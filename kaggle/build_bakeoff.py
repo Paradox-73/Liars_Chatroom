@@ -36,7 +36,7 @@ KERNELS = {
 }
 
 DRIVER = r'''
-import base64, collections, csv, io, json, os, re, subprocess, time, zipfile
+import base64, collections, csv, glob, io, json, os, re, subprocess, time, zipfile
 
 T0, SUB, OUT = time.time(), "/tmp/sub", "/kaggle/working"
 
@@ -62,7 +62,7 @@ t = time.time()
 rc = sh(f"cd {SUB} && {env} python predict.py --input /tmp/newfam.csv --output {OUT}/newfam_pred.csv --model /tmp/model "
         f"--workdir /tmp/w 2>&1 | tee /tmp/predict.log; exit ${{PIPESTATUS[0]}}", check=False)
 wall = (time.time() - t) / 60
-sh(f"cp /tmp/w/answers.jsonl {OUT}/newfam_answers.jsonl", check=False)
+sh(f"cat /tmp/w/answers* > {OUT}/newfam_answers.jsonl", check=False)  # one answers file per model process
 
 labels = {r["id"]: r["label"] for r in csv.DictReader(io.StringIO(NEWFAM))}
 family = {r["id"]: r["family"] for r in csv.DictReader(io.StringIO(META))}
@@ -70,8 +70,8 @@ pred = {}
 if os.path.exists(f"{OUT}/newfam_pred.csv"):
     pred = {r["id"]: r["label"] for r in csv.DictReader(open(f"{OUT}/newfam_pred.csv"))}
 recs, lines = {}, []
-if os.path.exists("/tmp/w/answers.jsonl"):
-    lines = [json.loads(x) for x in open("/tmp/w/answers.jsonl")]
+for path in sorted(glob.glob("/tmp/w/answers*")):
+    lines += [json.loads(x) for x in open(path)]
 for r in lines:
     old = recs.get((r["id"], r["k"]))
     if old is None or r["stage"] >= old["stage"]:
