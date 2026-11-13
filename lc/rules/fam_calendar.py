@@ -5,12 +5,13 @@ cal_closed   a place nobody could be inside on certain weekdays ("... on any Tue
 cal_rota     exactly one person did a nightly duty over a date range, following a rota
 cal_session  the only session of the day (tour, class, rehearsal), with a start time and an exact duration
 cal_age      birth dates against claims like "I turned 28 in July 2026" and "On 12 March 2026 I was 27"
-cal_booking  a room booked back to back by teams, only the booked team in the room
 cal_owner    who owned an item on each day of a month, from a chain of sales
 
-Families judge only plain claims: questions, hedged or negated sentences and reported speech are left alone, and
-so are messages naming another person, except where the evidence rules the claim out whoever it is about
-(sessions, bookings) or the name is the other side of a sale.
+Every evidence pattern matches a whole sentence, so a sentence with a clause these families do not model (an
+exception, a second schedule) is left unparsed. A family also abstains when another evidence sentence mentions the
+same place, duty, session, person or item. Claims are judged only when plain: questions, hedged or negated
+sentences and reported speech are left alone, and so are messages naming another person, except in sessions (nobody
+could take part outside the session) and sales (the name is the other side of the sale).
 """
 import datetime as dt
 import re
@@ -21,12 +22,17 @@ from . import text as T
 MONTH_ALT = "|".join(T.MONTHS)
 WD_ALT = "|".join(T.WEEKDAYS)
 DATE_PAT = rf"\d{{1,2}} (?:{MONTH_ALT}) \d{{4}}"
+MY_PAT = rf"(?:{MONTH_ALT}) \d{{4}}"
+TIME_PAT = r"(?:\d{1,2}:\d{2} [AP]M|noon|midday|midnight)"
+DUR_PAT = r"(?:(?:\d+|an?|one|two|three|four|five|six) hours?(?: (?:and )?\d+ minutes?)?|\d+ minutes?)"
+NP = r"[a-z][a-z' -]*?"  # a short lower-case noun phrase
+NAME = r"[A-Z][a-z]+(?:[-'][A-Z]?[a-z]+)?"
+NOBODY = r"(?:nobody|no one)"
 DASH = "[-–—]"
 ORDINALS = {"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5, "last": -1}
-NAME = r"[A-Z][a-z]+(?:[-'][A-Z]?[a-z]+)?"
 # a month and year that is not the tail of a full date ("in April 2026", not "1 April 2026")
 MONTH_YEAR_RE = re.compile(rf"(?<!\d\s)\b({MONTH_ALT})\s+(?:of\s+)?(\d{{4}})\b")
-ANCHOR_RE = re.compile(rf"^({DATE_PAT}) was an? ({WD_ALT})\.?$")
+ANCHOR_RE = re.compile(rf"^({DATE_PAT}) was an? ({WD_ALT})\.$")
 
 # conversational frames the generator wraps around claims
 FRAME_HEAD_RE = re.compile(r"^(?:(?:honestly|for the record|okay so|ok so|so|well|frankly|to be honest|as it happens)"
@@ -82,6 +88,26 @@ def month_years(s):
     return [(int(m.group(2)), T.MONTHS.index(m.group(1)) + 1) for m in MONTH_YEAR_RE.finditer(s)]
 
 
+def first_match(patterns, s):
+    for rx in patterns:
+        m = rx.match(s)
+        if m:
+            return m
+    return None
+
+
+def matches(ctx, patterns):
+    """[(sentence index, match)] for every evidence sentence that one of the whole-sentence patterns matches."""
+    return [(i, m) for i, s in enumerate(ctx.sentences) for m in [first_match(patterns, s)] if m]
+
+
+def mentioned_elsewhere(ctx, used, words):
+    """True when an evidence sentence this family did not parse (anchors aside) names one of the words: then the
+    evidence may say more about the subject than the family understands."""
+    rx = re.compile(r"\b(?:" + "|".join(re.escape(w) for w in words) + r")\b", re.I)
+    return any(i not in used and not ANCHOR_RE.match(s) and rx.search(s) for i, s in enumerate(ctx.sentences))
+
+
 def find_anchor(ctx):
     """'1 April 2026 was a Wednesday.' -> (date, weekday index), consumed. With several anchors they must agree."""
     found = []
@@ -112,13 +138,6 @@ def weekday_span(a, b):
     return {(i + k) % 7 for k in range((j - i) % 7 + 1)}
 
 
-# words that add an exception to a calendar rule, or limit it to part of a day; such rules are left alone
-EXCEPTION_RE = re.compile(r"\b(?:except|excepting|also|apart|but|besides|plus|unless|holidays?|as well|alternate|"
-                          r"other)\b", re.I)
-PART_OF_DAY_RE = re.compile(r"\b(?:before|after|until|till|between|from|morning|afternoon|evening|night|noon|"
-                            r"midday|midnight)\b", re.I)
-
-
 def waiting_only(t):
     """'I waited outside the pool on 14 April 2026': a single clause about waiting, with no clock time."""
     t = re.sub(rf"({DATE_PAT}),", r"\1", t)  # 'On 21 December 2026, I waited ...' is still one clause
@@ -127,13 +146,24 @@ def waiting_only(t):
 
 # ----------------------------------------------------------------------------------------------- opening hours
 
-HOURS_RE = re.compile(rf"\bopen(?:ed)? only (?:from )?({WD_ALT}) to ({WD_ALT})\b")
-HOURS_NOUN_RE = re.compile(r"\b(?:[Tt]he|use the) ([a-z][a-z' -]*?) (?:was open|opened|while it was closed)\b")
-CLOSED_USE_RE = re.compile(r"\b(?:nobody|no one) could use (?:it|the ([a-z][a-z' -]*?)) while it was closed\b", re.I)
-# not a use of the place: being near it, contacting it, seeing it
+MONTH_SCOPE = rf"(?:in|during|throughout) {MY_PAT}"
+HOURS_PAT = rf"(?:from |between )?{TIME_PAT} (?:to|and) {TIME_PAT}"
+CLOSE_IT = rf"{NOBODY} could use it while it was closed"
+HOURS_RES = [
+    re.compile(rf"^(?:(?i:{MONTH_SCOPE}),? )?(?i:the) (?P<noun>{NP}) (?:was open|opened) only (?:from )?"
+               rf"(?P<d1>{WD_ALT}) to (?P<d2>{WD_ALT})(?:,? {MONTH_SCOPE})?, {HOURS_PAT}(?:,? {MONTH_SCOPE})?"
+               rf"(?P<close>(?:,? and |; ){CLOSE_IT})?\.$"),
+    re.compile(rf"^(?i:{NOBODY}) could use the (?P<noun>{NP}) while it was closed(?P<close>), and {MONTH_SCOPE} it was "
+               rf"open only (?:from )?(?P<d1>{WD_ALT}) to (?P<d2>{WD_ALT}), {HOURS_PAT}\.$"),
+]
+CLOSE_RE = re.compile(rf"^(?i:{NOBODY}) could use (?:it|the (?P<noun>{NP})) while it was closed\.$")
+# not a use of the place: being near it or on the way, contacting it, seeing it, working on it
 NOT_USE_RE = re.compile(
     r"\b(?:near|nearby|past|passed|front|across|opposite|behind|next|beside|phoned|called|rang|emailed|messaged|"
-    r"texted|wrote|looked|saw|seen|watched|noticed|website|online|closed|shut|locked|booked|by)\b", re.I)
+    r"texted|wrote|looked|saw|seen|watched|noticed|website|online|closed|shut|locked|unlocked|booked|reserved|by|"
+    r"arrived|drove|walked|cycled|headed|reached|travelled|traveled|left|ticket|tickets|photo|photos|photographed|"
+    r"picture|pictures|cleaned|cleaning|repaired|fixed|inspected|checked|delivered|painted|guarded|patrolled|"
+    r"maintained|worked|working|staff|security|volunteered)\b", re.I)
 
 
 @register
@@ -146,34 +176,36 @@ class OpeningHours(Family):
     name = "cal_hours"
 
     def parse(self, ctx):
-        hits = [(i, s) for i, s in enumerate(ctx.sentences) if HOURS_RE.search(s)]
+        hits = matches(ctx, HOURS_RES)
         if len(hits) != 1:
             return None
-        i, s = hits[0]
-        m = HOURS_RE.search(s)
-        nouns = set(HOURS_NOUN_RE.findall(s))
-        closed = [(j, CLOSED_USE_RE.search(x)) for j, x in enumerate(ctx.sentences) if CLOSED_USE_RE.search(x)]
-        if len(nouns) != 1 or len(closed) != 1:
+        i, m = hits[0]
+        s, noun, used = ctx.sentences[i], m.group("noun"), [i]
+        if m.group("close") is None:  # 'Nobody could use it while it was closed.' as its own sentence
+            closes = [(j, c) for j, x in enumerate(ctx.sentences) for c in [CLOSE_RE.match(x)] if c]
+            if len(closes) != 1:
+                return None
+            j, c = closes[0]
+            if c.group("noun") != noun and not (c.group("noun") is None and j == i + 1):
+                return None
+            used.append(j)
+        times, months = [t for t, _ in T.find_times(s)], month_years(s)
+        if len(times) != 2 or times[0] >= times[1] or len(months) > 1:
             return None
-        noun = nouns.pop()
-        j, cm = closed[0]
-        if cm.group(1) and cm.group(1) != noun or (j != i and cm.group(1) is None and j != i + 1):
-            return None  # the closure rule must be about the same place
-        times = [t for t, _ in T.find_times(s)]
-        if len(times) not in (0, 2) or (times and times[0] >= times[1]):
+        if mentioned_elsewhere(ctx, used, [noun, noun.split()[-1]]):
             return None
-        if len(T.find_weekdays(s)) != 2 or T.find_dates(s) or EXCEPTION_RE.search(s):
-            return None  # extra days, dates or exceptions would change the opening days
-        months = month_years(s)
         anchor = find_anchor(ctx)
-        if len(months) > 1 or anchor is False:
+        if anchor is False:
             return None
-        ctx.consume(i)
-        ctx.consume(j)
-        return {"noun": noun, "days": weekday_span(m.group(1), m.group(2)), "hours": times or None,
+        for k in used:
+            ctx.consume(k)
+        return {"noun": noun, "days": weekday_span(m.group("d1"), m.group("d2")), "hours": times,
                 "month": months[0] if months else None, "anchor": anchor,
-                # 'I was at the pool' may mean outside it, so it is not a claim of using it
-                "at": re.compile(rf"\b(?:was|were) at the {re.escape(noun)}\b", re.I)}
+                # 'I was at the pool' may mean outside it; 'a photo of the pool' or 'tickets for the pool' are not
+                # uses of it ('out of the library' is)
+                "not_use": re.compile(rf"\b(?:was|were) at the {re.escape(noun)}\b|"
+                                      rf"\b(?:for|about|towards|toward|around|beyond|(?<!out )of) the {re.escape(noun)}\b",
+                                      re.I)}
 
     def judge(self, ctx, f, msg):
         t = plain_claim(msg.text)
@@ -185,7 +217,7 @@ class OpeningHours(Family):
         if waiting_only(t):
             return Verdict(OK, self.name, "waiting outside is always possible")
         times = T.find_times(t)
-        if WAIT_RE.search(t) or NOT_USE_RE.search(t) or len(times) > 1 or f["at"].search(t):
+        if WAIT_RE.search(t) or NOT_USE_RE.search(t) or len(times) > 1 or f["not_use"].search(t):
             return None
         if f["month"] and (d.year, d.month) != f["month"]:
             return Verdict(OK, self.name, "the opening days cover another month")
@@ -194,8 +226,6 @@ class OpeningHours(Family):
             return Verdict(LIE, self.name, f"{d} was a {T.WEEKDAYS[wd]}, a closed day")
         if not times:
             return Verdict(OK, self.name, "an open day")
-        if not f["hours"]:
-            return None  # the hours were not given in the sentence with the days
         if not f["hours"][0] <= times[0][0] <= f["hours"][1]:
             return Verdict(LIE, self.name, f"{T.fmt_time(times[0][0])} is outside the opening hours")
         return Verdict(OK, self.name, "open at that day and time")
@@ -203,10 +233,18 @@ class OpeningHours(Family):
 
 # ----------------------------------------------------------------------------------------------- closed weekdays
 
-CLOSED_DAY_RE = re.compile(r"\b(?:nobody|no one) could be (?:inside|in) the ([a-z][a-z' -]*?)(?= on\b| during\b| in\b|[.,])",
-                           re.I)
-ANY_WD_RE = re.compile(rf"\b(?:any|every|each) ({WD_ALT})\b|\bon ({WD_ALT})s\b")
-NTH_WD_RE = re.compile(rf"\bthe (first|second|third|fourth|fifth|last) ({WD_ALT}) (?:of|in) ({MONTH_ALT}) (\d{{4}})\b")
+ANY_DAY = rf"(?:any|every) (?P<wd>{WD_ALT}) (?:in|during) (?P<mon>{MONTH_ALT}) (?P<yr>\d{{4}})"
+NTH_DAY = (rf"the (?P<ord>first|second|third|fourth|fifth|last) (?P<wd>{WD_ALT}) (?:of|in) (?P<mon>{MONTH_ALT}) "
+           rf"(?P<yr>\d{{4}})")
+INSIDE = rf"could be inside the (?P<noun>{NP})"
+CLOSED_RES = [
+    re.compile(rf"^(?i:{NOBODY}) {INSIDE} on {ANY_DAY}\.$"),
+    re.compile(rf"^(?i:{NOBODY}) {INSIDE} on {NTH_DAY}\.$"),
+    re.compile(rf"^On {ANY_DAY},? {NOBODY} {INSIDE}\.$"),
+    re.compile(rf"^On {NTH_DAY},? {NOBODY} {INSIDE}\.$"),
+    re.compile(rf"^(?:In|During) (?P<mon>{MONTH_ALT}) (?P<yr>\d{{4}}),? {NOBODY} {INSIDE} on (?:any|every) "
+               rf"(?P<wd>{WD_ALT})\.$"),
+]
 
 
 def inside_re(noun):
@@ -231,34 +269,25 @@ class ClosedWeekday(Family):
     name = "cal_closed"
 
     def parse(self, ctx):
-        hits = [(i, s, CLOSED_DAY_RE.search(s)) for i, s in enumerate(ctx.sentences) if CLOSED_DAY_RE.search(s)]
+        hits = matches(ctx, CLOSED_RES)
         if len(hits) != 1:
             return None
-        i, s, cm = hits[0]
-        nth, anyd = NTH_WD_RE.search(s), ANY_WD_RE.search(s)
-        if bool(nth) == bool(anyd) or len(T.find_weekdays(s)) != 1:
+        i, m = hits[0]
+        noun = m.group("noun")
+        if mentioned_elsewhere(ctx, [i], [noun, noun.split()[-1]]):
             return None
-        if T.find_times(s) or T.find_dates(s) or EXCEPTION_RE.search(s) or PART_OF_DAY_RE.search(s):
-            return None  # 'on any Tuesday after 5:00 PM' or '... except 14 April' close less than whole days
-        if nth:
-            y, mo, wd_name = int(nth.group(4)), T.MONTHS.index(nth.group(3)) + 1, nth.group(2)
-        else:
-            months = month_years(s)
-            if len(months) != 1:
-                return None
-            (y, mo), wd_name = months[0], anyd.group(1) or anyd.group(2)
         anchor = find_anchor(ctx)
         if anchor is False:
             return None
-        wd = T.WEEKDAYS.index(wd_name)
+        y, mo, wd = int(m.group("yr")), T.MONTHS.index(m.group("mon")) + 1, T.WEEKDAYS.index(m.group("wd"))
         days = [d for d in month_days(y, mo) if weekday(d, anchor) == wd]
-        if nth:
-            k = ORDINALS[nth.group(1)]
+        if "ord" in m.groupdict():
+            k = ORDINALS[m.group("ord")]
             if k > len(days):
                 return None
             days = [days[k - 1] if k > 0 else days[-1]]
         ctx.consume(i)
-        return {"noun": cm.group(1), "closed": set(days), "inside": inside_re(cm.group(1))}
+        return {"noun": noun, "closed": set(days), "inside": inside_re(noun)}
 
     def judge(self, ctx, f, msg):
         t = plain_claim(msg.text)
@@ -278,10 +307,15 @@ class ClosedWeekday(Family):
 
 # ----------------------------------------------------------------------------------------------- nightly rota
 
-ROTA_RE = re.compile(r"\bexactly one person worked (the [a-z][a-z' -]*?) (?:each|every) night\b"
-                     r"|\bexactly one person worked (the [a-z][a-z' -]*?),"
-                     r"|\b(the [a-z][a-z' -]*?) was covered (?:each|every) night by exactly one person\b", re.I)
-ROTA_SPAN_RE = re.compile(rf"\b(?:[Ff]rom|[Bb]etween) ({DATE_PAT}) (?:to|and) ({DATE_PAT})\b")
+SPAN_PAT = rf"(?:from {DATE_PAT} to {DATE_PAT}|between {DATE_PAT} and {DATE_PAT})"
+ROTA_TAIL = r",? (?:following this rota exactly|and the rota was followed exactly): (?P<list>.+)\.$"
+ROTA_RES = [
+    re.compile(rf"^(?i:{SPAN_PAT}),? exactly one person worked (?P<duty>the {NP}) (?:each|every) night{ROTA_TAIL}"),
+    re.compile(rf"^(?i:each|every) night {SPAN_PAT},? exactly one person worked (?P<duty>the {NP}){ROTA_TAIL}"),
+    re.compile(rf"^(?i:exactly) one person worked (?P<duty>the {NP}) (?:each|every) night {SPAN_PAT}{ROTA_TAIL}"),
+    re.compile(rf"^(?i:{SPAN_PAT}),? (?P<duty>the {NP}) was covered (?:each|every) night by exactly one person"
+               rf"{ROTA_TAIL}"),
+]
 PART_DATES_RE = re.compile(rf"^({NAME}) (?:on|took) (\d{{1,2}})(?: ({MONTH_ALT}))?(?:\s*{DASH}\s*(\d{{1,2}}))? "
                            rf"({MONTH_ALT})$")
 PART_COUNT_RE = re.compile(rf"^(?:({NAME}) took the (first|next|last) (\w+)(?: nights?)?"
@@ -326,23 +360,24 @@ class NightRota(Family):
     name = "cal_rota"
 
     def parse(self, ctx):
-        hits = [(i, s) for i, s in enumerate(ctx.sentences) if ROTA_RE.search(s) and "rota" in s and ":" in s]
+        hits = matches(ctx, ROTA_RES)
         if len(hits) != 1:
             return None
-        i, s = hits[0]
-        rm, span = ROTA_RE.search(s), ROTA_SPAN_RE.search(s)
-        if not span:
+        i, m = hits[0]
+        dates = T.find_dates(ctx.sentences[i][:m.start("list")])
+        if len(dates) != 2:
             return None
-        duty = next(g for g in rm.groups() if g)
-        start, end = T.parse_date(span.group(1)), T.parse_date(span.group(2))
+        start, end = dates[0][0], dates[1][0]
         if end < start or (end - start).days > 62:
             return None
         nights = [start + dt.timedelta(days=k) for k in range((end - start).days + 1)]
-        who = self.assign(s.split(":", 1)[1], nights)
-        if who is None:
+        who = self.assign(m.group("list"), nights)
+        duty = [w for w in words(m.group("duty")) if w != "the"]
+        if who is None or mentioned_elsewhere(ctx, [i], [" ".join(duty)] + sorted(set(who.values()))):
             return None
         ctx.consume(i)
-        return {"duty": [w for w in words(duty) if w != "the"], "who": who, "start": start, "end": end}
+        phrase = r"\b" + r" ".join(map(re.escape, duty)) + r"(?=\s*(?:[.,;:!]|$)|\s+(?:on|was|that|fell|is|I|at)\b)"
+        return {"duty": duty, "phrase": re.compile(phrase, re.I), "who": who, "start": start, "end": end}
 
     @staticmethod
     def assign(rota, nights):
@@ -390,8 +425,8 @@ class NightRota(Family):
         extra = (said & DUTY_QUALIFIERS) - set(f["duty"])
         if not all(w in said for w in f["duty"]):
             return Verdict(OK, self.name, "a different duty") if extra and DUTY_WORD_RE.search(t) else None
-        if extra:
-            return None  # the duty with extra qualifiers: maybe a different one
+        if extra or not f["phrase"].search(t):
+            return None  # extra qualifiers, or the words not as the duty's name ('the late shift paperwork')
         if not f["start"] <= d <= f["end"]:
             return Verdict(OK, self.name, "outside the rota's dates")
         me = ctx.speakers.get(msg.label, "")
@@ -402,16 +437,28 @@ class NightRota(Family):
 
 # ----------------------------------------------------------------------------------------------- one session
 
-SESSION_RES = [
-    re.compile(r"\b(?:[Tt]he|[Tt]hat day's) (?:one and )?only ([a-z][a-z' -]*?)(?: that day)?(?:,)? "
-               r"(?:began|started|lasted|ran)\b"),
-    re.compile(r"\b[Tt]he ([a-z][a-z' -]*?) that day was the only one\b"),
-    re.compile(r"\bthe ([a-z][a-z' -]*?), which was the only one that day\b"),
-]
-START_RE = re.compile(r"\b(?:began|started|starting) at\b", re.I)
-LENGTH_RE = re.compile(r"\b(?:lasted|ran for|ran) exactly\b", re.I)
-OPEN_TO_ALL_RE = re.compile(r"\bopen to everyone\b|\b(?:anyone|everyone) could join\b", re.I)
-CLEANED_BEFORE_RE = re.compile(r"\bwas cleaned before the ([a-z][a-z' -]*?)[.,]")
+SESSION_TIMING = [rf"(?:began|started) at (?P<t>{TIME_PAT}) and (?:lasted|ran for) exactly (?P<dur>{DUR_PAT})",
+                  rf"(?:lasted|ran for) exactly (?P<dur>{DUR_PAT}),? and (?:it )?(?:began|started) at (?P<t>{TIME_PAT})"]
+SESSION_SUBJECT = [rf"(?i:the) (?:one and )?only (?P<noun>{NP}) that day", rf"(?i:that) day's only (?P<noun>{NP})",
+                   rf"(?i:the) (?P<noun>{NP}) that day was the only one, and it"]
+# an add-on clause that rules nothing out: 'and it was open to everyone', 'and the field was cleaned before ...'
+SESSION_EXTRA = rf"(?:, and (?:it|the (?P<open>{NP})) was open to everyone|, and the {NP} was cleaned before the (?P<cleaned>{NP}))?"
+SESSION_RES = [re.compile(rf"^{s} {t}{SESSION_EXTRA}\.$") for s in SESSION_SUBJECT for t in SESSION_TIMING]
+# 'The field was cleaned before the training session, which was the only one that day.' 'It began at ...'
+SESSION_FIRST_RE = re.compile(rf"^(?i:the) {NP} was cleaned before the (?P<noun>{NP}), which was the only one that day\.$")
+SESSION_IT_RES = [re.compile(rf"^It {t}\.$") for t in SESSION_TIMING]
+
+
+def session_support(noun):
+    """Sentences that add nothing to check: 'The tour was open to everyone.', 'The stage was cleaned before the
+    rehearsal.', 'Anyone could join the tour, as it was open to everyone.'"""
+    n = re.escape(noun)
+    return [re.compile(rf"^(?i:the) (?:{n}|class|session) was open to everyone\.$"),
+            re.compile(r"^It was open to everyone\.$"),
+            re.compile(rf"^(?i:anyone|everyone) could join the {n}(?:, as it was open to everyone)?\.$"),
+            re.compile(rf"^(?i:anyone|everyone) was welcome (?:at|to join) the {n}\.$"),
+            re.compile(rf"^(?i:the) {NP} (?:was|had been) cleaned before the {n}\.$"),
+            re.compile(rf"^Before the {n}, the {NP} (?:was|had been) cleaned\.$")]
 
 
 @register
@@ -422,39 +469,37 @@ class OnlySession(Family):
     name = "cal_session"
 
     def parse(self, ctx):
-        found = []
-        for i, s in enumerate(ctx.sentences):
-            for rx in SESSION_RES:
-                m = rx.search(s)
-                if m:
-                    found.append((i, m.group(1)))
-                    break
-        if len(found) != 1:
+        hits = matches(ctx, SESSION_RES)
+        firsts = matches(ctx, [SESSION_FIRST_RE])
+        if len(hits) + len(firsts) != 1:
             return None
-        i, noun = found[0]
-        span = [i] if START_RE.search(ctx.sentences[i]) else [i, i + 1]
-        if span[-1] >= len(ctx.sentences) or (len(span) == 2 and not ctx.sentences[i + 1].startswith("It ")):
+        if hits:
+            (i, m), used = hits[0], [hits[0][0]]
+            noun = m.group("noun")
+            if m.group("open") not in (None, noun, "class", "session") or m.group("cleaned") not in (None, noun):
+                return None
+        else:
+            i, noun = firsts[0][0], firsts[0][1].group("noun")
+            m = first_match(SESSION_IT_RES, ctx.sentences[i + 1]) if i + 1 < len(ctx.sentences) else None
+            if not m:
+                return None
+            used = [i, i + 1]
+        durs = T.find_durations(m.group("dur"))
+        if len(durs) != 1:
             return None
-        text = " ".join(ctx.sentences[k] for k in span)
-        times, durs = T.find_times(text), T.find_durations(text)
-        if len(times) != 1 or len(durs) != 1 or not START_RE.search(text) or not LENGTH_RE.search(text):
-            return None
-        if re.search(r"\b(?:half|quarter)\b", text):
-            return None  # 'half an hour' would read as an hour
-        start = times[0][0]
+        start = T.parse_time(m.group("t"))
         end = start + durs[0][0]
         if end >= 24 * 60:
             return None
-        for k in span:
-            ctx.consume(k)
+        support = session_support(noun)
         for k, s in enumerate(ctx.sentences):
-            # 'The tour was open to everyone.' and 'The stage was cleaned before the rehearsal.' rule nothing out
-            c = CLEANED_BEFORE_RE.search(s)
-            if (OPEN_TO_ALL_RE.search(s) and (re.search(rf"\b{re.escape(noun)}\b", s) or s.startswith("It "))
-                    or c and c.group(1) == noun and not T.find_times(s)):
-                ctx.consume(k)
-        rel = re.compile(rf"\b(?:during|in|on|at|joined|attended) {the_noun(noun)[2:]}|\bwhile the {re.escape(noun)} "
-                         rf"was on\b", re.I)
+            if k not in used and first_match(support, s) and (not s.startswith("It ") or k - 1 in used):
+                used.append(k)
+        if mentioned_elsewhere(ctx, used, [noun]):
+            return None
+        for k in used:
+            ctx.consume(k)
+        rel = re.compile(rf"\b(?:during|in|on) {the_noun(noun)[2:]}|\bwhile the {re.escape(noun)} was on\b", re.I)
         return {"noun": noun, "start": start, "end": end, "rel": rel}
 
     def judge(self, ctx, f, msg):
@@ -472,7 +517,8 @@ class OnlySession(Family):
 
 # ----------------------------------------------------------------------------------------------- ages
 
-BORN_RE = re.compile(rf"\b({NAME}) was born on ({DATE_PAT})")
+BORN_RE = re.compile(rf"^({NAME}) was born on ({DATE_PAT})(?:,? and ({NAME}) was born on ({DATE_PAT}))?\.$")
+AGE_WORDS = ["born", "birth", "birthday", "birthdays", "age", "aged", "ages", "years old", "older", "younger"]
 # the number must be the age itself, not 'I was 2 hours late' or 'I turned 3 pages'
 AGE_END = r"(?: years old)?(?= (?:in|on|during|was|is)\b|[.,!]|$)"
 TURNED_RE = re.compile(rf"\b(?:I turned|turning) (\d{{1,3}}){AGE_END}")
@@ -493,21 +539,20 @@ class BirthAge(Family):
     name = "cal_age"
 
     def parse(self, ctx):
-        born, other_ages = {}, False
-        for i, s in enumerate(ctx.sentences):
-            ms = BORN_RE.findall(s)
-            if not ms:
-                other_ages |= bool(re.search(r"\b(?:birthday|birthdays|years old|age|aged|older|younger)\b", s, re.I))
-                continue
-            if len(ms) != s.count("born"):
-                return None
-            for name, d in ms:
+        born, used = {}, []
+        for i, m in matches(ctx, [BORN_RE]):
+            for name, d in ((m.group(1), m.group(2)), (m.group(3), m.group(4))):
+                if name is None:
+                    continue
                 if name in born:
                     return None
                 born[name] = T.parse_date(d)
+            used.append(i)
+        if not born or mentioned_elsewhere(ctx, used, AGE_WORDS + sorted(born)):
+            return None
+        for i in used:
             ctx.consume(i)
-        # with other age facts around, a speaker missing from the birth dates is not known to be unconstrained
-        return {"born": born, "others_free": not other_ages} if born else None
+        return {"born": born}
 
     def judge(self, ctx, f, msg):
         t = plain_claim(msg.text)
@@ -520,7 +565,7 @@ class BirthAge(Family):
         dates, months = T.find_dates(t), month_years(t)
         years = re.findall(r"\b(?:19|20)\d\d\b", t)
         if born is None:
-            return Verdict(OK, self.name, "no known birth date") if f["others_free"] else None
+            return Verdict(OK, self.name, "no known birth date")
         if born.month == 2 and born.day == 29:
             return None  # leap-day birthdays: the birthday in other years is a matter of convention
         k = kinds[0]
@@ -557,126 +602,47 @@ class BirthAge(Family):
         return Verdict(OK, self.name, "matches the birth date")
 
 
-# ----------------------------------------------------------------------------------------------- room bookings
-
-TEAM_RE = re.compile(r"\b[Tt]he ([A-Za-z]+) team\b")
-ROOM_RE = re.compile(r"\b(Room \d+|[Tt]he [a-z][a-z ]*?)(?= was booked\b| was reserved\b)"
-                     r"|\bbooking for (Room \d+|the [a-z][a-z ]*?) ran\b")
-ONLY_TEAM_RE = re.compile(r"\bonly (?:that|the booked) team was in the room\b", re.I)
-GAPLESS_RE = re.compile(r"\bwithout gaps\b|\b[Ss]tarting at\b")
-
-
-def booking_blocks(s):
-    """'The studio was booked from 8:20 AM to 11:20 AM: the design team until 9:20 AM, the research team until
-    10:35 AM, then the finance team.' (or '... booked without gaps from 8:20 AM: the design team for 1 hour, then
-    ...') -> (room, [(start, end, team)]); None when the sentence does not fit either shape exactly."""
-    rm = ROOM_RE.search(s)
-    teams = list(TEAM_RE.finditer(s))
-    if not rm or not teams:
-        return None
-    room = rm.group(1) or rm.group(2)
-    head, segs = s[:teams[0].start()], []
-    for k, m in enumerate(teams):
-        seg = s[m.end():teams[k + 1].start() if k + 1 < len(teams) else len(s)]
-        segs.append((m.group(1).lower(), [t for t, _ in T.find_times(seg)], [d for d, _ in T.find_durations(seg)]))
-    times = [t for t, _ in T.find_times(head)]
-    if re.search(r"\b(?:half|quarter)\b", s):
-        return None
-    blocks = []
-    if GAPLESS_RE.search(head) and len(times) == 1 and all(len(d) == 1 and not t for _, t, d in segs):
-        at = times[0]
-        for team, _, (dur,) in segs:
-            blocks.append((at, at + dur, team))
-            at += dur
-    elif len(times) == 2 and all(len(t) == 1 and not d for _, t, d in segs[:-1]) and segs[-1][1:] == ([], []):
-        bounds = [times[0]] + [t[0] for _, t, _ in segs[:-1]] + [times[1]]
-        blocks = [(bounds[k], bounds[k + 1], team) for k, (team, _, _) in enumerate(segs)]
-    else:
-        return None
-    if any(a >= b for a, b, _ in blocks) or blocks[-1][1] >= 24 * 60 or len({b[2] for b in blocks}) != len(blocks):
-        return None
-    return room, blocks
-
-
-@register
-class RoomBooking(Family):
-    """A room booked back to back by teams, with 'During each booking, only that team was in the room.' A claim that
-    a team was in (or had) the room at a time inside another team's booking is a lie; times outside the bookings,
-    other places, and a team inside its own booking are fine. Endpoints belong to both neighbouring bookings."""
-
-    name = "cal_booking"
-
-    def parse(self, ctx):
-        only = [i for i, s in enumerate(ctx.sentences) if ONLY_TEAM_RE.search(s)]
-        found = [(i, booking_blocks(s)) for i, s in enumerate(ctx.sentences)
-                 if re.search(r"\b(?:booked|reserved|booking)\b", s) and i not in only]
-        if len(only) != 1 or len(found) != 1 or found[0][1] is None:
-            return None
-        i, (room, blocks) = found[0]
-        ctx.consume(i)
-        ctx.consume(only[0])
-        if room.lower().startswith("the "):  # 'the main hall'
-            room_re, head = the_noun(room[4:].lower())[2:], room.split()[-1].lower()
-        else:  # 'Room 4'
-            room_re, head = re.escape(room) + r"\b(?!\s*\d)", "room"
-        return {"room": room, "blocks": blocks, "head": head,
-                "in_room": re.compile(rf"\b(?:in|inside|had) {room_re}", re.I),
-                "past": re.compile(rf"^(?:At \S+ [AP]M,? )?I (?:walked|went|passed|cycled|ran) (?:past|by) {room_re}",
-                                   re.I),
-                "elsewhere": re.compile(rf"\b(?:in|inside) the (?!{re.escape(head)}\b)([a-z]+){AFTER_NOUN}", re.I)}
-
-    def judge(self, ctx, f, msg):
-        t = plain_claim(msg.text, names_ok=True)  # the subject is a team, not the speaker
-        if not t:
-            return None
-        teams, times = TEAM_RE.findall(t), T.find_times(t)
-        if not teams and f["past"].search(t):
-            return Verdict(OK, self.name, "walking past the room")
-        if len(teams) != 1 or len(times) != 1 or T.find_dates(t):
-            return None
-        team, tm = teams[0].lower(), times[0][0]
-        if not f["in_room"].search(t):
-            if f["elsewhere"].search(t) and not re.search(rf"\b{re.escape(f['head'])}\b", t, re.I):
-                return Verdict(OK, self.name, "another place")
-            return None
-        holders = {b[2] for b in f["blocks"] if b[0] <= tm <= b[1]}
-        if not holders:
-            return Verdict(OK, self.name, "outside the booked hours")
-        if team in holders:
-            return Verdict(OK, self.name, "the team's own booking")
-        return Verdict(LIE, self.name, f"the {'/'.join(sorted(holders))} team had {f['room']} at {T.fmt_time(tm)}")
-
-
 # ----------------------------------------------------------------------------------------------- owners over a month
 
-NOBODY_ELSE_RE = re.compile(
-    rf"\b(?:[Nn]obody|[Nn]o one) else owned the ([a-z][a-z -]*?) (?:in|during) ({MONTH_ALT}) (\d{{4}})\."
-    rf"|^(?:In|During) ({MONTH_ALT}) (\d{{4}}),? (?:nobody|no one) else owned the ([a-z][a-z -]*?)\.")
-SALE_RE = re.compile(rf"\b(?:sold|selling) it (?:on )?to ({NAME})\b")
-AFTER_BUYING_RE = re.compile(r"\bexactly (\w+) days? after buying it\b", re.I)
-OTHER_HANDOVER_RE = re.compile(r"\b(?:gave|given|handed|lent|loaned|passed|transferred|inherited|swapped|traded|"
-                               r"returned|donated|gifted|stole|stolen|lost|found|rented|shared|co-owned|jointly)\b",
-                               re.I)
-START_OWNER_RE = re.compile(rf"^(?:At the start of (?:{MONTH_ALT}) \d{{4}},? )?{NAME} owned the [a-z][a-z -]*?"
-                            rf"(?: at the start of (?:{MONTH_ALT}) \d{{4}})?\.$")
-NOT_SELLERS = NOT_NAMES | {"On", "Until", "At", "Exactly", "In", "During", "From", "Then", "After", "The"}
+OWNER_HEAD_RES = [
+    re.compile(rf"^(?i:{NOBODY}) else owned the (?P<item>{NP}) in (?P<mon>{MONTH_ALT}) (?P<yr>\d{{4}})\.$"),
+    re.compile(rf"^(?i:in) (?P<mon>{MONTH_ALT}) (?P<yr>\d{{4}}),? {NOBODY} else owned the (?P<item>{NP})\.$"),
+]
+PRONOUN = r"(?:he|she|they)"
+SOLD_TO = rf"sold it (?:on )?to (?P<b>{NAME})"
+WHEN = rf"(?:on (?P<d>{DATE_PAT})|exactly (?P<n>\w+) days? after buying it)"
+START = rf"at the start of {MY_PAT}"
+# one sale per clause; a sentence is split into clauses at ', and <Name>'
+SALE_RES = [
+    re.compile(rf"^(?P<s>{NAME}) owned the {NP} until (?:selling|(?:{PRONOUN}|{NAME}) sold) it to (?P<b>{NAME}) "
+               rf"on (?P<d>{DATE_PAT})$"),
+    re.compile(rf"^(?P<s>{NAME}) owned the {NP} until (?P<d>{DATE_PAT}), when {PRONOUN} sold it to (?P<b>{NAME})$"),
+    re.compile(rf"^(?P<s>{NAME}) was the {NP}'s owner until selling it to (?P<b>{NAME}) on (?P<d>{DATE_PAT})$"),
+    re.compile(rf"^(?i:until) (?:selling|{PRONOUN} sold) it to (?P<b>{NAME}) on (?P<d>{DATE_PAT}), (?P<s>{NAME}) "
+               rf"owned the {NP}$"),
+    re.compile(rf"^(?P<s>{NAME}) owned the {NP} {START} and {SOLD_TO} on (?P<d>{DATE_PAT})$"),
+    re.compile(rf"^(?i:at) the start of {MY_PAT},? (?P<s>{NAME}) owned the {NP}, and {PRONOUN} {SOLD_TO} on "
+               rf"(?P<d>{DATE_PAT})$"),
+    re.compile(rf"^(?i:at) the start of {MY_PAT},? the {NP} belonged to (?P<s>{NAME}), who {SOLD_TO} on "
+               rf"(?P<d>{DATE_PAT})$"),
+    re.compile(rf"^(?P<s>{NAME}) (?:then )?{SOLD_TO} {WHEN}$"),
+    re.compile(rf"^(?i:on) (?P<d>{DATE_PAT}),? (?P<s>{NAME}) (?:then )?{SOLD_TO}$"),
+    re.compile(rf"^(?i:exactly) (?P<n>\w+) days? after buying it, (?P<s>{NAME}) (?:then )?{SOLD_TO}$"),
+]
+START_OWNER_RE = re.compile(rf"^(?:(?i:at) the start of {MY_PAT},? )?{NAME} owned the {NP}(?: {START})?$")
 
 
 def sale(clause):
-    """'Camila owned the kayak until selling it to Tomas on 8 September 2026.' -> (seller, buyer, date), where date
-    is ('after', n) for 'Tariq sold it to Rahul exactly 14 days after buying it.'; None if it is not one sale."""
-    m = SALE_RE.search(clause)
-    if not m or len(SALE_RE.findall(clause)) != 1:
+    """'Camila owned the kayak until selling it to Tomas on 8 September 2026' -> (seller, buyer, date), where the
+    date is ('after', n) for '... exactly 14 days after buying it'; None when no sale pattern matches the clause."""
+    m = first_match(SALE_RES, clause)
+    if not m:
         return None
-    buyer = m.group(1)
-    sellers = {w for w in CAPITAL_RE.findall(clause) if w not in NOT_SELLERS and w != buyer}
-    dates, rel = T.find_dates(clause), AFTER_BUYING_RE.search(clause)
-    if len(sellers) != 1 or len(dates) + bool(rel) != 1:
-        return None
-    if rel:
-        n = T.word_num(rel.group(1))
-        return (sellers.pop(), buyer, ("after", n)) if n else None
-    return sellers.pop(), buyer, dates[0][0]
+    g = m.groupdict()
+    if g.get("d"):
+        return m.group("s"), m.group("b"), T.parse_date(g["d"])
+    n = T.word_num(g["n"])
+    return (m.group("s"), m.group("b"), ("after", n)) if n else None
 
 
 @register
@@ -689,31 +655,20 @@ class MonthOwners(Family):
     name = "cal_owner"
 
     def parse(self, ctx):
-        heads = [(i, NOBODY_ELSE_RE.search(s)) for i, s in enumerate(ctx.sentences) if NOBODY_ELSE_RE.search(s)]
+        heads = matches(ctx, OWNER_HEAD_RES)
         if len(heads) != 1:
             return None
         hi, hm = heads[0]
-        item, mon, yr = (hm.group(1), hm.group(2), hm.group(3)) if hm.group(1) else (hm.group(6), hm.group(4),
-                                                                                    hm.group(5))
-        sales, used = [], [hi]
+        item, sales, used = hm.group("item"), [], [hi]
         for i, s in enumerate(ctx.sentences):
-            if i == hi:
+            if i == hi or not s.endswith("."):
                 continue
-            if OTHER_HANDOVER_RE.search(s):
-                return None  # a gift, loan or swap would change who owned it when
-            if not re.search(r"\b(?:sold|selling|bought|buying|owned|owner|belonged)\b", s):
-                continue
-            found = 0
-            for clause in re.split(r",? and (?=[A-Z])", s):  # 'X sold it to Y on D, and Y sold it to Z on E.'
-                if SALE_RE.search(clause):
-                    one = sale(clause)
-                    if one is None:
-                        return None
-                    sales.append(one)
-                    found += 1
-            if not found and not START_OWNER_RE.match(s):
-                return None  # some other fact about owning or buying it
-            used.append(i)
+            clauses = re.split(r",? and (?=[A-Z])", s[:-1])  # '..., and Ivan sold it to Jonas on 15 May 2026.'
+            found = [sale(c) for c in clauses]
+            if all(x or START_OWNER_RE.match(c) for x, c in zip(found, clauses)):
+                sales += [x for x in found if x]
+                used.append(i)
+            # any other sentence naming the item or an owner makes the family abstain (checked below)
         bought = {b: d for _, b, d in sales if not isinstance(d, tuple)}
         resolved = []
         for s_, b, d in sales:
@@ -730,8 +685,10 @@ class MonthOwners(Family):
         names = [resolved[0][0]] + [b for _, b, _ in resolved]
         if len(set(names)) != len(names):
             return None  # someone owned it twice: keep out
-        month = (int(yr), T.MONTHS.index(mon) + 1)
+        month = (int(hm.group("yr")), T.MONTHS.index(hm.group("mon")) + 1)
         if any((d.year, d.month) != month for _, _, d in resolved):
+            return None
+        if mentioned_elsewhere(ctx, used, [item, item.split()[-1]] + names):
             return None
         for i in used:
             ctx.consume(i)
@@ -752,7 +709,8 @@ class MonthOwners(Family):
         if d is None or (d.year, d.month) != f["month"]:
             return None
         me = ctx.speakers.get(msg.label)
-        names = [w for w in CAPITAL_RE.findall(t) if w not in NOT_SELLERS and w not in ("I", "As", "For")]
+        names = [w for w in CAPITAL_RE.findall(t)
+                 if w not in NOT_NAMES and w not in ("On", "As", "For", "The", "At", "In", "During", "By")]
         if re.search(rf"\bI owned the {it}\b|\bI was the owner of the {it}\b|\bI was the {it}'s owner\b"
                      rf"|\b[Tt]he {it} (?:was mine|belonged to me)\b", t):
             if names:
@@ -780,13 +738,13 @@ class MonthOwners(Family):
         return Verdict(LIE, self.name, f"no such sale: the {f['item']} changed hands only as recorded that month")
 
 
-if __name__ == "__main__":  # self-check of the calendar arithmetic
+if __name__ == "__main__":  # self-check of the calendar arithmetic and the whole-sentence patterns
     assert weekday_span("Wednesday", "Sunday") == {2, 3, 4, 5, 6} and weekday_span("Friday", "Monday") == {4, 5, 6, 0}
     assert weekday(dt.date(2026, 4, 14), (dt.date(2026, 4, 1), 2)) == 1
     assert age_on(dt.date(1993, 7, 14), dt.date(2026, 7, 13)) == 32
     assert age_on(dt.date(1993, 7, 14), dt.date(2026, 7, 14)) == 33
     nts = [dt.date(2026, 3, 3) + dt.timedelta(days=k) for k in range(6)]
-    w = NightRota.assign("Usha took the first two, Jonas took the next two, and Akira took the last two.", nts)
+    w = NightRota.assign("Usha took the first two, Jonas took the next two, and Akira took the last two", nts)
     assert w[dt.date(2026, 3, 5)] == "Jonas" and w[dt.date(2026, 3, 8)] == "Akira"
     w = NightRota.assign("Lin on 5–6 March, Fatima on 7–8 March, Farid on 3–4 March", nts)
     assert w[dt.date(2026, 3, 3)] == "Farid"
@@ -796,4 +754,10 @@ if __name__ == "__main__":  # self-check of the calendar arithmetic
     assert claim_text("Honestly, I swam at the pool at 1:25 PM, for the record.") == "I swam at the pool at 1:25 PM."
     assert plain_claim("Joel told me he swam at the pool.") is None and plain_claim("In May 2026 I turned 30.")
     assert not re.search(the_noun("tour"), "I was at the tour desk at 1 PM")
+    s = ("In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it "
+         "while it was closed.")
+    assert first_match(HOURS_RES, s) and not first_match(HOURS_RES, s.replace(" and nobody", " except on 6 April "
+                                                                              "2026, and nobody"))
+    assert first_match(CLOSED_RES, "On the third Monday of April 2026, nobody could be inside the community hall.")
+    assert not first_match(CLOSED_RES, "Nobody could be inside the library on any Tuesday in April 2026 after noon.")
     print("ok")
