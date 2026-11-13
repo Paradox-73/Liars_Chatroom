@@ -211,6 +211,7 @@ class Store:
         self.events = []  # (minute, signed amount)
         self.rates = []  # [start or None, end, signed amount per minute]
         self.close = []  # ("all" | "add", end minute or None)
+        self.kin = {}  # last words of the name -> container phrases in the evidence that end with them
         self.bad = False
 
     def finish(self):
@@ -297,10 +298,12 @@ class Store:
 
 def pick(stores, name, claim=False):
     """The one store with this name. A claim may shorten the name ('the tank' for 'the water tank') but not add to
-    it: 'the paddling pool' may be a different pool from 'the pool'."""
+    it ('the paddling pool' may be a different pool from 'the pool'), and may shorten it only when the evidence
+    names no other container with that word ('the red tank' elsewhere makes 'the tank' ambiguous)."""
     if claim:
         c = head(name)
-        found = [s for s in stores if head(s.name) == c or head(s.name).endswith(" " + c)]
+        found = [s for s in stores if head(s.name) == c or (head(s.name).endswith(" " + c) and not any(
+            p != head(s.name) and p != c for p in s.kin.get(c, ())))]
     else:
         found = [s for s in stores if same_name(name, s.name)]
     return found[0] if len(found) == 1 else None
@@ -350,6 +353,8 @@ class Level(Family):
             if m:
                 subjects.append((i, m["c"]))
                 mine.add(i)
+                if cur is not None and not same_name(m["c"], cur.name):
+                    cur = None  # "it" now means the container just described
                 continue
             fresh = [name for j, name in subjects if j == i - 1]
             parts = clauses(low, times)
@@ -384,6 +389,13 @@ class Level(Family):
         good = [s for s in stores if not s.bad]
         if not good:
             return None
+        evidence = ctx.case.evidence.lower()
+        for st in good:
+            words = head(st.name).split()
+            for k in range(1, len(words)):
+                tail = " ".join(words[k:])
+                st.kin[tail] = set(re.findall(r"\b(?:the|a|an|that|this) ((?:[a-z\-]+ )?" + re.escape(tail) + r")\b",
+                                              evidence))
         for i in used:
             ctx.consume(i)
         for i, name in subjects:
