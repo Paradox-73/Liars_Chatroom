@@ -1,0 +1,301 @@
+id,family,lie_message,lie_tags,messages
+NF0001,whenever+battery,6,two-fact about-other,6
+NF0002,platform,12,two-fact about-other,12
+NF0003,prices,2,two-fact,6
+NF0004,battery,11,about-other,12
+NF0005,medicine,1,about-other,8
+NF0006,timezone,4,two-fact about-other,12
+NF0007,queue,4,two-fact,11
+NF0008,recipe,10,about-other,12
+NF0009,lift,9,two-fact,12
+NF0010,timezone,7,two-fact about-other,12
+NF0011,agelimit+queue,5,two-fact about-other,9
+NF0012,queue,9,about-other,12
+NF0013,medicine,1,two-fact about-other,10
+NF0014,parking,2,about-other,6
+NF0015,temperature+seats,6,,11
+NF0016,timezone,4,two-fact about-other,8
+NF0017,recipe,2,two-fact about-other,6
+NF0018,battery,9,,12
+NF0019,whenever+platform,8,two-fact,11
+NF0020,timezone,3,two-fact,12
+NF0021,agelimit,7,two-fact about-other,8
+NF0022,lift,1,,9
+NF0023,medicine,1,two-fact about-other,12
+NF0024,timezone,3,two-fact about-other,6
+NF0025,queue,11,two-fact,12
+NF0026,battery,3,about-other,9
+NF0027,agelimit,7,two-fact,11
+NF0028,seats,2,two-fact,7
+NF0029,timezone,2,two-fact about-other,12
+NF0030,periodic,5,two-fact about-other,8
+NF0031,library,2,two-fact about-other,7
+NF0032,medicine,1,about-other,11
+NF0033,recipe,7,,8
+NF0034,parking,2,two-fact,10
+NF0035,lift+parking,1,two-fact,6
+NF0036,periodic,2,two-fact,7
+NF0037,agelimit,3,two-fact about-other,6
+NF0038,temperature,1,two-fact,9
+NF0039,medicine,4,about-other,6
+NF0040,library+scores,3,two-fact,8
+NF0041,temperature+prices,5,two-fact about-other,12
+NF0042,battery,2,two-fact about-other,6
+NF0043,whenever,6,two-fact,11
+NF0044,medicine,1,about-other,12
+NF0045,scores,6,two-fact,11
+NF0046,platform,2,,6
+NF0047,queue+medicine,5,,9
+NF0048,agelimit,3,two-fact about-other,7
+NF0049,periodic+lift,4,two-fact,6
+NF0050,prices,2,two-fact,7
+NF0051,platform,7,,12
+NF0052,agelimit,8,two-fact about-other,12
+NF0053,periodic+medicine,4,two-fact,8
+NF0054,lift+platform,12,two-fact about-other,12
+NF0055,temperature+library,8,two-fact about-other,8
+NF0056,medicine+prices,6,two-fact about-other,6
+NF0057,library,4,two-fact about-other,6
+NF0058,prices+whenever,5,two-fact,8
+NF0059,overnight,5,two-fact,7
+NF0060,whenever,6,two-fact,6
+NF0061,prices+platform,4,two-fact,9
+NF0062,agelimit+parking,9,two-fact about-other,12
+NF0063,queue+battery,8,,8
+NF0064,queue,10,about-other,12
+NF0065,lift,1,,6
+NF0066,temperature+queue,4,,12
+NF0067,whenever,1,two-fact,12
+NF0068,whenever+prices,7,two-fact,7
+NF0069,whenever+parking,6,two-fact about-other,8
+NF0070,overnight,6,two-fact,6
+NF0071,whenever,8,,12
+NF0072,medicine+temperature,10,two-fact about-other,12
+NF0073,recipe,4,about-other,6
+NF0074,scores+timezone,6,two-fact,6
+NF0075,medicine+queue,7,,12
+NF0076,overnight,1,about-other,8
+NF0077,platform,4,two-fact,8
+NF0078,timezone,11,two-fact about-other,12
+NF0079,queue+parking,6,,8
+NF0080,whenever+scores,1,,9
+NF0081,prices+recipe,4,two-fact,7
+NF0082,seats+periodic,8,,8
+NF0083,timezone+whenever,6,two-fact,6
+NF0084,scores,8,two-fact,8
+NF0085,agelimit,6,two-fact,8
+NF0086,queue,3,,6
+NF0087,platform,9,,10
+NF0088,recipe,4,two-fact about-other,12
+NF0089,queue+temperature,4,two-fact,6
+NF0090,temperature,1,,6
+NF0091,queue,2,about-other,7
+NF0092,temperature,6,,7
+NF0093,seats,3,two-fact,6
+NF0094,battery+scores,7,,8
+NF0095,medicine+platform,3,about-other,7
+NF0096,agelimit,6,two-fact about-other,12
+NF0097,scores,8,,11
+NF0098,timezone,1,two-fact about-other,6
+NF0099,medicine,10,about-other,11
+NF0100,platform,5,two-fact,12
+NF0101,library,3,two-fact,9
+NF0102,overnight,1,two-fact,6
+NF0103,scores+parking,6,two-fact about-other,6
+NF0104,platform,1,two-fact,8
+NF0105,prices,11,,12
+NF0106,lift,4,two-fact,11
+NF0107,lift+platform,5,,8
+NF0108,library,8,two-fact,8
+NF0109,timezone,2,two-fact about-other,8
+NF0110,temperature,4,,10
+NF0111,seats,3,two-fact about-other,9
+NF0112,platform,7,two-fact about-other,11
+NF0113,library+queue,9,two-fact,9
+NF0114,overnight,10,two-fact about-other,10
+NF0115,lift+scores,5,two-fact,7
+NF0116,timezone+whenever,3,two-fact,12
+NF0117,lift,2,about-other,8
+NF0118,library,7,two-fact,11
+NF0119,queue,4,about-other,10
+NF0120,medicine,3,two-fact about-other,9
+NF0121,prices,12,,12
+NF0122,seats,1,about-other,8
+NF0123,periodic+medicine,1,two-fact about-other,8
+NF0124,seats,8,,8
+NF0125,prices,9,two-fact,10
+NF0126,periodic,4,two-fact,8
+NF0127,queue,5,two-fact,10
+NF0128,prices,3,,8
+NF0129,lift+timezone,3,two-fact,8
+NF0130,temperature,7,,12
+NF0131,parking+periodic,8,,8
+NF0132,platform,3,,6
+NF0133,agelimit,2,two-fact about-other,12
+NF0134,whenever,6,two-fact,12
+NF0135,scores,10,,12
+NF0136,periodic,4,two-fact,12
+NF0137,recipe,6,about-other,7
+NF0138,library,6,two-fact about-other,12
+NF0139,periodic,6,two-fact,8
+NF0140,prices+temperature,4,two-fact,6
+NF0141,medicine,12,about-other,12
+NF0142,battery+temperature,12,about-other,12
+NF0143,battery,3,about-other,7
+NF0144,scores,6,,10
+NF0145,overnight,9,two-fact,11
+NF0146,scores,4,,12
+NF0147,battery+library,7,about-other,12
+NF0148,agelimit,11,two-fact,11
+NF0149,scores,3,two-fact,6
+NF0150,parking,6,,8
+NF0151,parking,9,two-fact about-other,11
+NF0152,recipe+battery,8,,8
+NF0153,seats,9,,9
+NF0154,parking,5,,7
+NF0155,battery,7,about-other,7
+NF0156,scores,6,two-fact,12
+NF0157,whenever,3,two-fact,6
+NF0158,periodic,7,two-fact,8
+NF0159,queue,5,,7
+NF0160,seats,1,two-fact about-other,7
+NF0161,timezone+lift,6,two-fact about-other,12
+NF0162,platform,1,two-fact,6
+NF0163,battery,3,about-other,7
+NF0164,library,4,two-fact about-other,6
+NF0165,lift,11,,11
+NF0166,prices,4,two-fact,8
+NF0167,timezone+periodic,4,about-other,6
+NF0168,platform+timezone,3,,9
+NF0169,battery,1,two-fact about-other,8
+NF0170,whenever+periodic,3,two-fact,6
+NF0171,lift+whenever,11,,11
+NF0172,parking,6,two-fact about-other,7
+NF0173,scores,1,,6
+NF0174,parking,3,two-fact,12
+NF0175,temperature,7,two-fact,7
+NF0176,whenever,3,,6
+NF0177,scores,1,two-fact,8
+NF0178,recipe,2,two-fact about-other,8
+NF0179,parking,5,two-fact,7
+NF0180,seats,6,two-fact,8
+NF0181,library,1,two-fact,7
+NF0182,library+periodic,11,two-fact,12
+NF0183,recipe,8,two-fact,12
+NF0184,scores,2,,12
+NF0185,temperature,5,two-fact about-other,7
+NF0186,scores,7,two-fact,8
+NF0187,timezone,10,two-fact about-other,11
+NF0188,lift,2,about-other,7
+NF0189,periodic,4,two-fact,9
+NF0190,agelimit,1,two-fact about-other,8
+NF0191,lift,5,,6
+NF0192,temperature,4,,7
+NF0193,recipe,10,about-other,12
+NF0194,prices,6,,12
+NF0195,periodic,1,two-fact,12
+NF0196,lift+periodic,5,two-fact about-other,6
+NF0197,prices,5,two-fact,7
+NF0198,lift+recipe,6,,9
+NF0199,agelimit,10,two-fact about-other,12
+NF0200,medicine,8,two-fact,9
+NF0201,agelimit+platform,7,two-fact,8
+NF0202,platform+temperature,6,two-fact about-other,9
+NF0203,parking,6,two-fact about-other,9
+NF0204,whenever,8,,12
+NF0205,whenever,2,two-fact,8
+NF0206,whenever,7,two-fact,12
+NF0207,recipe,6,two-fact,6
+NF0208,library,3,two-fact about-other,7
+NF0209,prices,3,two-fact,6
+NF0210,platform+seats,9,two-fact,9
+NF0211,queue+agelimit,1,,9
+NF0212,periodic,10,two-fact,11
+NF0213,lift,1,two-fact about-other,6
+NF0214,whenever+seats,5,two-fact,11
+NF0215,parking,3,two-fact about-other,6
+NF0216,agelimit+temperature,5,two-fact about-other,6
+NF0217,overnight,7,,7
+NF0218,agelimit+battery,2,two-fact about-other,6
+NF0219,queue,5,two-fact,7
+NF0220,queue,1,,6
+NF0221,parking,6,about-other,7
+NF0222,lift,9,,12
+NF0223,timezone+recipe,6,two-fact about-other,7
+NF0224,scores+seats,4,,6
+NF0225,whenever+parking,2,two-fact,6
+NF0226,platform,1,,12
+NF0227,battery,6,,6
+NF0228,whenever+seats,7,two-fact,7
+NF0229,prices,5,two-fact,8
+NF0230,recipe,7,,12
+NF0231,prices,5,two-fact about-other,7
+NF0232,platform+whenever,9,two-fact,9
+NF0233,platform,5,,11
+NF0234,lift,2,two-fact,6
+NF0235,overnight,4,two-fact,8
+NF0236,temperature,4,two-fact,8
+NF0237,lift,2,,8
+NF0238,queue+prices,5,,12
+NF0239,whenever+recipe,6,two-fact,8
+NF0240,recipe,2,about-other,12
+NF0241,library+battery,2,two-fact,12
+NF0242,whenever,8,two-fact,8
+NF0243,medicine,2,two-fact about-other,8
+NF0244,recipe,8,two-fact about-other,11
+NF0245,seats,4,two-fact,8
+NF0246,library,3,two-fact about-other,6
+NF0247,agelimit,3,two-fact about-other,6
+NF0248,agelimit+queue,1,two-fact,11
+NF0249,temperature,1,two-fact about-other,6
+NF0250,timezone,6,two-fact about-other,6
+NF0251,queue,2,about-other,8
+NF0252,lift,12,two-fact about-other,12
+NF0253,seats,6,two-fact,11
+NF0254,timezone,12,two-fact,12
+NF0255,timezone+seats,3,two-fact about-other,6
+NF0256,seats+medicine,2,about-other,8
+NF0257,battery,9,,11
+NF0258,battery,7,about-other,12
+NF0259,periodic,1,two-fact,6
+NF0260,lift+queue,1,two-fact about-other,7
+NF0261,battery,12,about-other,12
+NF0262,whenever,3,two-fact,6
+NF0263,library,2,two-fact,8
+NF0264,queue,5,,6
+NF0265,seats+scores,7,two-fact,9
+NF0266,temperature,7,two-fact about-other,7
+NF0267,whenever+seats,4,two-fact,9
+NF0268,prices,4,two-fact,9
+NF0269,battery+seats,6,,12
+NF0270,periodic,3,two-fact,12
+NF0271,periodic,10,two-fact about-other,11
+NF0272,timezone+library,8,two-fact about-other,10
+NF0273,temperature+platform,3,two-fact,12
+NF0274,medicine,7,two-fact about-other,10
+NF0275,seats,1,two-fact,6
+NF0276,recipe+lift,9,,9
+NF0277,scores,11,two-fact about-other,12
+NF0278,seats,10,about-other,12
+NF0279,whenever+temperature,4,two-fact,9
+NF0280,seats+recipe,1,two-fact,6
+NF0281,prices+timezone,7,two-fact,8
+NF0282,battery,4,about-other,6
+NF0283,temperature,11,two-fact about-other,12
+NF0284,temperature,10,two-fact,12
+NF0285,library,3,about-other,7
+NF0286,library,6,two-fact about-other,8
+NF0287,scores+library,8,,12
+NF0288,medicine,1,two-fact about-other,7
+NF0289,agelimit,5,two-fact about-other,12
+NF0290,timezone,5,about-other,12
+NF0291,platform,5,,8
+NF0292,prices+agelimit,3,,10
+NF0293,parking,6,two-fact about-other,12
+NF0294,whenever,7,two-fact,12
+NF0295,overnight,10,about-other,10
+NF0296,whenever+scores,2,two-fact,7
+NF0297,seats,3,two-fact,8
+NF0298,parking,5,two-fact about-other,8
+NF0299,periodic,4,two-fact about-other,6
+NF0300,overnight,6,two-fact,6
