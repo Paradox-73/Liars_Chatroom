@@ -83,11 +83,16 @@ def main():
         sys.exit(3)
     tp = a.tp or min(gpus, 2)
     max_len, think_slots, quick_slots, step_tokens = ENGINE[tp]
+    think_slots = int(os.environ.get("LC_SLOTS", think_slots))  # per model: fewer when the weights leave little room
+    presence = float(os.environ.get("LC_PRESENCE_PENALTY", 0))  # per model: the Qwen3.5 models use 1.5
     util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered only to test on a shared card
-    log(f"{gpus} GPU(s): tensor parallel {tp}, max model length {max_len}, {think_slots}+{quick_slots} slots, eager {a.eager}")
+    with open(os.path.join(a.model, "config.json")) as f:
+        multimodal = "vision_config" in json.load(f)  # Qwen3.5 checkpoints carry a vision tower; it is not loaded
+    log(f"{gpus} GPU(s): tensor parallel {tp}, max model length {max_len}, {think_slots}+{quick_slots} slots, "
+        f"presence penalty {presence}, eager {a.eager}")
     llm = LLM(a.model, tensor_parallel_size=tp, dtype="float16", gpu_memory_utilization=util, max_model_len=max_len,
               max_num_seqs=think_slots + quick_slots, max_num_batched_tokens=step_tokens, seed=0,
-              disable_custom_all_reduce=True, enforce_eager=a.eager)
+              disable_custom_all_reduce=True, enforce_eager=a.eager, **({"language_model_only": True} if multimodal else {}))
     eng, tok = llm.llm_engine, llm.get_tokenizer()
     t_ready = time.time()
     log(f"engine ready after {(t_ready - T0) / 60:.1f} min")
@@ -96,11 +101,17 @@ def main():
     one_token = SamplingParams(max_tokens=1, temperature=0.0, logprobs=NUM_LOGPROBS, output_kind=final)
     prompts, plens = {}, {}
 
-    def prompt(cid, think=True):
-        if think not in prompts.setdefault(cid, {}):
-            prompts[cid][think] = tok.apply_chat_template([{"role": "user", "content": build_prompt(cases[cid])}], tokenize=False,
-                                                          add_generation_prompt=True, enable_thinking=think)
-        return prompts[cid][think]
+    def prompt(cid):
+        if cid not in prompts:
+            prompts[cid] = tok.apply_chat_template([{"role": "user", "content": build_prompt(cases[cid])}], tokenize=False,
+                                                   add_generation_prompt=True, enable_thinking=True)
+        return prompts[cid]
+
+    def no_think(cid):
+        # an empty thought, then the answer: Qwen3's own form without thinking, and it works for templates that
+        # already open the thought themselves
+        p = prompt(cid)
+        return p + ("" if p.endswith("<think>\n") else "<think>\n") + "\n</think>\n\nANSWER:"
 
     def plen(cid):
         if cid not in plens:
@@ -141,7 +152,8 @@ def main():
                 if cap < 256:
                     raise ValueError(f"only {room} tokens of room")
                 eng.add_request(rid, prompt(cid) + text, SamplingParams(
-                    temperature=0.6, top_p=0.95, top_k=20, seed=k, max_tokens=cap, logprobs=NUM_LOGPROBS, output_kind=final))
+                    temperature=0.6, top_p=0.95, top_k=20, presence_penalty=presence, seed=k, max_tokens=cap,
+                    logprobs=NUM_LOGPROBS, output_kind=final))
             else:  # text is the whole prompt of a one-token answer
                 eng.add_request(rid, text, one_token)
         except Exception as e:  # one bad case must not stop the others
@@ -209,7 +221,7 @@ def main():
             queued_cont.clear()
             for cid in need:
                 try:
-                    quick.append(("nothink", cid, -1, prompt(cid, think=False) + "ANSWER:"))
+                    quick.append(("nothink", cid, -1, no_think(cid)))
                 except Exception as e:
                     log(f"case {cid}: no prompt: {e!r}")
         while not late and running(True) < think_slots:
