@@ -513,7 +513,7 @@ EVT = r"(?P<e>[a-z][a-z'\- ]*?)"
 SOLD_TOTAL = [re.compile(r"^" + p + r"$") for p in (
     r"(?:a total of )?exactly (?P<n>\d+) (?P<u>[a-z]+) (?:were|was) sold(?: for the " + EVT + r")?(?: in total)?",
     r"for the " + EVT + r",? exactly (?P<n>\d+) (?P<u>[a-z]+) (?:were|was) sold(?: in total)?",
-    r"the " + EVT + r" (?:sold|had) exactly (?P<n>\d+) (?P<u>[a-z]+)(?: sold)?(?: in total)?")]
+    r"the " + EVT + r" (?:sold exactly (?P<n>\d+) (?P<u>[a-z]+)|had exactly (?P<n2>\d+) (?P<u2>[a-z]+) sold)(?: in total)?")]
 SOLD_SHARE = re.compile(r"^(?:of (?:them|these|those),? )?exactly (?:" + SHARE + r"|(?P<k>\d+))"
                         r"(?: of (?:them|these|those|(?:those|these|the) (?P<u>[a-z]+)))? "
                         r"(?:were sold|were bought|went|sold) before (?:noon|midday)$")
@@ -543,7 +543,8 @@ class Tickets(Family):
             for p in parts:
                 m = next((m for m in (rx.match(p) for rx in SOLD_TOTAL) if m), None)
                 if m and "total" not in g:
-                    g.update(total=int(m["n"]), unit=sing(m["u"]), event=m["e"])
+                    gd = m.groupdict()
+                    g.update(total=int(gd.get("n2") or m["n"]), unit=sing(gd.get("u2") or m["u"]), event=m["e"])
                     continue
                 m = SOLD_SHARE.match(p)
                 if m and "total" in g and "before" not in g and (not m["u"] or sing(m["u"]) == g["unit"]):
