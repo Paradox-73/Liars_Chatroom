@@ -197,13 +197,14 @@ def main():
 
     def on_schedule(now):
         done = sum(1 for i in order if 0 in samples.get(i, {}))
-        if done < 20:
-            return True
+        if done < 20:  # too early to tell: first samples go first
+            return False
         left = len(main_q) + sum(v[0] == "main" for v in flight.values())
         return now + left * (now - t_ready) / done < a.stop_new - 120
 
-    def next_work(now):
-        if queued_cont and (not main_q or on_schedule(now)):
+    def next_work(now, slots):
+        # a continuation holds its slot for thousands of tokens, so at most half the slots while first samples wait
+        if queued_cont and (not main_q or (on_schedule(now) and sum(v[0] == "cont" for v in flight.values()) < slots // 2)):
             return ("cont",) + queued_cont.popleft()
         if main_q:
             return ("main", main_q.popleft(), 0)
@@ -250,7 +251,7 @@ def main():
         # once 10 samples are done, keep the cases in flight within the cache at their mean length
         slots = think_slots if seq_n < 10 or not kv_tokens else min(think_slots, max(4, int(kv_tokens * seq_n / seq_tokens)))
         while not late and running(True) < slots:
-            w = next_work(now)
+            w = next_work(now, slots)
             if not w:
                 break
             start(*w)
