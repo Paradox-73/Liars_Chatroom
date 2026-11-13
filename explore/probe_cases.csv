@@ -1,0 +1,373 @@
+id,scenario,speakers,evidence,chat,label,samples,group
+NF0009,Office workers argue over who rode the goods lift and with what.,A = Hassan; B = Sofia; C = Hari; D = Abena,"All times in this case refer to 19 June 2026. The goods lift never carried more than its limit of 350 kilograms. Sofia weighs 98 kilograms, Abena weighs 93 kilograms, Hari weighs 101 kilograms and Hassan weighs 104 kilograms. At 8:30 AM the lift took a 156 kilogram cage of laundry up to the third floor. At 10:50 AM it took a 255 kilogram crate of paint up to the second floor.","1. A: I saw Hari and Abena go up in the lift with the cage of laundry at 8:30 AM.
+2. A: I swept the loading bay at 10:20 AM.
+3. A: I swept the loading bay at 7:50 AM.
+4. B: Should the lift get a bigger motor?
+5. D: On the 8:30 AM trip the lift was loaded right up to its 350 kilogram limit.
+6. B: Why does the lift always smell of paint?
+7. C: For the record, on the 10:50 AM trip the lift carried 348 kilograms in all.
+8. C: I rode up with the cage of laundry at 8:30 AM.
+9. A: At 10:50 AM I went up in the lift with the crate of paint.
+10. D: Hari and I rode up together with the cage of laundry at 8:30 AM, for the record.
+11. C: I saw Abena ride up with the crate of paint at 10:50 AM.
+12. D: I signed for a delivery at 1:00 PM.",A,4,newfam_miss
+NF0012,Patients compare notes on the queue at the pharmacy counter.,A = Mehmet; B = Adaeze; C = Pia; D = Ilse,"All times in this case refer to 2 June 2026. That morning exactly four people queued at the pharmacy counter: Pia, Mehmet, Adaeze and Ilse. The pharmacist served only people from that queue, one at a time and strictly in the order they joined it. Each person in the queue was served exactly once, and nobody left the queue before being served. Ilse was already in the queue when Mehmet joined it. Mehmet was the last to join the queue. Pia joined the queue straight after Adaeze, with nobody in between. Pia joined the queue before Ilse. Serving each person took the pharmacist at least 5 minutes. Mehmet's turn at the pharmacy counter began at 9:55 AM. Ilse's turn at the pharmacy counter began at 9:50 AM.","1. A: I was served right after Ilse, with nobody in between.
+2. B: I was the first person served.
+3. C: Honestly, I was served before Mehmet.
+4. B: Is the queue always this long?
+5. A: For the record, my turn began exactly 5 minutes after Ilse's.
+6. B: Let's not drag this out.
+7. D: Mehmet got served after Adaeze, for the record.
+8. C: My turn at the pharmacy counter began at 9:35 AM.
+9. A: Ilse got served right after Adaeze.
+10. C: I live 7 streets away.
+11. D: Let's keep it short.
+12. A: Pia was served before Ilse.",A,4,newfam_miss
+NF0019,Museum volunteers trade claims about the ticket office and the delayed train to Ashby Road.,A = Chloe; B = Ayesha; C = Zane; D = Ugo,"All times in this case refer to 8 March 2026. The 6:55 PM train from Westcombe to Ashby Road was timetabled to leave from platform 8. That day it never stopped at platform 8: it pulled in to platform 11 at 7:10 PM and left from there exactly 25 minutes late. It ran non-stop to Ashby Road, and the journey took exactly 40 minutes. Passengers could board a train only at the platform where it was standing. The 7:15 PM train from Westcombe to Stonebridge left on time from platform 8. Whenever the ticket office was open, Sana was at its counter. From 1:00 PM to 2:00 PM Sana was at the bank, which is a separate place from the ticket office. Nobody could buy a ticket at the ticket office while it was closed.","1. B: The 6:55 PM from Westcombe got into Ashby Road at 8:00 PM.
+2. C: The 6:55 PM train to Ashby Road was timetabled to leave from platform 8.
+3. A: Is the bank far from here?
+4. B: Is there a waiting room at the station?
+5. D: The ticket office was open at 2:45 PM.
+6. B: Should we complain about the delay?
+7. C: At 10:05 AM I got my ticket at the ticket office.
+8. D: For the record, the ticket office was open at 1:35 PM.
+9. C: The ticket office was open at 10:05 AM.
+10. A: I checked the weather forecast at 12:45 PM.
+11. D: Sana was at the bank at 1:20 PM, for the record.",D,4,newfam_miss
+NF0030,Flatmates try to pin down the bin days on Station Street.,A = Karim; B = Sergio; C = Vikram; D = Dario,"The recycling on Station Street is collected every second Saturday, that is once every 14 days, and on no other day. One collection was on 23 May 2026. 1 May 2026 was a Friday.","1. C: I bought a roll of 3 bin bags that month.
+2. D: The recycling on Station Street was collected on 4 July 2026.
+3. B: I rinsed out 12 glass jars for the recycling.
+4. C: The recycling on Station Street was collected on 20 June 2026, for the record.
+5. A: Sergio watched the bin lorry collect the recycling on Station Street on 8 August 2026.
+6. D: Cheers for checking, all.
+7. A: For the record, I flattened 6 cardboard boxes that week.
+8. A: Can glass go in the same bin?",A,4,newfam_miss
+NF0080,School staff compare notes on the east corridor and the Northgate Foxes' basketball match against the Quarry Rangers.,A = Obi; B = Naledi; C = Jaya; D = Yosef,"All times in this case refer to 3 May 2026. The Northgate Foxes played the Quarry Rangers on 3 May 2026. Quarter by quarter, the Northgate Foxes scored 12, 24, 19 and 17 points, and the Quarry Rangers scored 32, 14, 28 and 34. The game had no overtime. Jaya and Yosef play for the Northgate Foxes, and Obi plays for the Quarry Rangers. Tea was served after the match. Whenever the floor polisher was running in the east corridor, the east corridor was closed, and nobody could walk along it while it was closed. The floor polisher ran in the east corridor without a break from 2:00 PM to 4:15 PM.","1. D: The floor polisher was not running at 3:10 PM.
+2. A: I scored 8 points for the Quarry Rangers in the second quarter.
+3. B: At 11:05 AM I walked down the east corridor.
+4. B: The east corridor was closed at 1:45 PM.
+5. C: Who was in charge of the match?
+6. B: The east corridor was closed at 2:50 PM.
+7. B: Jaya scored 6 points for the Northgate Foxes in the third quarter.
+8. D: This is a bit of a muddle.
+9. C: Some clarity would be good.",D,4,newfam_miss
+NF0089,Customers sort out what happened with the queue at the post office counter and the orchid house temperature.,A = Aya; B = Gita; C = Fatima; D = Sami,"All times in this case refer to 2 April 2026. That morning exactly five people queued at the post office counter: Fatima, Gita, Sami, Ezra and Jun. The clerk served only people from that queue, one at a time and strictly in the order they joined it. Each person in the queue was served exactly once, and nobody left the queue before being served. Jun joined the queue after Ezra. Sami was already in the queue when Fatima joined it. Nobody joined the queue after Fatima. Jun joined the queue straight after Sami, with nobody in between. Serving each person took the clerk at least 10 minutes. Fatima's turn at the post office counter began at 12:30 PM. Gita's turn at the post office counter began at 11:15 AM. The heater in the orchid house is on whenever the temperature inside is below 15 °C, and off whenever it is 15 °C or warmer. That day the heater was on only once, the whole time from 10:15 AM to 12:15 PM. Every thermometer reading taken that day was accurate.","1. D: This is getting muddled.
+2. D: I was served before Fatima.
+3. B: The tomatoes look healthy this year.
+4. C: I was served straight after Ezra.
+5. A: This is a bit of a muddle.
+6. A: I restocked the shelves at 8:50 PM.",C,4,newfam_miss
+NF0106,Office workers piece together the trips of the lift in the shopping centre.,A = Ananya; B = Bella; C = Hira; D = Wren,"All times in this case refer to 10 July 2026. The lift in the shopping centre holds at most eight people at a time, and it never held more than that. On its 7:50 AM trip up from the ground floor, exactly eight people got in at the ground floor, and nobody got out before the fifth floor.","1. B: That lift is far too slow.
+2. D: There were 8 people in the lift between the first and second floors on the 7:50 AM trip.
+3. B: Nobody got in at the fourth floor on the 7:50 AM trip.
+4. D: I got in at the first floor on the 7:50 AM trip.
+5. C: The lift was full when it reached the fifth floor on the 7:50 AM trip.
+6. D: Who keeps the lift key?
+7. B: I rode the 7:50 AM trip from the ground floor up to the sixth floor.
+8. C: Should the lift get a bigger motor?
+9. C: I took the stairs instead of the 7:50 AM trip.
+10. A: Can we go over it once more?
+11. A: On the 7:50 AM trip I got out at the fifth floor.",D,4,newfam_miss
+NF0169,Housemates argue over how fast Akira's e-reader battery ran down.,A = Bella; B = Ravi; C = Jana; D = Priya,"All times in this case refer to 22 August 2026. At 9:15 AM Akira's e-reader battery was at 88%. From 9:15 AM to 12:15 PM the e-reader was never charged, and its battery level fell at a steady rate of 10 percentage points per hour. At 12:15 PM Akira put it on charge, and it stayed on charge until 3:25 PM. While it was charging, its level rose at a steady 20 percentage points per hour until it reached 100%, and then it stayed at 100%. The e-reader is a year old.","1. B: Akira's e-reader was fully charged at 1:00 PM.
+2. A: Would the manager know more?
+3. A: At 4:25 PM Akira's e-reader was down to 87%.
+4. A: This is a bit of a muddle.
+5. B: Is the battery getting old?
+6. C: Akira's e-reader was at 88% at 9:15 AM.
+7. D: I bought a sandwich at 5:55 PM.
+8. B: Is someone writing this up?",B,4,newfam_miss
+NF0196,Caretakers compare notes on the goods lift and the greenhouse watering days.,A = Asha; B = Reza; C = Rohan; D = Dmitri,"All times in this case refer to 12 September 2026. In October 2026 the greenhouse plants were watered every 3 days, starting on 4 October 2026, and on no other days that month. Jun did all of that watering. The goods lift can carry at most 450 kilograms at a time, and it never carried more than that. Asha weighs 105 kilograms, Reza weighs 77 kilograms, Dmitri weighs 92 kilograms and Rohan weighs 83 kilograms. At 8:30 AM the lift took a 268 kilogram crate of paint up to the sixth floor. At 11:05 AM the lift carried a 370 kilogram crate of tinned food upstairs. The greenhouse has a sliding door.","1. A: Who keeps the lift key?
+2. A: On the 11:05 AM trip the lift carried 447 kilograms in all.
+3. C: This is all rather confusing.
+4. B: I signed for a delivery at 7:50 AM.
+5. C: I saw Asha, Reza and Dmitri all go up together with the crate of paint at 8:30 AM.
+6. D: Who has the greenhouse key?",C,4,newfam_miss
+NF0202,Travellers trade claims about the delayed train to Northgate and the server room temperature.,A = Ximena; B = Diego; C = Sunil; D = Yusuf,"All times in this case refer to 30 August 2026. The 2:55 PM train from Fernhill to Northgate was timetabled to leave from platform 6. That day it never stopped at platform 6: it pulled in to platform 5 at 3:03 PM and left from there exactly 18 minutes late. It ran non-stop to Northgate, and the journey took exactly 35 minutes. Passengers could board a train only at the platform where it was standing. The 3:35 PM train from Fernhill to Westcombe left on time from platform 6. The fan in the server room always runs whenever the room is warmer than 30 degrees. The fan did not run at any time from 1:25 PM to 2:05 PM. Every thermometer reading taken that day was accurate.","1. A: Sunil's reading in the server room at 12:50 PM was 28 degrees, for the record.
+2. C: At 5:25 PM the fan was running even though the server room was only at 29 degrees.
+3. A: I checked the weather forecast at 3:00 PM.
+4. A: This is getting tangled.
+5. C: To be clear, I caught the 3:35 PM to Westcombe from platform 6.
+6. D: I saw Diego get off the 2:55 PM train from Fernhill in Northgate at 3:33 PM.
+7. D: Did anyone get a refund?
+8. B: In the end I boarded the 2:55 PM train to Northgate at platform 5 at 3:09 PM.
+9. B: The server room was at 28 degrees at 1:45 PM.",D,4,newfam_miss
+NF0212,Residents try to pin down the bin days on Orchard Close.,A = Tomasz; B = Ebru; C = Carlos; D = Alma,"The recycling on Orchard Close is collected every second Monday, that is once every 14 days, and on no other day. One collection was on 13 April 2026. 1 April 2026 was a Wednesday. Orchard Close has twelve houses.","1. C: I rinsed out 4 glass jars for the recycling, for the record.
+2. A: For the record, there was no recycling collection on Orchard Close on 6 April 2026.
+3. D: The bin lorry took the recycling from Orchard Close on 22 June 2026.
+4. D: I bought a roll of 7 bin bags that month.
+5. B: Cheers for checking, all.
+6. C: Orchard Close had 2 recycling collections in April 2026.
+7. D: Honestly, I flattened 7 cardboard boxes that week.
+8. C: The recycling on Orchard Close was collected on 11 May 2026.
+9. C: The recycling on Orchard Close was collected on 16 March 2026.
+10. B: The bin lorry took the recycling from Orchard Close on 11 April 2026.
+11. B: Can glass go in the same bin?",B,4,newfam_miss
+NF0257,Colleagues compare notes on Hugo's tablet battery during a long day.,A = Ebru; B = Hugo; C = Kofi; D = Bruno,"All times in this case refer to 29 November 2026. At 7:15 AM Hugo's tablet battery was at 75%. It was not charged at any time from 7:15 AM to 9:45 AM, and over that time its battery level dropped steadily by 10 percentage points every hour. At 9:45 AM Hugo put it on charge, and it stayed on charge until 12:15 PM. While it was charging, its level rose at a steady 50 percentage points per hour until it reached 100%, and then it stayed at 100%.","1. B: My tablet was at 60% at 8:45 AM.
+2. A: Hugo's tablet had 75% left at 10:15 AM.
+3. D: Okay so at 11:35 AM Hugo's tablet showed 100%.
+4. B: For the record, I bought a sandwich at 9:20 PM.
+5. C: At 1:15 PM Hugo's tablet was down to 90%.
+6. C: Hugo's tablet was at 70% at 7:45 AM, for the record.
+7. A: Batteries never last a whole day.
+8. D: Cheers for checking, all.
+9. B: My tablet lost 10 percentage points between 7:45 AM and 9:45 AM.
+10. B: I'd like a straight answer on this.
+11. A: Is someone writing this up?",B,4,newfam_miss
+NF0284,Technicians try to work out what the comms room temperature was and when.,A = Ingrid; B = Ugo; C = Deepa; D = Eun,All times in this case refer to 13 October 2026. The fan in the comms room always runs whenever the room is warmer than 24 °C. The fan did not run at any time from 3:00 PM to 4:25 PM. Every thermometer reading taken that day was accurate. The fan was fitted last spring.,"1. C: Ugo's reading in the comms room at 12:35 PM was 23 °C.
+2. D: The comms room was at 21 °C at 10:50 AM.
+3. B: I read 23 °C on the comms room thermometer at 6:30 PM.
+4. B: Okay so when I checked at 3:30 PM, the comms room was at 24 °C.
+5. B: Who is taking the notes?
+6. D: At 6:40 PM I signed for a delivery.
+7. C: The comms room was at 23 °C at 3:50 PM.
+8. A: Should we get air conditioning?
+9. A: Okay so I made a cup of tea at 12:00 PM.
+10. C: When I checked at 3:45 PM, the comms room was at 28 °C.
+11. A: I read 25 °C on the comms room thermometer at 9:25 AM.
+12. A: At 8:10 PM the fan was running even though the comms room was only at 22 °C.",C,4,newfam_miss
+NF0059,Night drivers try to work out who delivered to the sorting office when.,A = Anika; B = Yosef; C = Ximena; D = Adele,"On 7 November 2026 and 8 November 2026, the sorting office accepted deliveries at all times between 9:30 PM on 7 November 2026 and 3:00 AM on 8 November 2026, and at no other time on those two days.","1. C: Thanks, everyone, for checking.
+2. B: For the record, I delivered the mail sacks to the sorting office at 2:25 AM on 8 November 2026.
+3. C: Has anyone got further details?
+4. B: Is someone writing this up?
+5. D: The sorting office took deliveries for 4 hours 30 minutes that night.
+6. A: The sorting office took deliveries for 5 hours 30 minutes that night.
+7. C: Let's keep it short.",D,2,newfam_ok
+NF0282,Travellers try to work out how much charge Adaeze's tablet had.,A = Hassan; B = Ines; C = Rania; D = Ahmed,"All times in this case refer to 29 June 2026. At 8:30 AM Adaeze's tablet battery was at 94%. From 8:30 AM to 11:35 AM the tablet was never charged, and its battery level fell at a steady rate of 12 percentage points per hour. At 11:35 AM Adaeze put it on charge, and it stayed on charge until 12:40 PM. While it was charging, its level rose at a steady 60 percentage points per hour until it reached 100%, and then it stayed at 100%.","1. D: Does anyone have a spare charger?
+2. C: Some clarity would be good.
+3. B: Adaeze's tablet still had at least 83% at 9:25 AM.
+4. D: Between 9:10 AM and 10:30 AM Adaeze's tablet dropped by 28 percentage points, for the record.
+5. C: At 10:55 AM Adaeze's tablet was somewhere between 65% and 75%.
+6. A: At 1:55 PM I looked up the bus times.",D,2,newfam_ok
+NF0134,Museum volunteers compare times for the ticket office.,A = Theo; B = Lucy; C = Maya; D = Ravi,"All times in this case refer to 31 January 2026. Whenever the ticket office was open, Hassan was at its counter. From 1:25 PM to 4:55 PM Hassan was at the bank, which is a separate place from the ticket office. Nobody could buy a ticket at the ticket office while it was closed.","1. A: The ticket office was closed at 4:35 PM.
+2. D: The ticket office was closed at 10:50 AM.
+3. C: Hassan was at the ticket office counter at 11:40 AM.
+4. D: Should we check with the manager?
+5. A: I bought a ticket at the ticket office at 11:40 AM.
+6. B: I bought a ticket at the ticket office at 2:50 PM.
+7. D: This is all rather confusing.
+8. A: Cheers for checking, all.
+9. C: The ticket office was closed at 3:15 PM.
+10. B: Hassan was at the bank at 4:35 PM.
+11. B: Let's not drag this out.
+12. C: The ticket office was open at 5:45 PM.",B,2,newfam_ok
+NF0146,Supporters compare what they remember of the Quarry Rangers' football match against the Riverside Otters.,A = Bilal; B = Carlos; C = Liam; D = Alejandro,"On 7 January 2026 the Quarry Rangers played the Riverside Otters. At half-time the score was Quarry Rangers 3, Riverside Otters 3, and the final score was Quarry Rangers 6, Riverside Otters 4. Carlos and Alejandro play for the Quarry Rangers, and Liam plays for the Riverside Otters.","1. B: When is the next fixture?
+2. A: Shall we start again from the top?
+3. D: Can we go over it once more?
+4. B: The Riverside Otters were behind at half-time, for the record.
+5. A: I didn't score in the first half.
+6. C: Alejandro scored one goal for the Quarry Rangers in the second half.
+7. C: I didn't score in the second half.
+8. C: Over the whole match the Quarry Rangers scored six goals.
+9. C: I scored two goals for the Riverside Otters in the first half.
+10. D: I scored one goal for the Quarry Rangers in the second half.
+11. D: Liam scored two goals for the Riverside Otters in the first half, for the record.
+12. A: It was level at 3–3 at half-time.",B,2,newfam_ok
+NF0138,Classmates argue over when a library book was due back.,A = Alma; B = Pia; C = Diego; D = Aarav,"Every book from the harbour library is due back exactly 7 days after the day it is borrowed. A late return costs £0.30 for each day after the due date, up to and including the day the book comes back, and the library charges nothing else. Laila borrowed a biography of a pianist from the library on 5 August 2026 and returned it on 10 August 2026. 1 August 2026 was a Saturday.","1. D: I made 7 photocopies at the library on 8 August 2026.
+2. A: Laila returned the biography of a pianist before it was due.
+3. A: I printed 8 pages at the harbour library on 15 August 2026.
+4. D: Laila paid no late fee for the biography of a pianist.
+5. C: Are the late fees always this steep?
+6. C: The biography of a pianist was due back on a Thursday.
+7. B: This is all rather confusing.
+8. B: Laila returned the biography of a pianist 2 days before it was due, for the record.
+9. B: Can loans be renewed online?
+10. A: Laila brought the biography of a pianist back on 10 August 2026.
+11. B: Laila's biography of a pianist was due back on 12 August 2026, for the record.
+12. D: I renewed my library card on 19 August 2026, which took 6 minutes.",C,2,newfam_ok
+NF0157,Allotment volunteers try to work out what happened with the tool store.,A = Olga; B = Sergio; C = Tara; D = Bongani,"All times in this case refer to 27 January 2026. Whenever the tool store was open, Bongani was inside it. From 10:50 AM to 1:20 PM Bongani was out on the north field, which is a separate place from the tool store. Nobody could take a tool from the tool store while it was closed. The north field grows potatoes.","1. D: Let's not drag this out.
+2. D: The tool store was open at 9:40 AM.
+3. B: The tool store was open at 12:35 PM.
+4. A: Can we get a plain answer?
+5. C: I took a spade from the tool store at 10:35 AM.
+6. A: Who keeps the tool store key?",B,2,newfam_ok
+NF0042,Colleagues try to work out how much charge Zoya's tablet had.,A = Abel; B = Omar; C = Zoya; D = Omari,"All times in this case refer to 14 April 2026. At 9:35 AM Zoya's tablet battery was at 81%. It was not charged at any time from 9:35 AM to 12:55 PM, and over that time its battery level dropped steadily by 15 percentage points every hour. At 12:55 PM Zoya put it on charge, and it stayed on charge until 4:15 PM. While it was charging, its level rose at a steady 30 percentage points per hour until it reached 100%, and then it stayed at 100%.","1. D: Let's keep it short.
+2. D: At 2:35 PM Zoya's tablet showed 100%.
+3. C: Can we go over it once more?
+4. A: Is the battery getting old?
+5. C: At 7:45 AM I looked up the bus times.
+6. B: Zoya's tablet had 76% left at 9:55 AM, for the record.",D,2,newfam_ok
+NF0242,School staff compare times for the east corridor.,A = Tomasz; B = Nora; C = Rafael; D = Mehmet,"All times in this case refer to 19 September 2026. Whenever the floor polisher was running in the east corridor, the east corridor was closed, and nobody could walk along it while it was closed. That day the floor polisher ran in the east corridor only once, without a break from 11:30 AM to 12:45 PM.","1. B: At 2:50 PM I walked down the east corridor.
+2. C: The east corridor was open at 3:20 PM.
+3. C: Does the polisher have to be so loud?
+4. D: I saw Nora walk along the east corridor at 2:20 PM.
+5. D: Who signs off the cleaning rota?
+6. D: The east corridor was closed at 11:20 AM.
+7. A: At 2:30 PM I walked down the east corridor.
+8. C: I walked along the east corridor at 12:20 PM.",C,2,newfam_ok
+NF0163,Colleagues try to work out how much charge Naledi's e-reader had.,A = Yusuf; B = Adele; C = Yara; D = Abel,"All times in this case refer to 7 October 2026. At 8:05 AM Naledi's e-reader battery was at 94%. It was not charged at any time from 8:05 AM to 12:05 PM, and over that time its battery level dropped steadily by 4 percentage points every hour. At 12:05 PM Naledi put it on charge, and it stayed on charge until 1:10 PM. While it was charging, its level rose at a steady 30 percentage points per hour until it reached 100%, and then it stayed at 100%. The charger was a spare one from the office.","1. A: Can we get a plain answer?
+2. D: At 11:35 AM Naledi's e-reader battery showed 80%.
+3. C: At 8:20 AM Naledi's e-reader battery was at 0%.
+4. A: At 9:15 PM I looked up the bus times.
+5. A: Who's writing up the notes?
+6. B: At 11:20 AM Naledi's e-reader battery showed 81%.
+7. B: Some clarity would be good.",C,2,newfam_ok
+NF0250,Project team members compare call times across two clocks.,A = Aruna; B = Sami; C = Maria; D = Vida,"All times in this case refer to 10 April 2026. The field station's clocks are exactly 1 hour ahead of the main lab's clocks. At 2:20 PM main lab time, Maria at the main lab phoned Marco at the field station, and they talked for exactly 45 minutes without a break.","1. B: Who set up the video link?
+2. D: Maria and Marco talked for 45 minutes, for the record.
+3. A: Maria and Marco started talking at 3:20 PM field station time.
+4. A: Can we put both clocks on the calendar invite?
+5. C: The call ended at 3:05 PM main lab time.
+6. A: At 3:45 PM main lab time, Maria and Marco were still on the phone.",A,2,newfam_ok
+NF0215,Shoppers try to work out who got a parking fine at the library car park.,A = Camila; B = Mehmet; C = Aarav; D = Marta,"All times in this case refer to 23 August 2026. In the library car park, parking cost $1.00 per hour, and every ticket was valid from the moment it was bought for exactly the length of time paid for. At 12:45 PM Mehmet bought a ticket for Mehmet's black minibus and paid $3.00 for it. At 1:15 PM Camila bought a ticket for Camila's white estate car and paid $0.50 for it. Neither Mehmet nor Camila bought any other parking ticket that day. No vehicle in the library car park was fined while it had a valid ticket. The library car park has a height barrier at the entrance.","1. D: At 1:05 PM the ticket for Mehmet's black minibus was still valid.
+2. C: Should we pay by phone next time?
+3. A: Mehmet's ticket ran out at 3:00 PM.
+4. D: Parking here is far too expensive.
+5. B: At 9:35 AM I rang Pavel.
+6. C: Should the manager be told?",A,2,newfam_ok
+NF0213,Office workers piece together the trips of the goods lift.,A = Deepa; B = Chen; C = Vikram; D = Malik,"All times in this case refer to 25 January 2026. The goods lift can carry at most 630 kilograms at a time, and it never carried more than that. Deepa weighs 77 kilograms, Malik weighs 103 kilograms, Vikram weighs 64 kilograms and Chen weighs 52 kilograms. At 8:25 AM the lift took a 514 kilogram crate of paint up to the second floor. At 9:10 AM the lift carried a 575 kilogram trolley of books upstairs.","1. B: Malik went up in the lift with the trolley of books at 9:10 AM.
+2. D: Cheers for checking, all.
+3. A: Has anyone got further details?
+4. A: Should the lift get a bigger motor?
+5. C: At 8:25 AM I went up in the lift with the crate of paint.
+6. D: I signed for a delivery at 7:45 AM.",B,2,newfam_ok
+NF0065,Building staff compare notes on how full the lift in the shopping centre was.,A = Reza; B = Rui; C = Rohan; D = Jin,"All times in this case refer to 18 April 2026. The lift in the shopping centre never had more than 6 people in it at once. On its 12:40 PM trip up from the ground floor, exactly four people got in at the ground floor, and nobody got out before the fourth floor. The lift was installed when the building opened.","1. D: There were 9 people in the lift between the second and third floors on the 12:40 PM trip.
+2. A: There were 4 people in the lift between the first and second floors on the 12:40 PM trip.
+3. C: To be clear, on the 12:40 PM trip I got out at the fourth floor.
+4. B: Who keeps the lift key?
+5. A: This is all rather confusing.
+6. B: Thanks, everyone, for checking.",D,2,newfam_ok
+NF0142,Travellers sort out what happened with Aya's laptop battery and the cold store temperature.,A = Leila; B = Aya; C = Yosef; D = Deepa,"All times in this case refer to 1 July 2026. The alarm on the cold store sounds whenever the temperature inside it is above 6 °C, and only then. The alarm log accurately records every time the alarm sounded that day: it sounded only once, without a break from 12:30 PM to 2:05 PM. Every thermometer reading taken that day was accurate. At 8:30 AM Aya's laptop battery was at 99%. It was not charged at any time from 8:30 AM to 2:30 PM, and over that time its battery level dropped steadily by 4 percentage points every hour.","1. A: At 7:30 AM Aya's laptop showed 100%.
+2. A: At 10:30 AM Aya's laptop battery showed 91%.
+3. C: Leila's reading in the cold store at 2:30 PM was 6 °C.
+4. C: Aya's laptop had 75% left at 2:30 PM.
+5. C: I sent Dev an email at 10:20 AM.
+6. D: Does anyone have a spare charger?
+7. B: Let's not drag this out.
+8. B: My laptop still had at least 82% at 12:45 PM.
+9. D: Should the alarm be louder?
+10. D: Aya's laptop lost 3 percentage points between 12:30 PM and 1:15 PM.
+11. B: Batteries never last a whole day.
+12. D: At 9:45 AM Aya's laptop showed 100%.",D,2,newfam_ok
+NF0122,Students argue over the seating in the exam hall.,A = Tomas; B = Aruna; C = Alma; D = Fiona,"Desks 1 to 4 stand in a single row at the front of the exam hall, in number order. During the exam each of these desks was used by exactly one of Alma, Tomas, Aruna and Anton, one person per desk; nobody else used them and nobody moved desks. Alma and Aruna did not sit at neighbouring desks. Tomas sat at one end of the row. Aruna was not at desk 3. A clock hangs above the exam hall door.","1. A: Aruna was at desk 3.
+2. C: My desk was next to Tomas's.
+3. C: Can we get a plain answer?
+4. B: I'd like a clear answer here.
+5. B: Was the exam hall too cold?
+6. D: Aruna sat at the other end of the row.
+7. A: Anton's desk number was higher than Tomas's.
+8. B: There was exactly one desk between Alma's and Aruna's.",A,2,newfam_ok
+NF0170,Pottery club members trade claims about the kiln room door and the recycling days on Orchard Close.,A = Kaito; B = Rosa; C = Vera; D = Rania,"All times in this case refer to 11 May 2026. Whenever the kiln was firing, the kiln room door stayed locked, and nobody could open that door while it was locked. The kiln fired only once that day, without a break from 11:00 AM to 1:15 PM. The recycling on Orchard Close is collected every second Tuesday, that is once every 14 days, and on no other day. One collection was on 11 August 2026. 1 August 2026 was a Saturday.","1. C: The kiln room door was unlocked at 8:00 AM.
+2. B: Is someone writing this up?
+3. D: I opened the kiln room door at 12:15 PM.
+4. B: The recycling on Orchard Close was collected on 11 August 2026.
+5. A: The kiln room door was locked at 11:25 AM.
+6. B: Shall we start again from the top?",D,2,newfam_ok
+NF001,Office colleagues reconstruct how fast Priya's tablet battery ran down during a conference.,A = Priya; B = Tariq; C = Elena; D = Julian,"All times in this case refer to 15 September 2026. At 9:00 AM Priya's tablet was at 92% battery. The tablet was not plugged into a charger at any time between 9:00 AM and 5:00 PM, and during this period its battery drained at a constant rate of 8 percentage points per hour. Priya attended the morning keynote in Hall B.","1. C: Who's taking notes on this?
+2. B: At 1:00 PM Priya's tablet showed 72% battery.
+3. D: I attended the keynote in Hall B around 10:00 AM.
+4. A: This is getting confusing.
+5. C: At 11:00 AM Priya's tablet had 76% battery remaining.
+6. A: Between 9:00 AM and 3:00 PM my tablet battery dropped by 48 percentage points.
+7. D: At 2:30 PM Priya's tablet showed under 50% battery.
+8. B: Can we get a plain answer?",B,2,nirbhay15
+NF002,Drivers dispute how much parking time was purchased at the downtown municipal lot.,A = Marcus; B = Sonia; C = Kenji; D = Chloe,"All times in this case refer to 3 March 2026. Parking at the municipal lot cost £1.50 per 30 minutes, with a maximum permitted stay of 3 hours per vehicle. Drivers paid in advance and the parking ticket displayed the exact expiry time based on the amount paid. All meter payments were made in increments of £1.50.","1. B: Could we keep this thread short?
+2. A: I parked my car in bay 4.
+3. D: I paid £6.00 at 10:00 AM and my parking ticket expired at 12:30 PM.
+4. C: This is all rather confusing.
+5. B: At 9:15 AM I bought the maximum permitted stay for £9.00.
+6. A: I paid £4.50 at the meter at 1:00 PM for 90 minutes of parking.
+7. C: I paid £3.00 at 2:00 PM and my ticket expired at 3:00 PM.
+8. D: Who's writing up the notes?",D,2,nirbhay15
+NF003,Clinic staff determine the schedule of allergy medication administered to a patient.,A = Farah; B = Liam; C = Nadia; D = Oscar,All times in this case refer to 18 June 2026. A patient could receive at most three doses of antihistamine in a single calendar day. Each dose after the first had to be given at least 5 hours after the previous dose. The patient's first dose of antihistamine was administered at 7:30 AM.,"1. D: Is someone writing this up?
+2. A: I administered the patient's second dose of antihistamine at 11:45 AM.
+3. C: Let's keep this thread brief.
+4. B: I gave the patient their second dose of antihistamine at 1:15 PM.
+5. D: I checked the patient's temperature at 10:00 AM.
+6. A: Would the doctor know more?
+7. C: The patient received their third dose of antihistamine at 6:45 PM.
+8. B: The patient received exactly three doses of antihistamine that day.",A,2,nirbhay15
+NF004,Security guards review the freight elevator log during morning deliveries.,A = Bram; B = Leila; C = Tariq; D = Maya,"All times in this case refer to 22 May 2026. The freight elevator had a strict weight limit of at most 500 kg. Each metal container weighed exactly 75 kg, and each person was logged at a standard allowance of 70 kg. The elevator would refuse to move if the combined weight of passengers and containers exceeded 500 kg.","1. B: Can we keep this brief?
+2. A: At 9:30 AM I rode the freight elevator alone with 4 metal containers.
+3. C: At 10:15 AM I rode the freight elevator up to floor 4 accompanied by two colleagues and carrying 5 metal containers.
+4. D: This is getting muddled.
+5. B: At 11:00 AM two of us transported 3 metal containers in the freight elevator.
+6. A: I signed the maintenance clipboard on floor 4.
+7. D: Four of us rode the freight elevator together at 1:40 PM without any containers.
+8. C: Is there more to go on?",C,2,nirbhay15
+NF005,University students check borrowing records for reserved engineering textbooks.,A = Dev; B = Amara; C = Lucas; D = Mei,"All dates in this case refer to October 2026. Standard textbook loans lasted exactly 7 days from the borrowing date. A borrower could renew a textbook at most twice, with each renewal adding exactly 7 days to the current due date. Overdue books could never be renewed.","1. C: Does anyone have anything to add?
+2. B: I borrowed an engineering textbook on 5 October and returned it on its initial due date of 12 October.
+3. A: I borrowed an engineering textbook on 2 October and renewed it three times to keep it until 30 October.
+4. D: I'd like a clear answer here.
+5. C: I borrowed my textbook on 3 October, renewed it once, and returned it on 17 October.
+6. B: I studied in the silent reading room on the second floor.
+7. D: I borrowed a textbook on 1 October, renewed it twice, and had a final due date of 22 October.
+8. A: Can we keep this brief?",A,2,nirbhay15
+NF006,Commuters compare notes on the delayed express service from Greenfield to Central.,A = Samira; B = Viktor; C = Chloe; D = Ravi,"All times in this case refer to 12 November 2026. The 8:15 AM express train from Greenfield to Central was scheduled to depart from platform 3. Due to signaling works, it was moved to platform 7, where it arrived at 8:22 AM and departed 18 minutes behind schedule. The non-stop journey to Central took exactly 42 minutes. Passengers could only board the train while it was stopped at its departure platform.","1. D: Could we keep this thread short?
+2. C: The express train did not depart from platform 3.
+3. B: I arrived at Central on the express train from Greenfield at 8:57 AM.
+4. A: I bought a coffee at the station kiosk before boarding.
+5. B: Shall we start again from the top?
+6. A: The 8:15 AM express train departed from Greenfield at 8:33 AM.
+7. C: I boarded the express train at platform 7 at 8:26 AM.
+8. D: The express train arrived at Central at 9:15 AM.",B,2,nirbhay15
+NF007,Bakers at an artisanal pastry shop review ingredient usage for afternoon custard tarts.,A = Lin; B = Carlos; C = Fatima; D = Jonas,"All baking took place on 9 May 2026. The bakery's standard base recipe produces exactly 12 custard tarts and requires 250 ml of cream, 4 egg yolks, and 60 grams of sugar. Bakers strictly scale all ingredients proportionally when producing larger or smaller batches. The pantry had 20 eggs available at the start of the day.","1. B: Who is taking the notes?
+2. A: I made a batch of 24 custard tarts and used exactly 120 grams of sugar.
+3. D: I baked a batch of 36 custard tarts using 600 ml of cream and 12 egg yolks.
+4. C: This is getting tangled.
+5. B: For a small batch of 6 custard tarts, I used 2 egg yolks and 125 ml of cream.
+6. A: I washed the stainless steel mixing bowls at noon.
+7. C: I prepared 18 custard tarts using exactly 375 ml of cream.
+8. D: Can we keep this brief?",D,2,nirbhay15
+NF008,Festival attendees discuss merchandise purchases at the concert souvenir stall.,A = Keira; B = Aruna; C = Mateo; D = Zain,"At the concert merchandise booth on 14 August 2026, individual enamel pins cost £4.00 each, or £10.00 for a bundle of three. T-shirts cost £18.00 each with no quantity discount. The register always applied the bundle price to as many groups of three pins as possible. All customers paid with cash notes and received exact change.","1. B: Can we get a plain answer?
+2. A: I bought five enamel pins for a total cost of £18.00.
+3. C: I bought four enamel pins and paid £16.00 at the counter.
+4. D: Thanks for sorting this out, everyone.
+5. B: I bought one T-shirt and three enamel pins, handing over a £50 note and receiving £22 in change.
+6. A: The queue at the booth moved quite fast.
+7. D: I bought six enamel pins and was charged exactly £20.00.
+8. C: This is all rather confusing.",C,2,nirbhay15
+NF009,Chess club members verify the final standings of a four-round weekend tournament.,A = Zoya; B = Henrik; C = Ananya; D = Lars,"The chess tournament took place across four rounds on 5 April 2026. Each participant played exactly four games. A win awarded 3 tournament points, a draw awarded 1 point, and a loss awarded 0 points. No bonus points were available. Henrik finished the tournament with zero losses.","1. C: Is there more to go on?
+2. B: I won two games and drew two games, finishing with 8 points.
+3. A: I completed all four tournament games and finished with a total score of 11 points.
+4. D: This is all rather confusing.
+5. C: I had one win, two draws, and one loss, earning 5 points.
+6. B: I played on board 2 for my third round.
+7. D: I finished the four rounds with exactly 7 points from two wins, one draw, and one loss.
+8. A: Who is taking the notes?",A,2,nirbhay15
+NF010,Studio instructors review attendance caps for Saturday morning pottery workshops.,A = Nicole; B = Kieran; C = Sophie; D = Rahul,"All sessions took place on 17 January 2026. The ceramics studio held morning pottery sessions in Room 1 and Room 2. Studio policy strictly capped Room 1 at a maximum of 8 participants and Room 2 at a maximum of 12 participants per session. No person was permitted to join a session once the room cap was reached, and instructors never counted toward the participant cap.","1. C: Could we keep this thread short?
+2. A: My 9:00 AM advanced glazing session in Room 1 had 7 participants.
+3. B: I led the 10:00 AM beginner workshop in Room 1 with 11 registered participants working at the wheels.
+4. D: Some clarity would be good.
+5. C: I taught the 11:00 AM wheel-throwing class in Room 2 with exactly 12 participants.
+6. A: I restocked the clay bins before the first class began.
+7. D: There were 9 students in my 10:30 AM sculpting group in Room 2.
+8. B: Shall we start again from the top?",B,2,nirbhay15
+NF011,Botanical garden volunteers sort out who watered the specimen ferns in the glasshouse.,A = Leanne; B = Yusuf; C = Nadia; D = George,"All times in this case refer to 25 July 2026. The rare royal ferns required precise care: they were watered at most once per day, and any watering had to occur strictly before 10:00 AM. After 10:00 AM, the misting system was active, and direct watering of the ferns was strictly forbidden. The ferns were kept in Glasshouse 3.","1. C: Can we keep this brief?
+2. A: I checked the humidity gauge in Glasshouse 3 at 8:15 AM.
+3. D: I gave the royal ferns their daily watering at 11:20 AM.
+4. B: This is getting muddled.
+5. B: I watered the royal ferns thoroughly at 8:40 AM.
+6. A: The misting system switched on promptly at 10:00 AM.
+7. C: I trimmed dead fronds near the entrance of Glasshouse 3 at 2:00 PM.
+8. D: Does anyone have anything to add?",D,2,nirbhay15
+NF012,Laboratory researchers examine equipment usage and power drain during an automated assay.,A = Dragan; B = Sonia; C = Heidi; D = Kaito,"All times in this case refer to 8 September 2026. The portable centrifuge battery was at 100% at 8:00 AM and was not recharged all day. While running, the centrifuge drained the battery at a constant rate of 15 percentage points per hour; when idle, it consumed no power. Whenever the green sterilization lamp was illuminated, the centrifuge was required to remain powered off and idle. The green sterilization lamp was illuminated continuously from 1:00 PM to 3:30 PM and at no other time.","1. C: Who's writing up the notes?
+2. B: I ran the centrifuge for 2 hours between 9:00 AM and 11:30 AM, draining the battery by 30 percentage points.
+3. A: I operated the centrifuge continuously from 1:30 PM to 2:45 PM to process sample vials.
+4. D: Let's keep this thread brief.
+5. C: At 12:00 PM the centrifuge battery showed 70% remaining.
+6. D: The green sterilization lamp was switched off at 3:30 PM.
+7. B: I logged the test results in the laboratory database.
+8. A: Can we get a plain answer?",A,2,nirbhay15
+NF013,Shoppers piece together their expenses for parking and purchases at the retail village.,A = Omar; B = Beatrice; C = Fiona; D = Liam,"All events occurred on 19 October 2026. Parking at the retail village cost £2.00 per hour or fraction of an hour, payable upon exit. At the village café, gourmet muffins cost £3.50 each or £9.00 for a box of three, and the café register always applied the three-muffin deal to full sets of three. All shoppers paid each bill in exact cash without vouchers.","1. B: This is getting tangled.
+2. A: I parked from 10:00 AM to 11:45 AM and paid £4.00 for parking.
+3. C: I parked my car from 1:15 PM to 4:05 PM and paid exactly £4.00 at the exit barrier.
+4. D: Can someone give a clear answer?
+5. B: I bought four gourmet muffins at the café and paid £12.50.
+6. D: I bought six gourmet muffins at the café and was charged £18.00.
+7. A: I bought an iced tea at the café patio.
+8. C: Is there more to go on?",C,2,nirbhay15
+NF014,Hotel staff investigate elevator operations and emergency protocol activations.,A = Nadia; B = Kenji; C = Darius; D = Elena,"All times in this case refer to 4 June 2026. The guest elevator carried at most 8 passengers per trip. Whenever the maintenance yellow strobe on the roof was flashing, the elevator was locked in fire-service mode and could only be operated by a keyholder with no more than 2 passengers inside. The maintenance yellow strobe flashed continuously from 2:15 PM to 3:45 PM and at no other time that day.","1. B: Could we keep this thread short?
+2. A: At 1:30 PM I rode the guest elevator with six other people.
+3. D: At 3:00 PM I took the guest elevator down with four other hotel guests.
+4. C: This is all rather confusing.
+5. B: As a keyholder, I operated the elevator at 2:30 PM with just one passenger.
+6. C: At 4:10 PM I rode the elevator up with five guests.
+7. A: I delivered fresh towels to the fifth floor.
+8. D: Who's taking notes on this?",D,2,nirbhay15
+NF015,Summer camp counselors review camper health logs and activity schedules.,A = Maya; B = Colin; C = Priya; D = Sam,"All times in this case refer to 28 July 2026. Camp policy mandated that any camper taking anti-nausea drops could receive at most three doses in a single day, with at least 4 hours between consecutive doses. Whenever lightning was detected within 10 miles, all outdoor activities were suspended and all campers were confined to the indoor recreation hall. Lightning was detected continuously from 1:30 PM to 4:00 PM and at no other time that day.","1. C: Is someone writing this up?
+2. A: I gave the camper their first dose of anti-nausea drops at 9:00 AM.
+3. B: I administered the camper's second dose of anti-nausea drops at 11:30 AM.
+4. D: This is a bit of a muddle.
+5. C: I administered the camper's second dose of anti-nausea drops at 1:15 PM in the clinic.
+6. D: During the lightning detection at 2:30 PM, I supervised board games inside the recreation hall.
+7. A: I led the outdoor archery drill at 10:30 AM before any storm warnings.
+8. B: Can we keep this thread brief?",B,2,nirbhay15
