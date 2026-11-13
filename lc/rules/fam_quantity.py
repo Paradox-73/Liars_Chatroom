@@ -123,10 +123,26 @@ def same_name(a, b):
     return a == b or a.endswith(" " + b) or b.endswith(" " + a)
 
 
+NUMBER_IN = re.compile(r"\d|%|\b(?:" + "|".join(w for w in WORDNUM if w != "one") + r")\b")
+
+
+def unparsed_mention(ctx, used, key, time_ok=lambda t: True):
+    """True when an evidence sentence the family did not parse names its subject (a word for which key() is true)
+    together with a number, so the parsed facts may be incomplete. Clock times count only when time_ok rejects them."""
+    for i, sent in enumerate(ctx.sentences):
+        if i in used:
+            continue
+        low, times = mask_times(T.DATE_RE.sub("", sent).lower())
+        if any(key(w) for w in re.findall(r"[a-z]+", low)) and (
+                NUMBER_IN.search(low) or not all(time_ok(t) for t in times)):
+            return True
+    return False
+
+
 # -------------------------------------------------------------------------------------- qty_level: containers
 
 C = r"(?:the|that|this) (?P<c>[a-z][a-z'\- ]*?)"
-QTY = r"(?:exactly )?(?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?)"
+QTY = r"(?:exactly )?(?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?)(?: of [a-z]+)?"  # "150 bags (of sand)"
 SPAN = r"(?:from @T (?:to|until)|between @T and) @T"
 STATES = [re.compile(r"^(?:(?P<pre>at @T|" + SPAN + r"),? )?" + p + r"(?: (?P<post>at @T|" + SPAN + r"))?$") for p in (
     r"(?:" + C + r"|(?P<it>it)) (?:held|contained|had|was holding) " + QTY + r"(?: in it)?",
@@ -280,7 +296,7 @@ def pick(stores, name):
     return found[0] if len(found) == 1 else None
 
 
-CQ = r"(?:exactly |only |just )?(?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?)"
+CQ = r"(?:exactly |only |just )?(?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?)(?: of [a-z]+)?"
 AMOUNT = [re.compile(r"^(?:at @T,? )?(?:" + f.format(Q=CQ, C=C) + r")(?: at @T)?$") for f in (
     r"there (?:were|was) {Q} in {C}",
     r"{C} (?:held|had|contained|still held|still had|was holding) {Q}(?: in it)?",
@@ -486,7 +502,8 @@ SOLD_TOTAL = [re.compile(r"^" + p + r"$") for p in (
     r"(?:a total of )?exactly (?P<n>\d+) (?P<u>[a-z]+) (?:were|was) sold(?: for the " + EVT + r")?(?: in total)?",
     r"for the " + EVT + r",? exactly (?P<n>\d+) (?P<u>[a-z]+) (?:were|was) sold(?: in total)?",
     r"the " + EVT + r" (?:sold|had) exactly (?P<n>\d+) (?P<u>[a-z]+)(?: sold)?(?: in total)?")]
-SOLD_SHARE = re.compile(r"^exactly " + SHARE + r" of (?:them|those (?P<u>[a-z]+)|the (?P<u2>[a-z]+)) "
+SOLD_SHARE = re.compile(r"^(?:of (?:them|these|those),? )?exactly (?:" + SHARE + r"|(?P<k>\d+))"
+                        r"(?: of (?:them|these|those|(?:those|these|the) (?P<u>[a-z]+)))? "
                         r"(?:were sold|were bought|went|sold) before (?:noon|midday)$")
 SOLD_ONLINE = re.compile(r"^exactly (?:" + SHARE + r"|(?P<k>\d+)) of the morning (?P<u>[a-z]+) were (?:sold|bought) online$")
 PERIODS = [(re.compile(r"\b(?:before (?:noon|midday)|in the morning|morning)\b"), " _m_ "),
@@ -518,22 +535,23 @@ class Tickets(Family):
                     got.append(p)
                     continue
                 m = SOLD_SHARE.match(p)
-                if m and "total" in f and "share" not in f:
-                    f["share"] = Fraction(m["p"]) / 100 if m["p"] else FRACW[m["f"]]
+                if m and "total" in f and "before" not in f and (not m["u"] or sing(m["u"]) == f["unit"]):
+                    f["before"] = Fraction(int(m["k"])) if m["k"] else f["total"] * (
+                        Fraction(m["p"]) / 100 if m["p"] else FRACW[m["f"]])
                     got.append(p)
                     continue
                 m = SOLD_ONLINE.match(p)
-                if m and "share" in f and sing(m["u"]) == f["unit"]:
+                if m and "before" in f and sing(m["u"]) == f["unit"]:
                     f["online"] = (Fraction(m["p"]) / 100 if m["p"] else FRACW[m["f"]]) if not m["k"] else int(m["k"])
                     got.append(p)
                     continue
                 break
             if got and len(got) == len(parts):
                 used.append(i)
-        if "share" not in f:
+        if "before" not in f or unparsed_mention(ctx, used, lambda w: sing(w) == f["unit"]):
             return None
-        before = f["total"] * f["share"]
-        if before.denominator != 1:
+        before = f["before"]
+        if before.denominator != 1 or not 0 <= before <= f["total"]:
             return None
         counts = {("m", None): before, ("a", None): f["total"] - before, (None, None): Fraction(f["total"])}
         if "online" in f:
@@ -665,6 +683,9 @@ class Pieces(Family):
             sizes = {"mine": {short, ratio(r) * short}, "long": {ratio(r) * short}, "short": {short},
                      "two short": {short * (k - 1)} if k == 3 else None}
         sizes["total"] = {obj["total"]}
+        words = set(obj["name"].split())
+        if unparsed_mention(ctx, obj["idx"], lambda w: w in words or sing(w) == noun):
+            return None
         for i in obj["idx"]:
             ctx.consume(i)
         return {"name": obj["name"], "dim": obj["dim"], "sizes": sizes, "nouns": PIECE_WORDS | {noun}}
@@ -788,6 +809,9 @@ class Attendance(Family):
             if i not in used and re.search(r"\b" + word + r"\b", low) and DESCRIBED.search(low) and not re.search(
                     r"\d", low) and all(t == f["time"] for t in times):
                 used.append(i)
+        if unparsed_mention(ctx, used, lambda w: w == f["noun"].split()[-1] or w in ("list", "sheet", "register"),
+                            lambda t: t == f["time"]):
+            return None  # another session of the event, or more about the list than this family reads
         for i in used:
             ctx.consume(i)
         n = re.escape(f["noun"])
