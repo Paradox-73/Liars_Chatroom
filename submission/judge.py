@@ -2,16 +2,18 @@
 safer engine settings after a failure, and keep a valid predictions file whatever happens here.
 
 It runs the thinking-mode judge of lc/llm (the prompt, sampling and answer parsing of lc/llm/judge_vllm.py and
-kaggle/kjudge.py) with Qwen3-14B-AWQ on the cases in --cases, and appends one JSON line per finished answer to --out.
-A free slot takes, in this order:
-  1. a continuation: a first sample that stopped at 8,192 tokens while still thinking goes on to 16,384 tokens in
-     total. It goes first only while the first samples are on schedule; otherwise it waits for them.
-  2. the first sample of a case: seed 0, at most 8,192 output tokens.
+kaggle/kjudge.py) on the cases in --cases, and appends one JSON line per finished answer to --out. Settings come from
+the environment, which predict.py fills from its MODEL_ENV table. A free slot takes, in this order:
+  1. a continuation: a first sample that reached its cap while still thinking goes on to LC_CONT_TOKENS in total. It
+     goes first only while the first samples are on schedule, and holds at most half the slots while they wait.
+  2. the first sample of the next case, seed 0, longest prompt first. Its cap is LC_MAIN_TOKENS, or an even share of
+     the tokens left before --stop-new when those no longer cover every waiting case (at least 768).
   3. an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin over the speakers the rules
      did not clear, at most 5 samples a case, none once the margin reaches 1.5.
 A sample with no "ANSWER:" line gets a forced answer: "ANSWER:" is appended and one more token is read.
-No thinking work starts after --stop-new. Then every case without a finished sample gets a one-token answer without
-thinking, and the process exits once nothing is left, or at --hard-stop.
+No thinking work starts after --stop-new: running continuations and extra samples stop, and every case without a
+finished sample gets a one-token answer without thinking; 90 s before --hard-stop, unfinished first samples stop too.
+The process exits once nothing is left, or at --hard-stop.
 Exit codes: 0 done, 1 error, 3 no GPU, 4 vLLM missing.
 """
 import argparse
