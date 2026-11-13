@@ -3,15 +3,16 @@
 
 1. The rule solver (lc/rules, standard library only) answers the cases it can prove and clears the speakers whose
    claims it judged consistent. A complete predictions file is written straight away.
-2. judge.py, a child process, runs Qwen3-14B-AWQ with vLLM on the other cases. Its answers are merged as they arrive
+2. judge.py, a child process, runs the judge model with vLLM on the other cases. Its answers are merged as they arrive
    and the predictions file is rewritten every 30 s, so a crash or a hang still leaves a valid file.
 3. Each case's answer follows lc/combine.py: the rule answer, then elimination, then the vote of the model's samples
    over the speakers the rules did not clear (a forced answer at half weight), then the model's one-token answer
    without thinking, then the letter C (or the first open speaker if the rules cleared C).
 
 Time is measured from the start of this process: 80 min for an input of 450 to 600 cases (the limit is 90 min for
-about 450), and the same time per case for any other size. Model work stops 5 min before the end and the child is
-stopped at the end. A model process that fails or hangs is restarted with safer engine settings while time allows.
+about 450), the same time per case for a smaller input, and the same time per model-judged case for a larger one.
+Model work stops 5 min before the end and the child is stopped at the end. A model process that fails or hangs is
+restarted with safer engine settings while time allows.
 """
 import time
 
@@ -234,14 +235,17 @@ def main():
     ap.add_argument("--output", required=True)
     ap.add_argument("--model", default=os.environ.get("LC_MODEL_DIR", os.path.join(HERE, "models", "judge")),
                     help="local model folder (default: models/judge, where setup.sh puts it, or $LC_MODEL_DIR)")
-    ap.add_argument("--minutes", type=float, help="time budget; default 80 for 450 to 600 cases, else 80 x cases / 450")
+    ap.add_argument("--minutes", type=float, help="time budget; default 80 for 450 to 600 cases, 80 x cases / 450 below, 80 x model cases / 450 above")
     ap.add_argument("--no-llm", action="store_true", help="rules and fallbacks only")
     ap.add_argument("--workdir", help="folder for the model's answers (default: a new temporary folder)")
     a = ap.parse_args()
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))  # runs the finally blocks, which stop the model process
 
     ids, fixed, cases, cands = read_cases(a.input)
-    minutes = a.minutes or 80 * (1 if 450 <= len(ids) <= 600 else len(ids) / 450)
+    # The limit is 90 min for about 450 cases. 450 to 600 cases get 80 min and fewer get the same time per case. A bigger
+    # file (test.csv, when predict.py is checked against our submission) gets that time per case the model judges.
+    n, n_model = len(ids), len(cases)
+    minutes = a.minutes or 80 * (n / 450 if n < 450 else 1 if n <= 600 else max(1, n_model / 450))
     hard = T0 + 60 * minutes
     stop_new = hard - 5 * 60
     tiers = write_predictions(a.output, ids, fixed, cands, {})
