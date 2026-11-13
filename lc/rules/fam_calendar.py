@@ -5,9 +5,12 @@ cal_closed   a place nobody could be inside on certain weekdays ("... on any Tue
 cal_rota     exactly one person did a nightly duty over a date range, following a rota
 cal_session  the only session of the day (tour, class, rehearsal), with a start time and an exact duration
 cal_age      birth dates against claims like "I turned 28 in July 2026" and "On 12 March 2026 I was 27"
+cal_booking  a room booked back to back by teams, only the booked team in the room
+cal_owner    who owned an item on each day of a month, from a chain of sales
 
-Every family judges only plain first-person claims: questions, hedged or negated sentences, reported speech and
-messages that name another person are left alone.
+Families judge only plain claims: questions, hedged or negated sentences and reported speech are left alone, and
+so are messages naming another person, except where the evidence rules the claim out whoever it is about
+(sessions, bookings) or the name is the other side of a sale.
 """
 import datetime as dt
 import re
@@ -137,7 +140,8 @@ NOT_USE_RE = re.compile(
 class OpeningHours(Family):
     """'In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it
     while it was closed.' A first-person claim of using the place on a closed weekday, or at a time outside the
-    hours (endpoints are open), is a lie. Waiting outside is always possible; other months are not covered."""
+    hours (opening and closing times count as open), is a lie. Waiting outside is always possible; other months are
+    not covered."""
 
     name = "cal_hours"
 
@@ -287,7 +291,7 @@ DUTY_QUALIFIERS = {"day", "night", "late", "early", "morning", "afternoon", "eve
                    "call-out", "front", "desk", "back", "office", "kitchen", "door", "gate", "reception", "bar",
                    "double", "split", "overnight", "graveyard", "lunch", "breakfast", "dinner", "cleaning", "security"}
 # the speaker as the one who worked it
-WORK_RE = re.compile(r"\bI (?:worked|covered|did|took|was on|was working|was the one working)\b|\bI worked\b"
+WORK_RE = re.compile(r"\bI (?:worked|covered|did|took|was on|was working|was the one working)\b"
                      r"|\bwas mine\b|\bone I worked\b|\bby me\b|\bme working\b")
 NOT_WORK_RE = re.compile(r"\b(?:off|swap|swapped|gave|handed|missed|skipped|leave|sick|cancelled|instead)\b", re.I)
 DUTY_WORD_RE = re.compile(r"\b(?:shift|duty)\b", re.I)
@@ -469,8 +473,10 @@ class OnlySession(Family):
 # ----------------------------------------------------------------------------------------------- ages
 
 BORN_RE = re.compile(rf"\b({NAME}) was born on ({DATE_PAT})")
-TURNED_RE = re.compile(r"\b(?:I turned|turning) (\d{1,3})\b")
-WAS_AGE_RE = re.compile(r"\bI was (\d{1,3})(?: years old)?\b")
+# the number must be the age itself, not 'I was 2 hours late' or 'I turned 3 pages'
+AGE_END = r"(?: years old)?(?= (?:in|on|during|was|is)\b|[.,!]|$)"
+TURNED_RE = re.compile(rf"\b(?:I turned|turning) (\d{{1,3}}){AGE_END}")
+WAS_AGE_RE = re.compile(rf"\bI was (\d{{1,3}}){AGE_END}")
 SELF_BORN_RE = re.compile(r"\bI was born (?:on|in)\b")
 
 
