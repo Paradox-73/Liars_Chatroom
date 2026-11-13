@@ -224,6 +224,7 @@ BENCH_RUNS_C = [
     {"tag": "tp2-40-block32", "tp": 2, "seqs": 40, "max_len": 18432, "engine": {"block_size": 32}},
     {"tag": "dp-10", "tp": 1, "seqs": 10, "max_len": 8192, "dp": True},
     {"tag": "tp2-40-flex", "tp": 2, "seqs": 40, "max_len": 18432, "env": {"VLLM_ATTENTION_BACKEND": "FLEX_ATTENTION"}},
+    {"tag": "tp2-40-flashinfer", "tp": 2, "seqs": 40, "max_len": 18432, "env": {"VLLM_ATTENTION_BACKEND": "FLASHINFER"}},
 ]
 
 
