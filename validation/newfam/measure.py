@@ -19,7 +19,8 @@ import os
 from lc.combine import decide, open_speakers
 from lc.data import load
 from lc.rules import solve
-from lc.rules.core import LIE
+from lc.rules.core import LIE, OK
+from lc.rules.text import is_filler
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPORT = os.path.join(HERE, "REPORT.md")
@@ -52,7 +53,10 @@ def run():
         pred, tier = decide(c, [])
         sender = {m.num: m.label for m in c.messages}
         bad = [(n, v) for n, vs in res.verdicts.items() for v in vs if v.status == LIE and sender[n] != c.label]
+        lie = int(meta[c.id]["lie_message"])
+        lie_text = next(m.text for m in c.messages if m.num == lie)
         rows.append(dict(case=c, res=res, tier=tier, pred=pred, fam=meta[c.id]["family"], bad=bad,
+                         lie_ok=[v for v in res.verdicts.get(lie, []) if v.status == OK], lie_filler=is_filler(lie_text),
                          cleared=c.label not in open_speakers(c, res),
                          overnight=("core", "overnight times: rules abstain") in res.errors,
                          crashed=[e for e in res.errors if e[0] != "core"]))
@@ -110,6 +114,8 @@ def summary(rows):
         f"- Misfires (an innocent speaker's message judged a lie): {len(mis)} cases"
         + (f"; rule families that fired: {', '.join(f'{k} {v}' for k, v in fired.most_common())}" if fired else ""),
         f"- Cases where open_speakers() wrongly drops the true liar: {len(cleared)}",
+        f"- Cases where a rule judged the lie itself consistent: {sum(bool(r['lie_ok']) for r in rows)}",
+        f"- Cases where is_filler() reads the lie as a question or opinion: {sum(r['lie_filler'] for r in rows)}",
         f"- Elimination tier answers: {len(elim)}, of which wrong {sum(r['pred'] != r['case'].label for r in elim)}",
         f"- Cases where the overnight guard made the rules abstain: {sum(r['overnight'] for r in rows)}",
         f"- Cases with an exception inside a rule family: {sum(bool(r['crashed']) for r in rows)}",
