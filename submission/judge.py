@@ -107,6 +107,14 @@ def main():
             plens[cid] = len(tok.encode(prompt(cid)))
         return plens[cid]
 
+    # Longest prompt first: on the 14B's test answers a long prompt means long reasoning (correlation 0.51; the top
+    # quarter of prompts held 21 of the 29 capped samples), so the slow cases start early and the cases left for the
+    # one-token answers at the stop time are the short ones.
+    try:
+        main_q = deque(sorted(main_q, key=lambda cid: -plen(cid)))
+    except Exception as e:
+        log(f"prompts not measured ({type(e).__name__}): input order")
+
     fout = open(a.out, "a", encoding="utf-8")
     flight = {}  # request id -> (kind, case id, k, text so far, tokens so far, kind of the sample it answers for)
     queued_cont, quick, dead = deque(), deque(), set()  # dead: cases whose request could not start
