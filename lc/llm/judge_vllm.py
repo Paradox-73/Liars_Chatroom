@@ -27,8 +27,10 @@ NUM_LOGPROBS = 20  # vLLM's default cap; enough to see all four letters at the a
 
 
 def free_gpu_util():
+    """Leaves 1.5 GiB of the card free for its other users. vLLM's sampler takes about 0.4 GiB beyond the
+    gpu_memory_utilization budget (top-p sorting is not in its memory profile), so 1.9 GiB is held back."""
     free_mib = int(subprocess.check_output(["nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits"]).split()[0])
-    return round((free_mib / 1024 - 1.5) / 48, 3)
+    return round((free_mib / 1024 - 1.9) / 48, 3)
 
 
 def letter_probs(logprobs_at):
@@ -68,7 +70,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model", required=True, help="local model folder")
     ap.add_argument("--split", default="train", help="train or test (CSV in LC_DATA_DIR)")
-    ap.add_argument("--ids", help="file with one case id per line; default: every case in the split")
+    ap.add_argument("--ids", help="file with one case id per line, run in that order; default: every case in the split")
     ap.add_argument("--out", required=True, help="JSONL to append to; reasoning texts go to <out>.texts.jsonl")
     ap.add_argument("--n", type=int, default=1, help="samples per case, majority vote (self-consistency)")
     ap.add_argument("--temperature", type=float, default=0.6)
@@ -78,14 +80,16 @@ def main():
     ap.add_argument("--seed", type=int, default=0, help="sample k of every case uses seed + k")
     ap.add_argument("--max-tokens", type=int, default=8192, help="output tokens per sample, thinking included")
     ap.add_argument("--max-num-seqs", type=int, default=64)
-    ap.add_argument("--gpu-util", type=float, help="fraction of the 48 GB card; default (free GiB - 1.5) / 48 at launch")
+    ap.add_argument("--max-num-batched-tokens", type=int, default=4096, help="lower it to free activation memory for the KV cache")
+    ap.add_argument("--gpu-util", type=float, help="fraction of the 48 GB card; default (free GiB - 1.9) / 48 at launch")
     args = ap.parse_args()
 
     cases = load(args.split)
     if args.ids:
         with open(args.ids) as f:
-            keep = set(f.read().split())
-        cases = [c for c in cases if c.id in keep]
+            order = dict.fromkeys(f.read().split())
+        by_id = {c.id: c for c in cases}
+        cases = [by_id[i] for i in order]  # file order: vLLM serves requests first come, first served
     done = set()
     if os.path.exists(args.out):
         with open(args.out) as f:
@@ -100,7 +104,7 @@ def main():
         multimodal = "vision_config" in json.load(f)
     print(f"gpu_memory_utilization {util}", flush=True)
     llm = LLM(args.model, gpu_memory_utilization=util, max_model_len=args.max_tokens + 2048, max_num_seqs=args.max_num_seqs,
-              max_num_batched_tokens=4096, seed=args.seed, **({"language_model_only": True} if multimodal else {}))
+              max_num_batched_tokens=args.max_num_batched_tokens, seed=args.seed, **({"language_model_only": True} if multimodal else {}))
     print(subprocess.run(["nvidia-smi", "--query-compute-apps=pid,used_memory", "--format=csv,noheader"],
                          capture_output=True, text=True).stdout, flush=True)
 
