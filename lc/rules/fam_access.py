@@ -40,6 +40,9 @@ NOT_NAMES = {
     "March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "VPN", "AM",
     "PM", "Cheers", "Shall", "Should", "Could", "Would", "Can", "Does", "Do", "Is", "Are", "Was", "Who", "What",
     "Why", "How", "Let", "Some", "Clarity", "Grateful", "Appreciate", "Good", "Keep", "Please", "Everything", "None",
+    "Security", "Reception", "Staff", "Management", "Admin", "Facilities", "Maintenance", "Cleaning", "Catering",
+    "Support", "Mum", "Mom", "Dad", "Grandma", "Grandpa", "Doctor", "Nurse", "Officer", "Professor", "Mr", "Mrs",
+    "Ms", "Dr", "Sir", "Madam", "Team", "Everybody", "Folks", "Guys", "All", "Both", "Each", "Either", "Neither",
 }
 
 LEAD_RE = re.compile(
@@ -426,23 +429,29 @@ class AccessSupply(Family):
         if not re.search(obj, c.text):
             return False
         words = v.split()
+        end = r"(?= at | by | around | when |$)"  # "were on at 2:35 pm", not "were on the floor"
         if words[0] == "be" and len(words) >= 2:  # "could be lit": a state claim about the machine
             states = LIT_WORDS if words[1] in ("lit", "on", "illuminated") else re.escape(" ".join(words[1:]))
-            return bool(re.search(rf"{obj} (?:was|were) (?:still |already )?{states}\b", c.text)
-                        or re.search(rf"@ saw {obj} {states}\b", c.text))
+            return bool(re.search(rf"{obj} (?:was|were) (?:still |already )?{states}{end}", c.text)
+                        or re.search(rf"@ saw {obj} {states}{end}", c.text))
         if words in (["run"], ["operate"], ["work"]):
             if head in CONVEYANCE or a in CONVEYANCE:
-                if re.search(rf"@ (?:rode|ride|riding|took|take|taking|used|use|using|caught|catch) {obj}", c.text):
+                if re.search(rf"@ {AUX}(?:rode|ride|riding|took|take|taking|used|use|using|caught|catch) {obj}",
+                             c.text):
                     return True
-                if re.search(rf"@ (?:went|came|got|travelled|traveled|rode) (?:up|down)\b.*\bin {obj}", c.text):
+                if re.search(rf"@ {AUX}(?:went|came|got|travelled|traveled|rode) (?:up|down) (?:\S+ ){{0,4}}?in {obj}",
+                             c.text):
                     return True
-            return bool(re.search(rf"{obj} (?:was|were) (?:still |already )?{RUN_WORDS}\b", c.text))
-        # an action with an object: "make coffee" -> "made a coffee with the machine"
+            return bool(re.search(rf"{obj} (?:was|were) (?:still |already )?{RUN_WORDS}{end}", c.text))
+        # an action, maybe with an object: "make coffee" -> "made a coffee with the machine", "with the machine I
+        # made a coffee", "used the machine to make a coffee"; the machine must be what the action was done with
         forms = "|".join(sorted(verb_forms(words[0]), key=len, reverse=True))
-        rest = r" (?:\S+ ){0,3}?".join(re.escape(w) for w in words[1:])
-        if not rest:
-            return bool(re.search(rf"@ (?:{forms}) (?:with |using |on )?{obj}", c.text))
-        return bool(re.search(rf"@ (?:\S+ ){{0,4}}?(?:{forms}) (?:\S+ ){{0,3}}?{rest}\b", c.text))
+        rest = "".join(rf" (?:\S+ ){{0,3}}?{re.escape(w)}" for w in words[1:])
+        act = rf"(?:{forms}){rest}\b"
+        tool = rf"(?:with|using|on|from|in) {obj}"
+        return bool(re.search(rf"@ {AUX}{act} (?:\S+ ){{0,3}}?{tool}", c.text)
+                    or re.search(rf"^{tool} @ {AUX}{act}", c.text)
+                    or re.search(rf"@ {AUX}(?:used|use|using) {obj} to {act}", c.text))
 
     def judge(self, ctx, facts, msg):
         c = claim(ctx, msg)
@@ -1188,7 +1197,7 @@ class AccessBooking(Family):
         if c is None or negated(c):
             return None
         for room, slots in facts:
-            rr = rf"(?:the )?{re.escape(room)}\b"
+            rr = rf"(?:the )?{re.escape(room)}\b(?!'s)"
             team = self.team_in(c.text, rr)
             if team is None:
                 continue
@@ -1203,4 +1212,101 @@ class AccessBooking(Family):
             owner = next(o for a, b, o in slots if a <= t < b)
             return verdict(self, team == owner, f"the {room} was booked by the {owner} team at {T.fmt_time(t)}")
         return None
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Self-check on made-up wordings and nouns that train does not use:
+#   python -c "import lc.rules.fam_access as f; raise SystemExit(f._selfcheck())"
+_CHECKS = [  # (evidence, sender, message, expected status or None)
+    ("Nobody could get into the boiler room between 1:00 PM and 2:00 PM.", "A",
+     "For the record, at 1:30 PM I went into the boiler room.", LIE),
+    ("Nobody could get into the boiler room between 1:00 PM and 2:00 PM.", "A", "I went into the boiler room at 2:00 PM.",
+     LIE),
+    ("Nobody could get into the boiler room between 1:00 PM and 2:00 PM.", "A", "I went into the boiler room at 2:30 PM.",
+     OK),
+    ("Nobody could get into the boiler room between 1:00 PM and 2:00 PM.", "A",
+     "I was waiting outside the boiler room at 1:30 PM.", OK),
+    ("Nobody could get into the boiler room between 1:00 PM and 2:00 PM.", "A",
+     "I almost went into the boiler room at 1:30 PM.", None),
+    ("Nobody could get into the boiler room between 1:00 PM and 2:00 PM.", "A",
+     "Dan, I saw you slip into the boiler room at 1:45 PM.", LIE),
+    ("The printer could print only while the network was up. The network was down from 10:00 AM to 11:00 AM.", "B",
+     "I printed my boarding pass on the printer at 10:30 AM.", LIE),
+    ("The printer could print only while the network was up. The network was down from 10:00 AM to 11:00 AM.", "B",
+     "I fixed the printer at 10:30 AM.", None),
+    ("The printer could print only while the network was up. The network was down from 10:00 AM to 11:00 AM.", "B",
+     "I printed my boarding pass on the printer at 11:30 AM.", OK),
+    ("The stage lamps could be lit only while the generator was running. The generator was stopped from 2:00 PM to "
+     "3:00 PM.", "C", "The stage lamps were on the floor at 2:30 PM.", None),
+    ("The stage lamps could be lit only while the generator was running. The generator was stopped from 2:00 PM to "
+     "3:00 PM.", "C", "Honestly, the stage lamps were glowing at 2:30 PM.", LIE),
+    ("The coffee machine could make coffee only while the water supply was on. The water supply was shut off from "
+     "11:15 AM to 11:45 AM.", "C", "I made a coffee at 11:30 AM before cleaning the machine.", None),
+    ("Every remote sign-in to the archive server required the VPN. The VPN service was offline from 9:00 AM to "
+     "9:30 AM.", "D", "I signed in locally to the archive server at 9:10 AM.", OK),
+    ("Until 10:00 AM, only code 1111 could unlock the shed gate. From 10:00 AM onward, only code 2222 could unlock it.",
+     "A", "I opened the shed gate with code 1111 at 10:30 AM.", LIE),
+    ("Until 10:00 AM, only code 1111 could unlock the shed gate. From 10:00 AM onward, only code 2222 could unlock it.",
+     "A", "I tried code 1111 on the shed gate at 10:30 AM.", None),
+    ("Until 10:00 AM, only code 1111 could unlock the shed gate. From 10:00 AM onward, only code 2222 could unlock it.",
+     "A", "I unlocked the shed gate with code 2222 at 10:15 AM.", OK),
+    ("Until 10:00 AM, only code 1111 could unlock the shed gate. From 10:00 AM onward, only code 2222 could unlock it.",
+     "A", "I unlocked the shed gate with code 1111 at 10:00 AM.", None),
+    ("Before 8:00 AM the boathouse door opened only for registered rowers, and it was the only way into the boathouse. "
+     "Ana and Ben are registered rowers. Cleo is a guest, not a registered rower.", "C",
+     "At 7:30 AM I came into the boathouse.", LIE),
+    ("Before 8:00 AM the boathouse door opened only for registered rowers, and it was the only way into the boathouse. "
+     "Ana and Ben are registered rowers. Cleo is a guest, not a registered rower.", "D",
+     "At 7:30 AM I came into the boathouse.", None),
+    ("Before 8:00 AM the boathouse door opened only for registered rowers, and it was the only way into the boathouse. "
+     "Ana and Ben are registered rowers. Cleo is a guest, not a registered rower.", "C",
+     "At 8:30 AM I came into the boathouse.", OK),
+    ("Nobody could enter the darkroom except by scanning their own active pass. Ana's pass was inactive before 9:00 AM "
+     "and active from 9:00 AM onward.", "B", "I saw Ana walk into the darkroom at 8:30 AM.", LIE),
+    ("Nobody could enter the darkroom except by scanning their own active pass. Ana's pass was inactive before 9:00 AM "
+     "and active from 9:00 AM onward.", "A", "I scanned my pass at 8:30 AM.", None),
+    ("The darkroom entry log accurately records every entry to the darkroom that day. It shows exactly one entry: Ana "
+     "at 9:00 AM.", "B", "I went into the darkroom at 9:00 AM.", LIE),
+    ("The darkroom entry log accurately records every entry to the darkroom that day. It shows exactly one entry: Ana "
+     "at 9:00 AM.", "B", "I never went into the darkroom at all.", OK),
+    ("The darkroom entry log accurately records every entry to the darkroom that day. It shows exactly one entry: Ana "
+     "at 9:00 AM.", "B", "I was in the darkroom at 10:00 AM.", None),
+    ("The gate log accurately records when each of these four people first arrived at the depot that day: Ana at "
+     "8:00 AM, Ben at 8:10 AM, Cleo at 8:20 AM and Dan at 8:30 AM.", "B", "I was the first person at the depot.", LIE),
+    ("The gate log accurately records when each of these four people first arrived at the depot that day: Ana at "
+     "8:00 AM, Ben at 8:10 AM, Cleo at 8:20 AM and Dan at 8:30 AM.", "A", "I was the first person at the depot.", OK),
+    ("The gate log accurately records when each of these four people first arrived at the depot that day: Ana at "
+     "8:00 AM, Ben at 8:10 AM, Cleo at 8:20 AM and Dan at 8:30 AM.", "C", "I first arrived at the depot before Ben.",
+     LIE),
+    ("Only Ana and Ben were at the kiosk from 1:00 PM to 3:00 PM.", "C", "I was at the kiosk at 2:00 PM.", LIE),
+    ("Only Ana and Ben were at the kiosk from 1:00 PM to 3:00 PM.", "A", "I was at the kiosk at 2:00 PM.", OK),
+    ("Only Ana and Ben were at the kiosk from 1:00 PM to 3:00 PM.", "C", "I was near the kiosk at 2:00 PM.", None),
+    ("Only Ana and Ben were at the kiosk from 1:00 PM to 3:00 PM.", "C", "I was at the kiosk at 3:00 PM.", None),
+    ("The lab was booked from 9:00 AM to 12:00 PM: the biology team until 10:00 AM, the chemistry team until 11:00 AM, "
+     "then the physics team. During each booking, only that team was in the room.", "D",
+     "The physics team was in the lab at 9:30 AM.", LIE),
+    ("The lab was booked from 9:00 AM to 12:00 PM: the biology team until 10:00 AM, the chemistry team until 11:00 AM, "
+     "then the physics team. During each booking, only that team was in the room.", "D",
+     "The physics team walked past the lab at 9:30 AM.", None),
+    ("The lab was booked from 9:00 AM to 12:00 PM: the biology team until 10:00 AM, the chemistry team until 11:00 AM, "
+     "then the physics team. During each booking, only that team was in the room.", "D",
+     "The physics team met in the lab at 1:00 PM.", OK),
+]
+
+
+def _selfcheck():
+    from lc.data import Case, Message
+    from .core import solve
+    fams = [f for f in __import__("lc.rules", fromlist=["REGISTRY"]).REGISTRY if f.name.startswith("access_")]
+    speakers = {"A": "Ana", "B": "Ben", "C": "Cleo", "D": "Dan"}
+    bad = 0
+    for ev, label, text, want in _CHECKS:
+        res = solve(Case("x", "", speakers, ev, [Message(1, label, text)]), fams)
+        got = [v.status for v in res.verdicts.get(1, [])]
+        status = LIE if LIE in got else OK if got else None
+        if status != want:
+            bad += 1
+            print(f"FAIL want {want} got {status}: {text!r} | {ev}")
+    print(f"{len(_CHECKS) - bad}/{len(_CHECKS)} checks pass")
+    return bad
 
