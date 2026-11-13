@@ -86,6 +86,7 @@ def main():
     think_slots = int(os.environ.get("LC_SLOTS", think_slots))  # per model: fewer when the weights leave little room
     max_len = int(os.environ.get("LC_MAX_LEN", max_len))  # per model: a small one has room for continuations on one card
     presence = float(os.environ.get("LC_PRESENCE_PENALTY", 0))  # per model: the Qwen3.5 models use 1.5
+    style = os.environ.get("LC_PROMPT", "full")  # the closing instruction of lc/llm/prompt.py
     # letter probabilities at the answer need log-probabilities on every sampled token; without them the letter alone votes
     token_logprobs = NUM_LOGPROBS if os.environ.get("LC_TOKEN_LOGPROBS", "1") == "1" else None
     util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered only to test on a shared card
@@ -111,7 +112,7 @@ def main():
 
     def prompt(cid):
         if cid not in prompts:
-            prompts[cid] = tok.apply_chat_template([{"role": "user", "content": build_prompt(cases[cid])}], tokenize=False,
+            prompts[cid] = tok.apply_chat_template([{"role": "user", "content": build_prompt(cases[cid], style)}], tokenize=False,
                                                    add_generation_prompt=True, enable_thinking=True)
         return prompts[cid]
 
