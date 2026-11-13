@@ -151,7 +151,9 @@ class OpeningHours(Family):
         ctx.consume(i)
         ctx.consume(j)
         return {"noun": noun, "days": weekday_span(m.group(1), m.group(2)), "hours": times or None,
-                "month": months[0] if months else None, "anchor": anchor}
+                "month": months[0] if months else None, "anchor": anchor,
+                # 'I was at the pool' may mean outside it, so it is not a claim of using it
+                "at": re.compile(rf"\b(?:was|were) at the {re.escape(noun)}\b", re.I)}
 
     def judge(self, ctx, f, msg):
         t = plain_claim(msg.text)
@@ -164,7 +166,7 @@ class OpeningHours(Family):
         if waiting_only(t):
             return Verdict(OK, self.name, "waiting outside is always possible")
         times = T.find_times(t)
-        if WAIT_RE.search(t) or NOT_USE_RE.search(t) or len(times) > 1:
+        if WAIT_RE.search(t) or NOT_USE_RE.search(t) or len(times) > 1 or f["at"].search(t):
             return None
         if f["month"] and (d.year, d.month) != f["month"]:
             return Verdict(OK, self.name, "the opening days cover another month")
@@ -270,7 +272,7 @@ DUTY_QUALIFIERS = {"day", "night", "late", "early", "morning", "afternoon", "eve
                    "double", "split", "overnight", "graveyard", "lunch", "breakfast", "dinner", "cleaning", "security"}
 # the speaker as the one who worked it
 WORK_RE = re.compile(r"\bI (?:worked|covered|did|took|was on|was working|was the one working)\b|\bI worked\b"
-                     r"|\bwas mine\b|\bone I worked\b|\bby me\b|\bme working\b|^My\b")
+                     r"|\bwas mine\b|\bone I worked\b|\bby me\b|\bme working\b")
 NOT_WORK_RE = re.compile(r"\b(?:off|swap|swapped|gave|handed|missed|skipped|leave|sick|cancelled|instead)\b", re.I)
 DUTY_WORD_RE = re.compile(r"\b(?:shift|duty)\b", re.I)
 
@@ -348,6 +350,8 @@ class NightRota(Family):
             if not n or (which == "first" and pos != 0) or (which == "last" and pos + n != len(nights)):
                 return None
             for d in nights[pos:pos + n]:
+                if d in who:
+                    return None
                 who[d] = name
             pos += n
         if set(who) != set(nights) or (pos and pos != len(nights)):
@@ -356,7 +360,8 @@ class NightRota(Family):
 
     def judge(self, ctx, f, msg):
         t = plain_claim(msg.text)
-        if not t or not DUTY_WORD_RE.search(t) or not WORK_RE.search(t) or NOT_WORK_RE.search(t):
+        mine = t and (WORK_RE.search(t) or t.startswith("My " + " ".join(f["duty"])))  # 'My late shift was on ...'
+        if not mine or NOT_WORK_RE.search(t):
             return None
         dates = T.find_dates(t)
         if len(dates) != 1 or T.find_times(t):
@@ -365,12 +370,13 @@ class NightRota(Family):
         said = set(words(t))
         extra = (said & DUTY_QUALIFIERS) - set(f["duty"])
         if not all(w in said for w in f["duty"]):
-            return Verdict(OK, self.name, "a different duty") if extra else None
+            return Verdict(OK, self.name, "a different duty") if extra and DUTY_WORD_RE.search(t) else None
         if extra:
             return None  # the duty with extra qualifiers: maybe a different one
         if not f["start"] <= d <= f["end"]:
             return Verdict(OK, self.name, "outside the rota's dates")
-        if f["who"][d] == ctx.speakers.get(msg.label):
+        me = ctx.speakers.get(msg.label, "")
+        if f["who"][d] in (me, me.split(" ")[0]):
             return Verdict(OK, self.name, "the rota gives that night to the speaker")
         return Verdict(LIE, self.name, f"the rota gives {d} to {f['who'][d]}")
 
@@ -414,6 +420,8 @@ class OnlySession(Family):
         times, durs = T.find_times(text), T.find_durations(text)
         if len(times) != 1 or len(durs) != 1 or not START_RE.search(text) or not LENGTH_RE.search(text):
             return None
+        if re.search(r"\b(?:half|quarter)\b", text):
+            return None  # 'half an hour' would read as an hour
         start = times[0][0]
         end = start + durs[0][0]
         if end >= 24 * 60:
@@ -464,10 +472,11 @@ class BirthAge(Family):
     name = "cal_age"
 
     def parse(self, ctx):
-        born = {}
+        born, other_ages = {}, False
         for i, s in enumerate(ctx.sentences):
             ms = BORN_RE.findall(s)
             if not ms:
+                other_ages |= bool(re.search(r"\b(?:birthday|birthdays|years old|age|aged|older|younger)\b", s, re.I))
                 continue
             if len(ms) != s.count("born"):
                 return None
@@ -476,7 +485,8 @@ class BirthAge(Family):
                     return None
                 born[name] = T.parse_date(d)
             ctx.consume(i)
-        return {"born": born} if born else None
+        # with other age facts around, a speaker missing from the birth dates is not known to be unconstrained
+        return {"born": born, "others_free": not other_ages} if born else None
 
     def judge(self, ctx, f, msg):
         t = plain_claim(msg.text)
@@ -489,7 +499,7 @@ class BirthAge(Family):
         dates, months = T.find_dates(t), month_years(t)
         years = re.findall(r"\b(?:19|20)\d\d\b", t)
         if born is None:
-            return Verdict(OK, self.name, "no known birth date")
+            return Verdict(OK, self.name, "no known birth date") if f["others_free"] else None
         if born.month == 2 and born.day == 29:
             return None  # leap-day birthdays: the birthday in other years is a matter of convention
         k = kinds[0]
