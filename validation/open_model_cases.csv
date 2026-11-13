@@ -1,0 +1,121 @@
+id,scenario,speakers,evidence,chat,label
+NF001,Office colleagues reconstruct how fast Priya's tablet battery ran down during a conference.,A = Priya; B = Tariq; C = Elena; D = Julian,"All times in this case refer to 15 September 2026. At 9:00 AM Priya's tablet was at 92% battery. The tablet was not plugged into a charger at any time between 9:00 AM and 5:00 PM, and during this period its battery drained at a constant rate of 8 percentage points per hour. Priya attended the morning keynote in Hall B.","1. C: Who's taking notes on this?
+2. B: At 1:00 PM Priya's tablet showed 72% battery.
+3. D: I attended the keynote in Hall B around 10:00 AM.
+4. A: This is getting confusing.
+5. C: At 11:00 AM Priya's tablet had 76% battery remaining.
+6. A: Between 9:00 AM and 3:00 PM my tablet battery dropped by 48 percentage points.
+7. D: At 2:30 PM Priya's tablet showed under 50% battery.
+8. B: Can we get a plain answer?",B
+NF002,Drivers dispute how much parking time was purchased at the downtown municipal lot.,A = Marcus; B = Sonia; C = Kenji; D = Chloe,"All times in this case refer to 3 March 2026. Parking at the municipal lot cost £1.50 per 30 minutes, with a maximum permitted stay of 3 hours per vehicle. Drivers paid in advance and the parking ticket displayed the exact expiry time based on the amount paid. All meter payments were made in increments of £1.50.","1. B: Could we keep this thread short?
+2. A: I parked my car in bay 4.
+3. D: I paid £6.00 at 10:00 AM and my parking ticket expired at 12:30 PM.
+4. C: This is all rather confusing.
+5. B: At 9:15 AM I bought the maximum permitted stay for £9.00.
+6. A: I paid £4.50 at the meter at 1:00 PM for 90 minutes of parking.
+7. C: I paid £3.00 at 2:00 PM and my ticket expired at 3:00 PM.
+8. D: Who's writing up the notes?",D
+NF003,Clinic staff determine the schedule of allergy medication administered to a patient.,A = Farah; B = Liam; C = Nadia; D = Oscar,All times in this case refer to 18 June 2026. A patient could receive at most three doses of antihistamine in a single calendar day. Each dose after the first had to be given at least 5 hours after the previous dose. The patient's first dose of antihistamine was administered at 7:30 AM.,"1. D: Is someone writing this up?
+2. A: I administered the patient's second dose of antihistamine at 11:45 AM.
+3. C: Let's keep this thread brief.
+4. B: I gave the patient their second dose of antihistamine at 1:15 PM.
+5. D: I checked the patient's temperature at 10:00 AM.
+6. A: Would the doctor know more?
+7. C: The patient received their third dose of antihistamine at 6:45 PM.
+8. B: The patient received exactly three doses of antihistamine that day.",A
+NF004,Security guards review the freight elevator log during morning deliveries.,A = Bram; B = Leila; C = Tariq; D = Maya,"All times in this case refer to 22 May 2026. The freight elevator had a strict weight limit of at most 500 kg. Each metal container weighed exactly 75 kg, and each person was logged at a standard allowance of 70 kg. The elevator would refuse to move if the combined weight of passengers and containers exceeded 500 kg.","1. B: Can we keep this brief?
+2. A: At 9:30 AM I rode the freight elevator alone with 4 metal containers.
+3. C: At 10:15 AM I rode the freight elevator up to floor 4 accompanied by two colleagues and carrying 5 metal containers.
+4. D: This is getting muddled.
+5. B: At 11:00 AM two of us transported 3 metal containers in the freight elevator.
+6. A: I signed the maintenance clipboard on floor 4.
+7. D: Four of us rode the freight elevator together at 1:40 PM without any containers.
+8. C: Is there more to go on?",C
+NF005,University students check borrowing records for reserved engineering textbooks.,A = Dev; B = Amara; C = Lucas; D = Mei,"All dates in this case refer to October 2026. Standard textbook loans lasted exactly 7 days from the borrowing date. A borrower could renew a textbook at most twice, with each renewal adding exactly 7 days to the current due date. Overdue books could never be renewed.","1. C: Does anyone have anything to add?
+2. B: I borrowed an engineering textbook on 5 October and returned it on its initial due date of 12 October.
+3. A: I borrowed an engineering textbook on 2 October and renewed it three times to keep it until 30 October.
+4. D: I'd like a clear answer here.
+5. C: I borrowed my textbook on 3 October, renewed it once, and returned it on 17 October.
+6. B: I studied in the silent reading room on the second floor.
+7. D: I borrowed a textbook on 1 October, renewed it twice, and had a final due date of 22 October.
+8. A: Can we keep this brief?",A
+NF006,Commuters compare notes on the delayed express service from Greenfield to Central.,A = Samira; B = Viktor; C = Chloe; D = Ravi,"All times in this case refer to 12 November 2026. The 8:15 AM express train from Greenfield to Central was scheduled to depart from platform 3. Due to signaling works, it was moved to platform 7, where it arrived at 8:22 AM and departed 18 minutes behind schedule. The non-stop journey to Central took exactly 42 minutes. Passengers could only board the train while it was stopped at its departure platform.","1. D: Could we keep this thread short?
+2. C: The express train did not depart from platform 3.
+3. B: I arrived at Central on the express train from Greenfield at 8:57 AM.
+4. A: I bought a coffee at the station kiosk before boarding.
+5. B: Shall we start again from the top?
+6. A: The 8:15 AM express train departed from Greenfield at 8:33 AM.
+7. C: I boarded the express train at platform 7 at 8:26 AM.
+8. D: The express train arrived at Central at 9:15 AM.",B
+NF007,Bakers at an artisanal pastry shop review ingredient usage for afternoon custard tarts.,A = Lin; B = Carlos; C = Fatima; D = Jonas,"All baking took place on 9 May 2026. The bakery's standard base recipe produces exactly 12 custard tarts and requires 250 ml of cream, 4 egg yolks, and 60 grams of sugar. Bakers strictly scale all ingredients proportionally when producing larger or smaller batches. The pantry had 20 eggs available at the start of the day.","1. B: Who is taking the notes?
+2. A: I made a batch of 24 custard tarts and used exactly 120 grams of sugar.
+3. D: I baked a batch of 36 custard tarts using 600 ml of cream and 12 egg yolks.
+4. C: This is getting tangled.
+5. B: For a small batch of 6 custard tarts, I used 2 egg yolks and 125 ml of cream.
+6. A: I washed the stainless steel mixing bowls at noon.
+7. C: I prepared 18 custard tarts using exactly 375 ml of cream.
+8. D: Can we keep this brief?",D
+NF008,Festival attendees discuss merchandise purchases at the concert souvenir stall.,A = Keira; B = Aruna; C = Mateo; D = Zain,"At the concert merchandise booth on 14 August 2026, individual enamel pins cost £4.00 each, or £10.00 for a bundle of three. T-shirts cost £18.00 each with no quantity discount. The register always applied the bundle price to as many groups of three pins as possible. All customers paid with cash notes and received exact change.","1. B: Can we get a plain answer?
+2. A: I bought five enamel pins for a total cost of £18.00.
+3. C: I bought four enamel pins and paid £16.00 at the counter.
+4. D: Thanks for sorting this out, everyone.
+5. B: I bought one T-shirt and three enamel pins, handing over a £50 note and receiving £22 in change.
+6. A: The queue at the booth moved quite fast.
+7. D: I bought six enamel pins and was charged exactly £20.00.
+8. C: This is all rather confusing.",C
+NF009,Chess club members verify the final standings of a four-round weekend tournament.,A = Zoya; B = Henrik; C = Ananya; D = Lars,"The chess tournament took place across four rounds on 5 April 2026. Each participant played exactly four games. A win awarded 3 tournament points, a draw awarded 1 point, and a loss awarded 0 points. No bonus points were available. Henrik finished the tournament with zero losses.","1. C: Is there more to go on?
+2. B: I won two games and drew two games, finishing with 8 points.
+3. A: I completed all four tournament games and finished with a total score of 11 points.
+4. D: This is all rather confusing.
+5. C: I had one win, two draws, and one loss, earning 5 points.
+6. B: I played on board 2 for my third round.
+7. D: I finished the four rounds with exactly 7 points from two wins, one draw, and one loss.
+8. A: Who is taking the notes?",A
+NF010,Studio instructors review attendance caps for Saturday morning pottery workshops.,A = Nicole; B = Kieran; C = Sophie; D = Rahul,"All sessions took place on 17 January 2026. The ceramics studio held morning pottery sessions in Room 1 and Room 2. Studio policy strictly capped Room 1 at a maximum of 8 participants and Room 2 at a maximum of 12 participants per session. No person was permitted to join a session once the room cap was reached, and instructors never counted toward the participant cap.","1. C: Could we keep this thread short?
+2. A: My 9:00 AM advanced glazing session in Room 1 had 7 participants.
+3. B: I led the 10:00 AM beginner workshop in Room 1 with 11 registered participants working at the wheels.
+4. D: Some clarity would be good.
+5. C: I taught the 11:00 AM wheel-throwing class in Room 2 with exactly 12 participants.
+6. A: I restocked the clay bins before the first class began.
+7. D: There were 9 students in my 10:30 AM sculpting group in Room 2.
+8. B: Shall we start again from the top?",B
+NF011,Botanical garden volunteers sort out who watered the specimen ferns in the glasshouse.,A = Leanne; B = Yusuf; C = Nadia; D = George,"All times in this case refer to 25 July 2026. The rare royal ferns required precise care: they were watered at most once per day, and any watering had to occur strictly before 10:00 AM. After 10:00 AM, the misting system was active, and direct watering of the ferns was strictly forbidden. The ferns were kept in Glasshouse 3.","1. C: Can we keep this brief?
+2. A: I checked the humidity gauge in Glasshouse 3 at 8:15 AM.
+3. D: I gave the royal ferns their daily watering at 11:20 AM.
+4. B: This is getting muddled.
+5. B: I watered the royal ferns thoroughly at 8:40 AM.
+6. A: The misting system switched on promptly at 10:00 AM.
+7. C: I trimmed dead fronds near the entrance of Glasshouse 3 at 2:00 PM.
+8. D: Does anyone have anything to add?",D
+NF012,Laboratory researchers examine equipment usage and power drain during an automated assay.,A = Dragan; B = Sonia; C = Heidi; D = Kaito,"All times in this case refer to 8 September 2026. The portable centrifuge battery was at 100% at 8:00 AM and was not recharged all day. While running, the centrifuge drained the battery at a constant rate of 15 percentage points per hour; when idle, it consumed no power. Whenever the green sterilization lamp was illuminated, the centrifuge was required to remain powered off and idle. The green sterilization lamp was illuminated continuously from 1:00 PM to 3:30 PM and at no other time.","1. C: Who's writing up the notes?
+2. B: I ran the centrifuge for 2 hours between 9:00 AM and 11:30 AM, draining the battery by 30 percentage points.
+3. A: I operated the centrifuge continuously from 1:30 PM to 2:45 PM to process sample vials.
+4. D: Let's keep this thread brief.
+5. C: At 12:00 PM the centrifuge battery showed 70% remaining.
+6. D: The green sterilization lamp was switched off at 3:30 PM.
+7. B: I logged the test results in the laboratory database.
+8. A: Can we get a plain answer?",A
+NF013,Shoppers piece together their expenses for parking and purchases at the retail village.,A = Omar; B = Beatrice; C = Fiona; D = Liam,"All events occurred on 19 October 2026. Parking at the retail village cost £2.00 per hour or fraction of an hour, payable upon exit. At the village café, gourmet muffins cost £3.50 each or £9.00 for a box of three, and the café register always applied the three-muffin deal to full sets of three. All shoppers paid each bill in exact cash without vouchers.","1. B: This is getting tangled.
+2. A: I parked from 10:00 AM to 11:45 AM and paid £4.00 for parking.
+3. C: I parked my car from 1:15 PM to 4:05 PM and paid exactly £4.00 at the exit barrier.
+4. D: Can someone give a clear answer?
+5. B: I bought four gourmet muffins at the café and paid £12.50.
+6. D: I bought six gourmet muffins at the café and was charged £18.00.
+7. A: I bought an iced tea at the café patio.
+8. C: Is there more to go on?",C
+NF014,Hotel staff investigate elevator operations and emergency protocol activations.,A = Nadia; B = Kenji; C = Darius; D = Elena,"All times in this case refer to 4 June 2026. The guest elevator carried at most 8 passengers per trip. Whenever the maintenance yellow strobe on the roof was flashing, the elevator was locked in fire-service mode and could only be operated by a keyholder with no more than 2 passengers inside. The maintenance yellow strobe flashed continuously from 2:15 PM to 3:45 PM and at no other time that day.","1. B: Could we keep this thread short?
+2. A: At 1:30 PM I rode the guest elevator with six other people.
+3. D: At 3:00 PM I took the guest elevator down with four other hotel guests.
+4. C: This is all rather confusing.
+5. B: As a keyholder, I operated the elevator at 2:30 PM with just one passenger.
+6. C: At 4:10 PM I rode the elevator up with five guests.
+7. A: I delivered fresh towels to the fifth floor.
+8. D: Who's taking notes on this?",D
+NF015,Summer camp counselors review camper health logs and activity schedules.,A = Maya; B = Colin; C = Priya; D = Sam,"All times in this case refer to 28 July 2026. Camp policy mandated that any camper taking anti-nausea drops could receive at most three doses in a single day, with at least 4 hours between consecutive doses. Whenever lightning was detected within 10 miles, all outdoor activities were suspended and all campers were confined to the indoor recreation hall. Lightning was detected continuously from 1:30 PM to 4:00 PM and at no other time that day.","1. C: Is someone writing this up?
+2. A: I gave the camper their first dose of anti-nausea drops at 9:00 AM.
+3. B: I administered the camper's second dose of anti-nausea drops at 11:30 AM.
+4. D: This is a bit of a muddle.
+5. C: I administered the camper's second dose of anti-nausea drops at 1:15 PM in the clinic.
+6. D: During the lightning detection at 2:30 PM, I supervised board games inside the recreation hall.
+7. A: I led the outdoor archery drill at 10:30 AM before any storm warnings.
+8. B: Can we keep this thread brief?",B
