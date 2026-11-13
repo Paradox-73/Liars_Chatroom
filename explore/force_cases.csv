@@ -1,0 +1,265 @@
+id,scenario,speakers,evidence,chat,label,samples
+NF0002,Commuters compare notes on the 7:35 AM train from Elm Park.,A = Mohan; B = Hira; C = Mina; D = Tomas,"All times in this case refer to 14 April 2026. The 7:35 AM train from Elm Park to Oakvale was timetabled to leave from platform 12. That day it never stopped at platform 12: it pulled in to platform 9 at 7:43 AM and left from there exactly 20 minutes late. It ran non-stop to Oakvale, and the journey took exactly 1 hour 20 minutes. Passengers could board a train only at the platform where it was standing.","1. B: Honestly, the 7:35 AM to Oakvale left from platform 9.
+2. C: Did anyone get a refund?
+3. D: At 7:47 AM the 7:35 AM to Oakvale was standing at platform 9.
+4. D: I checked the weather forecast at 7:20 AM.
+5. C: I'd like a straight answer on this.
+6. A: Could we keep this thread short?
+7. D: The 7:35 AM train to Oakvale left at 7:55 AM.
+8. A: The 7:35 AM train to Oakvale never stopped at platform 12.
+9. C: Honestly, I got on the 7:35 AM to Oakvale at platform 9 at 7:48 AM.
+10. B: Okay so I waited on platform 12 at 7:35 AM, but the 7:35 AM to Oakvale never came to that platform.
+11. B: Should we complain about the delay?
+12. D: I saw Mina get off the 7:35 AM train from Elm Park in Oakvale at 8:00 AM.",D,3
+NF0004,Colleagues argue over how fast Arash's phone battery ran down.,A = Reza; B = Leila; C = Beatriz; D = Lars,"All times in this case refer to 10 August 2026. At 10:10 AM Arash's phone battery was at 61%. From 10:10 AM to 5:10 PM the phone was never charged, and its battery level fell at a steady rate of 6 percentage points per hour. At 5:10 PM Arash put it on charge, and it stayed on charge until 9:25 PM. While it was charging, its level rose at a steady 25 percentage points per hour until it reached 100%, and then it stayed at 100%. The phone is a year old.","1. D: At 10:10 AM Arash's phone battery showed 61%.
+2. D: I bought a sandwich at 11:30 AM.
+3. B: Arash's phone lost 21 percentage points between 12:50 PM and 4:20 PM.
+4. C: Let's keep this thread brief.
+5. C: I bought a sandwich at 6:45 PM.
+6. B: At 11:40 AM Arash's phone was somewhere between 52% and 62%.
+7. A: This is a bit of a muddle.
+8. A: I bought a sandwich at 9:30 AM.
+9. D: Arash's phone had 51% left at 11:50 AM.
+10. C: Thanks for sorting this out, everyone.
+11. B: Arash's phone was fully charged at 12:50 PM.
+12. A: At 10:25 PM Arash's phone was down to 83%.",B,3
+NF0009,Office workers argue over who rode the goods lift and with what.,A = Hassan; B = Sofia; C = Hari; D = Abena,"All times in this case refer to 19 June 2026. The goods lift never carried more than its limit of 350 kilograms. Sofia weighs 98 kilograms, Abena weighs 93 kilograms, Hari weighs 101 kilograms and Hassan weighs 104 kilograms. At 8:30 AM the lift took a 156 kilogram cage of laundry up to the third floor. At 10:50 AM it took a 255 kilogram crate of paint up to the second floor.","1. A: I saw Hari and Abena go up in the lift with the cage of laundry at 8:30 AM.
+2. A: I swept the loading bay at 10:20 AM.
+3. A: I swept the loading bay at 7:50 AM.
+4. B: Should the lift get a bigger motor?
+5. D: On the 8:30 AM trip the lift was loaded right up to its 350 kilogram limit.
+6. B: Why does the lift always smell of paint?
+7. C: For the record, on the 10:50 AM trip the lift carried 348 kilograms in all.
+8. C: I rode up with the cage of laundry at 8:30 AM.
+9. A: At 10:50 AM I went up in the lift with the crate of paint.
+10. D: Hari and I rode up together with the cage of laundry at 8:30 AM, for the record.
+11. C: I saw Abena ride up with the crate of paint at 10:50 AM.
+12. D: I signed for a delivery at 1:00 PM.",A,3
+NF0012,Patients compare notes on the queue at the pharmacy counter.,A = Mehmet; B = Adaeze; C = Pia; D = Ilse,"All times in this case refer to 2 June 2026. That morning exactly four people queued at the pharmacy counter: Pia, Mehmet, Adaeze and Ilse. The pharmacist served only people from that queue, one at a time and strictly in the order they joined it. Each person in the queue was served exactly once, and nobody left the queue before being served. Ilse was already in the queue when Mehmet joined it. Mehmet was the last to join the queue. Pia joined the queue straight after Adaeze, with nobody in between. Pia joined the queue before Ilse. Serving each person took the pharmacist at least 5 minutes. Mehmet's turn at the pharmacy counter began at 9:55 AM. Ilse's turn at the pharmacy counter began at 9:50 AM.","1. A: I was served right after Ilse, with nobody in between.
+2. B: I was the first person served.
+3. C: Honestly, I was served before Mehmet.
+4. B: Is the queue always this long?
+5. A: For the record, my turn began exactly 5 minutes after Ilse's.
+6. B: Let's not drag this out.
+7. D: Mehmet got served after Adaeze, for the record.
+8. C: My turn at the pharmacy counter began at 9:35 AM.
+9. A: Ilse got served right after Adaeze.
+10. C: I live 7 streets away.
+11. D: Let's keep it short.
+12. A: Pia was served before Ilse.",A,3
+NF0018,Housemates argue over how fast Sunil's e-reader battery ran down.,A = Lars; B = Ilse; C = Kenji; D = Sunil,"All times in this case refer to 8 February 2026. At 7:15 AM Sunil's e-reader battery was at 60%. From 7:15 AM to 2:15 PM the e-reader was never charged, and its battery level fell at a steady rate of 5 percentage points per hour. At 2:15 PM Sunil put it on charge, and it stayed on charge until 4:50 PM. While it was charging, its level rose at a steady 40 percentage points per hour until it reached 100%, and then it stayed at 100%.","1. C: Cheers for checking, all.
+2. A: This is getting muddled.
+3. C: At 9:55 AM I looked up the bus times, for the record.
+4. A: At 5:50 PM Sunil's e-reader was down to 86%.
+5. A: Can we keep this brief?
+6. B: Some clarity would be good.
+7. D: My e-reader was at 25% at 2:15 PM.
+8. D: Honestly, at 3:00 PM my e-reader battery showed 55%.
+9. D: At 11:15 AM my e-reader battery was at 0%.
+10. C: Sunil's e-reader still had at least 35% at 12:15 PM, for the record.
+11. B: Sunil's e-reader had 45% left at 10:15 AM.
+12. D: I bought a sandwich at 12:35 PM.",D,3
+NF0019,Museum volunteers trade claims about the ticket office and the delayed train to Ashby Road.,A = Chloe; B = Ayesha; C = Zane; D = Ugo,"All times in this case refer to 8 March 2026. The 6:55 PM train from Westcombe to Ashby Road was timetabled to leave from platform 8. That day it never stopped at platform 8: it pulled in to platform 11 at 7:10 PM and left from there exactly 25 minutes late. It ran non-stop to Ashby Road, and the journey took exactly 40 minutes. Passengers could board a train only at the platform where it was standing. The 7:15 PM train from Westcombe to Stonebridge left on time from platform 8. Whenever the ticket office was open, Sana was at its counter. From 1:00 PM to 2:00 PM Sana was at the bank, which is a separate place from the ticket office. Nobody could buy a ticket at the ticket office while it was closed.","1. B: The 6:55 PM from Westcombe got into Ashby Road at 8:00 PM.
+2. C: The 6:55 PM train to Ashby Road was timetabled to leave from platform 8.
+3. A: Is the bank far from here?
+4. B: Is there a waiting room at the station?
+5. D: The ticket office was open at 2:45 PM.
+6. B: Should we complain about the delay?
+7. C: At 10:05 AM I got my ticket at the ticket office.
+8. D: For the record, the ticket office was open at 1:35 PM.
+9. C: The ticket office was open at 10:05 AM.
+10. A: I checked the weather forecast at 12:45 PM.
+11. D: Sana was at the bank at 1:20 PM, for the record.",D,3
+NF0029,Office staff at the south site and the north site argue over what time the call happened.,A = Aarav; B = Alma; C = Maya; D = Mei,"All times in this case refer to 11 October 2026. The north site's clocks are exactly 3 hours behind the south site's clocks. At 2:55 PM south site time, Mei at the south site phoned Nell at the north site, and they talked for exactly 20 minutes without a break. The video meeting between the two sites started at 4:00 PM north site time and lasted exactly 30 minutes. The north site opened two years ago.","1. C: Is someone writing this up?
+2. C: To be clear, the call between Mei and Nell started at 5:55 PM north site time.
+3. D: Who set up the video link?
+4. C: Who's writing up the notes?
+5. A: The video meeting ended at 4:30 PM north site time.
+6. A: I printed 4 copies of the agenda at the south site.
+7. A: I sent 3 emails to the north site that day.
+8. D: I booked a room for 3 people at the south site.
+9. B: This is all rather confusing.
+10. B: Nell answered before 12:10 PM north site time, even though Mei rang after 2:40 PM south site time, for the record.
+11. D: The video meeting started at 4:00 PM north site time.
+12. B: Mei and Nell talked for 20 minutes.",C,3
+NF0030,Flatmates try to pin down the bin days on Station Street.,A = Karim; B = Sergio; C = Vikram; D = Dario,"The recycling on Station Street is collected every second Saturday, that is once every 14 days, and on no other day. One collection was on 23 May 2026. 1 May 2026 was a Friday.","1. C: I bought a roll of 3 bin bags that month.
+2. D: The recycling on Station Street was collected on 4 July 2026.
+3. B: I rinsed out 12 glass jars for the recycling.
+4. C: The recycling on Station Street was collected on 20 June 2026, for the record.
+5. A: Sergio watched the bin lorry collect the recycling on Station Street on 8 August 2026.
+6. D: Cheers for checking, all.
+7. A: For the record, I flattened 6 cardboard boxes that week.
+8. A: Can glass go in the same bin?",A,3
+NF0040,Flatmates sort out what happened with some library loans and the Elm Park Comets' football match against the Northgate Foxes.,A = Yuki; B = Kai; C = Gabriel; D = Rahul,"On 8 October 2026 the Elm Park Comets played the Northgate Foxes. At half-time the score was Elm Park Comets 3, Northgate Foxes 1, and the final score was Elm Park Comets 3, Northgate Foxes 3. Rahul and Yuki play for the Elm Park Comets, and Kai plays for the Northgate Foxes. Every book from the village library is due back exactly 7 days after the day it is borrowed. A late return costs £0.15 for each day after the due date, up to and including the day the book comes back, and the library charges nothing else. Kai borrowed an atlas from the library on 19 February 2026 and returned it on 25 February 2026. Yuki borrowed a garden handbook from the library on 25 February 2026 and returned it on 4 March 2026. 1 February 2026 was a Sunday. The village library has a blue front door.","1. C: I renewed my library card on 26 February 2026, which took 6 minutes.
+2. A: I'd like a clear answer here.
+3. B: I returned the atlas 2 days late.
+4. C: Over the whole match the Northgate Foxes scored three goals.
+5. D: That was a tense game.
+6. C: Yuki returned the garden handbook on a Wednesday, for the record.
+7. C: Kai's atlas was due back on 26 February 2026.
+8. C: Yuki paid no late fee for the garden handbook.",B,3
+NF0080,School staff compare notes on the east corridor and the Northgate Foxes' basketball match against the Quarry Rangers.,A = Obi; B = Naledi; C = Jaya; D = Yosef,"All times in this case refer to 3 May 2026. The Northgate Foxes played the Quarry Rangers on 3 May 2026. Quarter by quarter, the Northgate Foxes scored 12, 24, 19 and 17 points, and the Quarry Rangers scored 32, 14, 28 and 34. The game had no overtime. Jaya and Yosef play for the Northgate Foxes, and Obi plays for the Quarry Rangers. Tea was served after the match. Whenever the floor polisher was running in the east corridor, the east corridor was closed, and nobody could walk along it while it was closed. The floor polisher ran in the east corridor without a break from 2:00 PM to 4:15 PM.","1. D: The floor polisher was not running at 3:10 PM.
+2. A: I scored 8 points for the Quarry Rangers in the second quarter.
+3. B: At 11:05 AM I walked down the east corridor.
+4. B: The east corridor was closed at 1:45 PM.
+5. C: Who was in charge of the match?
+6. B: The east corridor was closed at 2:50 PM.
+7. B: Jaya scored 6 points for the Northgate Foxes in the third quarter.
+8. D: This is a bit of a muddle.
+9. C: Some clarity would be good.",D,3
+NF0087,Travellers compare notes on the 1:50 PM train from Riverside.,A = Alma; B = Ugo; C = Kiran; D = Nora,"All times in this case refer to 9 June 2026. The 1:50 PM train from Riverside to Oakvale was timetabled to leave from platform 5. That day it never stopped at platform 5: it pulled in to platform 4 at 2:10 PM and left from there exactly 30 minutes late. It ran non-stop to Oakvale, and the journey took exactly 1 hour 35 minutes. Passengers could board a train only at the platform where it was standing. The line to Oakvale runs along the river.","1. B: The 1:50 PM train to Oakvale left at least 30 minutes after its timetabled time.
+2. D: Should the manager be told?
+3. C: I got off the 1:50 PM from Riverside in Oakvale at 3:55 PM.
+4. C: I texted Kofi at 10:15 AM.
+5. A: Should we complain about the delay?
+6. C: To be clear, the 1:50 PM train to Oakvale left between 1:50 PM and 2:20 PM.
+7. A: I texted Kofi at 9:20 AM.
+8. B: Why do they keep changing platforms?
+9. A: The 1:50 PM train to Oakvale left on time at 1:50 PM.
+10. D: The 1:50 PM train to Oakvale never stopped at platform 5.",A,3
+NF0089,Customers sort out what happened with the queue at the post office counter and the orchid house temperature.,A = Aya; B = Gita; C = Fatima; D = Sami,"All times in this case refer to 2 April 2026. That morning exactly five people queued at the post office counter: Fatima, Gita, Sami, Ezra and Jun. The clerk served only people from that queue, one at a time and strictly in the order they joined it. Each person in the queue was served exactly once, and nobody left the queue before being served. Jun joined the queue after Ezra. Sami was already in the queue when Fatima joined it. Nobody joined the queue after Fatima. Jun joined the queue straight after Sami, with nobody in between. Serving each person took the clerk at least 10 minutes. Fatima's turn at the post office counter began at 12:30 PM. Gita's turn at the post office counter began at 11:15 AM. The heater in the orchid house is on whenever the temperature inside is below 15 °C, and off whenever it is 15 °C or warmer. That day the heater was on only once, the whole time from 10:15 AM to 12:15 PM. Every thermometer reading taken that day was accurate.","1. D: This is getting muddled.
+2. D: I was served before Fatima.
+3. B: The tomatoes look healthy this year.
+4. C: I was served straight after Ezra.
+5. A: This is a bit of a muddle.
+6. A: I restocked the shelves at 8:50 PM.",C,3
+NF0105,Classmates compare what the canteen charged them.,A = Bao; B = Nora; C = Zainab; D = Tomasz,"At the canteen on 7 October 2026, a curry cost $4.20, a pot of tea cost $1.40 and a fruit pot cost $2.20. Customers with a loyalty card got 10% off their whole bill, and nobody else got any discount. Tomasz and Zainab have loyalty cards, and Bao does not have one. Everyone paid in cash and was given the correct change.","1. C: A pot of tea cost me $1.26 altogether.
+2. B: I waited about 10 minutes to be served.
+3. D: Shall we start again from the top?
+4. B: I paid for two curries with a $10 bill and got $2.44 back.
+5. D: Thanks for going through this, everyone.
+6. A: A fruit pot was $2.20 before any discount, for the record.
+7. A: Tomasz bought exactly what I bought but paid less.
+8. B: I saw Tomasz pay $5.76 for a curry and a fruit pot.
+9. A: Zainab paid $1.26 for a pot of tea.
+10. C: My receipt number was 3481.
+11. D: Okay so before any discount, a single curry was $4.80.
+12. C: I handed over a $5 bill for a pot of tea and got $3.74 in change.",D,3
+NF0106,Office workers piece together the trips of the lift in the shopping centre.,A = Ananya; B = Bella; C = Hira; D = Wren,"All times in this case refer to 10 July 2026. The lift in the shopping centre holds at most eight people at a time, and it never held more than that. On its 7:50 AM trip up from the ground floor, exactly eight people got in at the ground floor, and nobody got out before the fifth floor.","1. B: That lift is far too slow.
+2. D: There were 8 people in the lift between the first and second floors on the 7:50 AM trip.
+3. B: Nobody got in at the fourth floor on the 7:50 AM trip.
+4. D: I got in at the first floor on the 7:50 AM trip.
+5. C: The lift was full when it reached the fifth floor on the 7:50 AM trip.
+6. D: Who keeps the lift key?
+7. B: I rode the 7:50 AM trip from the ground floor up to the sixth floor.
+8. C: Should the lift get a bigger motor?
+9. C: I took the stairs instead of the 7:50 AM trip.
+10. A: Can we go over it once more?
+11. A: On the 7:50 AM trip I got out at the fifth floor.",D,3
+NF0113,Flatmates sort out what happened with some library loans and the queue at the post office counter.,A = Kaito; B = Dara; C = Theo; D = Vera,"Every book from the harbour library is due back exactly 14 days after the day it is borrowed. A late return costs £0.20 for each day after the due date, up to and including the day the book comes back, and the library charges nothing else. Kaito borrowed a travel guide from the library on 26 August 2026, returned it late and paid exactly £1.00 in late fees for it. That morning Kaito, Theo and Kavya all queued at the post office counter. The clerk served only people from that queue, one at a time and strictly in the order they joined it. Each person in the queue was served exactly once, and nobody left the queue before being served. Kavya joined the queue immediately after Theo.","1. B: To be clear, I was served before Kavya.
+2. D: Kaito's travel guide was due back on 9 September 2026.
+3. B: Kaito brought the travel guide back on 14 September 2026, for the record.
+4. B: Would the manager know more?
+5. C: Cheers for checking, all.
+6. A: This is getting muddled.
+7. D: I live 8 streets away.
+8. C: Is the queue always this slow?
+9. A: I brought the travel guide back on 16 September 2026.",A,3
+NF0169,Housemates argue over how fast Akira's e-reader battery ran down.,A = Bella; B = Ravi; C = Jana; D = Priya,"All times in this case refer to 22 August 2026. At 9:15 AM Akira's e-reader battery was at 88%. From 9:15 AM to 12:15 PM the e-reader was never charged, and its battery level fell at a steady rate of 10 percentage points per hour. At 12:15 PM Akira put it on charge, and it stayed on charge until 3:25 PM. While it was charging, its level rose at a steady 20 percentage points per hour until it reached 100%, and then it stayed at 100%. The e-reader is a year old.","1. B: Akira's e-reader was fully charged at 1:00 PM.
+2. A: Would the manager know more?
+3. A: At 4:25 PM Akira's e-reader was down to 87%.
+4. A: This is a bit of a muddle.
+5. B: Is the battery getting old?
+6. C: Akira's e-reader was at 88% at 9:15 AM.
+7. D: I bought a sandwich at 5:55 PM.
+8. B: Is someone writing this up?",B,3
+NF0196,Caretakers compare notes on the goods lift and the greenhouse watering days.,A = Asha; B = Reza; C = Rohan; D = Dmitri,"All times in this case refer to 12 September 2026. In October 2026 the greenhouse plants were watered every 3 days, starting on 4 October 2026, and on no other days that month. Jun did all of that watering. The goods lift can carry at most 450 kilograms at a time, and it never carried more than that. Asha weighs 105 kilograms, Reza weighs 77 kilograms, Dmitri weighs 92 kilograms and Rohan weighs 83 kilograms. At 8:30 AM the lift took a 268 kilogram crate of paint up to the sixth floor. At 11:05 AM the lift carried a 370 kilogram crate of tinned food upstairs. The greenhouse has a sliding door.","1. A: Who keeps the lift key?
+2. A: On the 11:05 AM trip the lift carried 447 kilograms in all.
+3. C: This is all rather confusing.
+4. B: I signed for a delivery at 7:50 AM.
+5. C: I saw Asha, Reza and Dmitri all go up together with the crate of paint at 8:30 AM.
+6. D: Who has the greenhouse key?",C,3
+NF0202,Travellers trade claims about the delayed train to Northgate and the server room temperature.,A = Ximena; B = Diego; C = Sunil; D = Yusuf,"All times in this case refer to 30 August 2026. The 2:55 PM train from Fernhill to Northgate was timetabled to leave from platform 6. That day it never stopped at platform 6: it pulled in to platform 5 at 3:03 PM and left from there exactly 18 minutes late. It ran non-stop to Northgate, and the journey took exactly 35 minutes. Passengers could board a train only at the platform where it was standing. The 3:35 PM train from Fernhill to Westcombe left on time from platform 6. The fan in the server room always runs whenever the room is warmer than 30 degrees. The fan did not run at any time from 1:25 PM to 2:05 PM. Every thermometer reading taken that day was accurate.","1. A: Sunil's reading in the server room at 12:50 PM was 28 degrees, for the record.
+2. C: At 5:25 PM the fan was running even though the server room was only at 29 degrees.
+3. A: I checked the weather forecast at 3:00 PM.
+4. A: This is getting tangled.
+5. C: To be clear, I caught the 3:35 PM to Westcombe from platform 6.
+6. D: I saw Diego get off the 2:55 PM train from Fernhill in Northgate at 3:33 PM.
+7. D: Did anyone get a refund?
+8. B: In the end I boarded the 2:55 PM train to Northgate at platform 5 at 3:09 PM.
+9. B: The server room was at 28 degrees at 1:45 PM.",D,3
+NF0212,Residents try to pin down the bin days on Orchard Close.,A = Tomasz; B = Ebru; C = Carlos; D = Alma,"The recycling on Orchard Close is collected every second Monday, that is once every 14 days, and on no other day. One collection was on 13 April 2026. 1 April 2026 was a Wednesday. Orchard Close has twelve houses.","1. C: I rinsed out 4 glass jars for the recycling, for the record.
+2. A: For the record, there was no recycling collection on Orchard Close on 6 April 2026.
+3. D: The bin lorry took the recycling from Orchard Close on 22 June 2026.
+4. D: I bought a roll of 7 bin bags that month.
+5. B: Cheers for checking, all.
+6. C: Orchard Close had 2 recycling collections in April 2026.
+7. D: Honestly, I flattened 7 cardboard boxes that week.
+8. C: The recycling on Orchard Close was collected on 11 May 2026.
+9. C: The recycling on Orchard Close was collected on 16 March 2026.
+10. B: The bin lorry took the recycling from Orchard Close on 11 April 2026.
+11. B: Can glass go in the same bin?",B,3
+NF0257,Colleagues compare notes on Hugo's tablet battery during a long day.,A = Ebru; B = Hugo; C = Kofi; D = Bruno,"All times in this case refer to 29 November 2026. At 7:15 AM Hugo's tablet battery was at 75%. It was not charged at any time from 7:15 AM to 9:45 AM, and over that time its battery level dropped steadily by 10 percentage points every hour. At 9:45 AM Hugo put it on charge, and it stayed on charge until 12:15 PM. While it was charging, its level rose at a steady 50 percentage points per hour until it reached 100%, and then it stayed at 100%.","1. B: My tablet was at 60% at 8:45 AM.
+2. A: Hugo's tablet had 75% left at 10:15 AM.
+3. D: Okay so at 11:35 AM Hugo's tablet showed 100%.
+4. B: For the record, I bought a sandwich at 9:20 PM.
+5. C: At 1:15 PM Hugo's tablet was down to 90%.
+6. C: Hugo's tablet was at 70% at 7:45 AM, for the record.
+7. A: Batteries never last a whole day.
+8. D: Cheers for checking, all.
+9. B: My tablet lost 10 percentage points between 7:45 AM and 9:45 AM.
+10. B: I'd like a straight answer on this.
+11. A: Is someone writing this up?",B,3
+NF0258,Friends try to work out how much charge Carmen's phone had.,A = Jun; B = Jonas; C = Carmen; D = Yusuf,"All times in this case refer to 16 February 2026. At 9:40 AM Carmen's phone battery was at 80%. From 9:40 AM to 3:10 PM the phone was never charged, and its battery level fell at a steady rate of 10 percentage points per hour. At 3:10 PM Carmen put it on charge, and it stayed on charge until 6:10 PM. While it was charging, its level rose at a steady 50 percentage points per hour until it reached 100%, and then it stayed at 100%. The phone is a year old.","1. D: Carmen's phone had 25% left at 3:10 PM.
+2. A: At 4:00 PM I looked up the bus times.
+3. A: At 2:40 PM Carmen's phone battery showed 30%.
+4. C: My phone was at 70% at 10:40 AM.
+5. D: I sent Ebru an email at 8:35 PM.
+6. B: Can we keep this brief?
+7. D: Carmen's phone still had at least 75% at 10:40 AM.
+8. D: At 7:10 PM Carmen's phone was down to 82%, for the record.
+9. A: Some clarity would be good.
+10. B: At 5:05 PM Carmen's phone showed 100%.
+11. C: Let's keep it short.
+12. B: I sent Ebru an email at 8:00 PM.",D,3
+NF0261,Friends argue over how fast Hana's tablet battery ran down.,A = Naledi; B = Abel; C = Zeynep; D = Hana,"All times in this case refer to 28 February 2026. At 7:35 AM Hana's tablet battery was at 75%. From 7:35 AM to 10:50 AM the tablet was never charged, and its battery level fell at a steady rate of 20 percentage points per hour. At 10:50 AM Hana put it on charge, and it stayed on charge until 2:30 PM. While it was charging, its level rose at a steady 30 percentage points per hour until it reached 100%, and then it stayed at 100%. Hana's tablet has a cracked case.","1. A: Batteries never last a whole day.
+2. D: My tablet still had at least 45% at 9:05 AM.
+3. B: At 8:20 AM Hana's tablet battery showed 60%.
+4. B: At 8:20 AM I looked up the bus times.
+5. C: Is the battery getting old?
+6. A: At 3:30 PM Hana's tablet was down to 99%.
+7. D: At 2:10 PM my tablet showed 100%, for the record.
+8. B: Is someone writing this up?
+9. D: At 10:20 AM my tablet was somewhere between 20% and 30%.
+10. B: Who's writing up the notes?
+11. C: Hana's tablet was at 75% at 7:35 AM.
+12. A: Between 8:20 AM and 9:20 AM Hana's tablet dropped by 10 percentage points, for the record.",A,3
+NF0265,Audience members sort out what happened with who sat where in row B and the Riverside Otters' cricket match against the Valley Kestrels.,A = Akira; B = Kemal; C = Nadia; D = Jun,"Seats 1 to 4 in row B of the concert hall are side by side, in number order. For the whole concert, those seats were taken by exactly Jun, Kemal, Nadia and Vani, one person per seat; nobody else sat in them and nobody changed seats. Vani sat at one end of the row. Kemal's seat number was two higher than Vani's. In their two-innings match on 30 June 2026, the Riverside Otters made 285 runs in their first innings and 52 in their second, and the Valley Kestrels made 312 and 156. Akira and Kemal bat for the Riverside Otters, and Jun bats for the Valley Kestrels.","1. A: The Valley Kestrels made fewer runs in their second innings than in their first.
+2. C: Cheers for checking, all.
+3. B: This is getting tangled.
+4. B: Let's keep it short.
+5. D: Should we have played the reserves?
+6. A: Nadia made 17 runs in the Valley Kestrels' first innings.
+7. C: I sat in seat 3.
+8. A: I made 18 runs in the Riverside Otters' second innings.
+9. A: I sat in row A of the stand, seat 25.",C,3
+NF0280,Audience members trade claims about who sat where in row F and Kiran's banana bread.,A = Kiran; B = Marco; C = Aiko; D = Kenji,"All times in this case refer to 13 March 2026. Kiran's recipe for banana bread serves 3 and uses exactly 250 grams of flour, 2 bananas and 150 grams of butter. For the street party, Kiran made the recipe once, for 9 people, scaling every ingredient exactly in proportion, and cooked nothing else that day. Kiran baked it in two trays, one after another with no gap, starting at 4:40 PM. Each tray took exactly 25 minutes, and only one tray fitted in the oven at a time. The bowls were washed afterwards. Seats 1 to 5 in row F of the theatre are side by side, in number order. For the whole play, those seats were taken by exactly Aiko, Kiran, Marco, Ezra and Anton, one person per seat; nobody else sat in them and nobody changed seats. Anton did not sit in seat 2. Kiran and Aiko sat side by side. Aiko's seat number was one higher than Kiran's. Ezra did not sit in seat 1. Ezra's seat number was one higher than Marco's. Anton had an end seat.","1. B: I sat right next to Kiran.
+2. D: I made the same recipe for 8 people last month.
+3. C: Kiran sat in seat 3.
+4. A: Some clarity would be good.
+5. A: Thanks for going through this, everyone.
+6. C: Has anyone got further details?",B,3
+NF0284,Technicians try to work out what the comms room temperature was and when.,A = Ingrid; B = Ugo; C = Deepa; D = Eun,All times in this case refer to 13 October 2026. The fan in the comms room always runs whenever the room is warmer than 24 °C. The fan did not run at any time from 3:00 PM to 4:25 PM. Every thermometer reading taken that day was accurate. The fan was fitted last spring.,"1. C: Ugo's reading in the comms room at 12:35 PM was 23 °C.
+2. D: The comms room was at 21 °C at 10:50 AM.
+3. B: I read 23 °C on the comms room thermometer at 6:30 PM.
+4. B: Okay so when I checked at 3:30 PM, the comms room was at 24 °C.
+5. B: Who is taking the notes?
+6. D: At 6:40 PM I signed for a delivery.
+7. C: The comms room was at 23 °C at 3:50 PM.
+8. A: Should we get air conditioning?
+9. A: Okay so I made a cup of tea at 12:00 PM.
+10. C: When I checked at 3:45 PM, the comms room was at 28 °C.
+11. A: I read 25 °C on the comms room thermometer at 9:25 AM.
+12. A: At 8:10 PM the fan was running even though the comms room was only at 22 °C.",C,3
+NF0294,School staff argue over the east corridor on a busy day.,A = Kemal; B = Asha; C = Arash; D = Sunil,"All times in this case refer to 29 January 2026. Whenever the floor polisher was running in the east corridor, the east corridor was closed, and nobody could walk along it while it was closed. The floor polisher ran in the east corridor without a break from 10:00 AM to 12:30 PM.","1. B: Okay so at 2:30 PM I walked down the east corridor.
+2. A: The east corridor was open at 3:00 PM.
+3. D: At 1:20 PM I walked down the east corridor.
+4. D: The east corridor was closed at 12:40 PM.
+5. D: Can we go over it once more?
+6. B: The floor polisher was running in the east corridor at 11:00 AM.
+7. C: The east corridor was open at 11:45 AM.
+8. A: I'd like a clear answer here.
+9. C: The east corridor was closed at 12:10 PM.
+10. B: I saw Arash walk along the east corridor at 7:55 AM.
+11. B: The floor polisher was not running at 7:25 AM.
+12. C: Who signs off the cleaning rota?",C,3

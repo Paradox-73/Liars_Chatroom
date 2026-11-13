@@ -185,6 +185,102 @@ print(f"PROBE {json.dumps({a: f'{v[0]}/{v[1]}' for a, v in right.items()})}; {to
 os._exit(0)
 '''
 
+FORCE = r'''
+# What to do with a sample that reaches the first-pass cap while still thinking. Every case gets first samples capped at
+# CAP tokens (the pipeline's sampling); each capped one is then answered three ways from the same text:
+#   one_token  the pipeline's forced answer: "</think> ANSWER:" and one greedy token
+#   budget     Qwen's thinking-budget sentence, then the model writes its final answer (greedy, up to 256 tokens)
+#   continue   thinking goes on to 2 x CAP tokens in total, then the one_token answer if it is still capped
+import csv, json, math, re, sys, time
+sys.path.insert(0, "/tmp/sub")
+from lc.data import case_from_row
+from lc.llm.prompt import build_prompt
+from vllm import LLM, SamplingParams
+
+c = json.loads(open("/tmp/probe_cfg.json").read())
+CAP = c["max_tokens"]
+rows = list(csv.DictReader(open("/tmp/cases.csv", encoding="utf-8")))
+llm = LLM("/tmp/model", tensor_parallel_size=2, dtype="float16", gpu_memory_utilization=0.92, max_model_len=2 * CAP + 3072,
+          max_num_seqs=40, max_num_batched_tokens=4096, seed=0, disable_custom_all_reduce=True)
+tok = llm.get_tokenizer()
+labels = {r["id"]: r["label"] for r in rows}
+prompt = {r["id"]: tok.apply_chat_template([{"role": "user", "content": build_prompt(case_from_row(r))}], tokenize=False,
+                                           add_generation_prompt=True, enable_thinking=True) for r in rows}
+LETTERS = "ABCD"
+BUDGET = ("\n\nConsidering the limited time by the user, I have to give the solution based on the thinking directly now."
+          "\n</think>\n\n")
+
+
+def think(k, cap):
+    return SamplingParams(temperature=0.6, top_p=0.95, top_k=20, seed=k, max_tokens=cap)
+
+
+def answer_of(text):
+    if "</think>" not in text:
+        return None
+    found = re.findall(r"ANSWER\W{0,6}([ABCD])\b", text.rsplit("</think>", 1)[1])
+    return found[-1] if found else None
+
+
+def one_token(texts):
+    outs = llm.generate([t + "\n</think>\n\nANSWER:" for t in texts],
+                        SamplingParams(max_tokens=1, temperature=0.0, logprobs=20), use_tqdm=False)
+    res = []
+    for o in outs:
+        p = dict.fromkeys(LETTERS, 0.0)
+        for lp in (o.outputs[0].logprobs[0] if o.outputs[0].logprobs else {}).values():
+            t = (lp.decoded_token or "").strip(" *")
+            if t in p:
+                p[t] += math.exp(lp.logprob)
+        res.append(max(p, key=p.get) if any(p.values()) else None)
+    return res
+
+
+t0 = time.time()
+reqs = [(r["id"], k) for r in rows for k in range(int(r["samples"]))]
+outs = llm.generate([prompt[i] for i, _ in reqs], [think(k, CAP) for _, k in reqs], use_tqdm=False)
+first = {}
+for (cid, k), o in zip(reqs, outs):
+    first[(cid, k)] = o.outputs[0].text
+capped = [key for key, t in first.items() if "</think>" not in t]
+print(f"[force] {len(reqs)} first samples in {time.time() - t0:.0f} s, {len(capped)} capped at {CAP}", flush=True)
+res = {key: {"id": key[0], "k": key[1], "label": labels[key[0]], "capped": key in capped,
+             "first": answer_of(t), "tokens": len(tok.encode(t, add_special_tokens=False))} for key, t in first.items()}
+if capped:
+    texts = [prompt[i] + first[(i, k)] for i, k in capped]
+    for key, letter in zip(capped, one_token(texts)):
+        res[key]["one_token"] = letter
+    bud = llm.generate([t + BUDGET for t in texts], SamplingParams(max_tokens=256, temperature=0.0), use_tqdm=False)
+    for key, o in zip(capped, bud):
+        res[key]["budget"] = answer_of("</think>" + o.outputs[0].text)
+        res[key]["budget_tokens"] = len(o.outputs[0].token_ids)
+    t1 = time.time()
+    cont = llm.generate(texts, [think(100 + k, CAP) for _, k in capped], use_tqdm=False)
+    still, still_keys = [], []
+    for key, t, o in zip(capped, texts, cont):
+        full = t + o.outputs[0].text
+        res[key]["continue_finished"] = "</think>" in o.outputs[0].text
+        res[key]["continue"] = answer_of(o.outputs[0].text)
+        if res[key]["continue"] is None:
+            still.append(full)
+            still_keys.append(key)
+    for key, letter in zip(still_keys, one_token(still) if still else []):
+        res[key]["continue"] = letter
+    print(f"[force] continuations in {time.time() - t1:.0f} s, {len(still)} still capped at {2 * CAP}", flush=True)
+with open("/kaggle/working/force_out.jsonl", "w", encoding="utf-8") as f:
+    for key in sorted(res):
+        f.write(json.dumps({**res[key], "text": first[key]}) + "\n")
+fin = [r for r in res.values() if not r["capped"]]
+cap = [r for r in res.values() if r["capped"]]
+summary = {"first_samples": len(res), "finished_right": f"{sum(r['first'] == r['label'] for r in fin)}/{len(fin)}"}
+for m in ("one_token", "budget", "continue"):
+    summary[m] = f"{sum(r.get(m) == r['label'] for r in cap)}/{len(cap)}"
+summary["continue_finished"] = sum(bool(r.get("continue_finished")) for r in cap)
+print("FORCE " + json.dumps(summary), flush=True)
+import os
+os._exit(0)
+'''
+
 PROBE_DRIVER = r'''
 import base64, io, json, os, subprocess, time, zipfile
 
@@ -282,7 +378,7 @@ def write_kernel(out, owner, run_py):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("kind", choices=["bench", "probe", "pipe"])
+    ap.add_argument("kind", choices=["bench", "probe", "force", "pipe"])
     ap.add_argument("--zip", required=True)
     ap.add_argument("--csv", required=True, help="labelled cases (train.csv columns); probe: plus a samples column")
     ap.add_argument("--meta", help="pipe: id,family CSV for the per-family accuracy")
@@ -304,6 +400,10 @@ def main():
         cfg = dict(MODEL, max_tokens=a.max_tokens, variant=open(a.variant, encoding="utf-8").read() if a.variant else "")
         run_py = f"ZIP = {zip_b64!r}\nCASES = {cases!r}\nPROBE = {PROBE!r}\nCFG = {cfg!r}\n{PROBE_DRIVER}"
         compile(PROBE, "probe.py", "exec")
+    elif a.kind == "force":  # the probe driver runs FORCE in place of the probe; --max-tokens is the first-pass cap
+        cfg = dict(MODEL, max_tokens=a.max_tokens)
+        run_py = f"ZIP = {zip_b64!r}\nCASES = {cases!r}\nPROBE = {FORCE!r}\nCFG = {cfg!r}\n{PROBE_DRIVER}"
+        compile(FORCE, "force.py", "exec")
     else:
         meta = open(a.meta, encoding="utf-8", newline="").read()
         cfg = dict(MODEL, env=json.loads(a.env))
