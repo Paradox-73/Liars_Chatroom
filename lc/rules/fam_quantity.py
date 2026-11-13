@@ -127,18 +127,24 @@ def same_name(a, b):
 
 C = r"(?:the|that|this) (?P<c>[a-z][a-z'\- ]*?)"
 QTY = r"(?:exactly )?(?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?)"
-SPAN = r"from @T (?:to|until) @T"
-STATE = re.compile(r"^(?:(?P<pre>at @T|" + SPAN + r"),? )?(?:" + C + r"|(?P<it>it)) (?:held|contained|had) " + QTY
-                   + r"(?: in it)?(?: (?P<post>at @T|" + SPAN + r"))?$")
+SPAN = r"(?:from @T (?:to|until)|between @T and) @T"
+STATES = [re.compile(r"^(?:(?P<pre>at @T|" + SPAN + r"),? )?" + p + r"(?: (?P<post>at @T|" + SPAN + r"))?$") for p in (
+    r"(?:" + C + r"|(?P<it>it)) (?:held|contained|had|was holding) " + QTY + r"(?: in it)?",
+    r"there (?:were|was) " + QTY + r" in (?:" + C + r"|(?P<it>it))")]
 RATE = re.compile(r"^(?:(?P<pre>" + SPAN + r"|from then (?:to|until) @T|until @T),? )?(?:(?:" + C + r"|(?P<it>it)) )?"
-                  r"(?:then )?(?P<v>drained|filled|emptied|leaked) (?:at a steady|at a constant|steadily at)(?: rate of)? "
+                  r"(?:then )?(?:was )?(?P<v>drained|filled|refilled|emptied|leaked|pumped out) "
+                  r"(?:at a steady|at a constant|steadily at)(?: rate of)? "
                   r"(?P<r>\d+(?:\.\d+)?) (?P<u>[a-z]+) (?:per|an|a|each|every) (?P<per>hour|minute)"
                   r"(?: (?P<post>" + SPAN + r"|from then (?:to|until) @T|until @T))?$")
-EVENT = re.compile(r"^(?:then )?(?:at @T,? )?exactly (?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?) (?:was|were) "
-                   r"(?P<v>added|removed|taken out|poured in|put in|tipped in|drawn off|taken away)"
-                   r"(?: (?:to|into|from|out of) (?:it|" + C + r"))?(?: at @T)?$")
-CLOSE = re.compile(r"^(?:and )?(?:with )?nothing (?:else )?(?:was )?(?P<what>added or removed|removed or added|added)"
-                   r"(?: (?:to|from) it)?(?: (?:before|until) @T)?$")
+ADDED = ("added", "poured in", "put in", "tipped in", "pumped in", "delivered")
+EVENT = re.compile(r"^(?:then )?(?:at @T,? )?(?:exactly )?(?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?) (?:was|were) "
+                   r"(?P<v>" + "|".join(ADDED) + r"|removed|taken out|taken|taken away|drawn off|used|poured out|"
+                   r"tipped out|scooped out|pumped out|drained off)"
+                   r"(?: (?:to|into|from|out of|off) (?:it|" + C + r"))?(?: at @T)?$")
+CLOSE = re.compile(r"^(?:and )?(?:with )?(?:nothing (?:else )?|no other [a-z]+ )(?:was )?"
+                   r"(?P<what>added or removed|removed or added|put in or taken out|added)"
+                   r"(?: (?:to|from|in|out of) it)?(?: (?:before|until) @T)?$"
+                   r"|^(?:and )?there (?:were|was) no other (?:additions or removals|changes)(?: (?:before|until) @T)?$")
 NOCHANGE = re.compile(r"^(?:and )?no (?P<u>[a-z]+(?: [a-z]+)?) (?:was|were) (?:added or removed|removed or added)"
                       r"(?: during that time| in that time| during that period)?$")
 SUBJECT = re.compile(r"^" + C + r" (?:stands|stood|sits|sat|is|was) (?!.*@T)[a-z ,']+$")
@@ -171,7 +177,7 @@ def clauses(masked, times):
 
 def span_times(phrase, ts):
     """(start, end) for a time phrase whose @T values are ts; start None means 'from the reading'."""
-    if phrase.startswith("from @T"):
+    if len(ts) == 2:
         return ts[0], ts[1]
     return None, ts[0]  # 'until @T' or 'from then until @T'
 
@@ -242,7 +248,8 @@ class Store:
             lo, hi = max(ra, t0), min(rb, t)
             if hi > lo:
                 a += r * (hi - lo)
-        return ({a, a + at_t} if at_t else {a}), True
+        possible = {a, a + at_t} if at_t else {a}
+        return (possible, True) if min(possible) >= 0 else None  # below empty: the reading of the evidence is off
 
     def removal(self, t):
         """LIE/OK for 'someone took some out at minute t', or None."""
@@ -347,7 +354,7 @@ class Level(Family):
 
     def apply(self, p, ts, stores, store_for, cur, subjects, touched):
         """Add one clause to the stores; False when the clause is not understood."""
-        m = STATE.match(p)
+        m = next((m for m in (rx.match(p) for rx in STATES) if m), None)
         if m and bool(m["pre"]) != bool(m["post"]):
             phrase = m["pre"] or m["post"]
             st = self.subject(m, stores, store_for, cur, subjects, m["u"])
@@ -380,7 +387,7 @@ class Level(Family):
                 return True
             start, end = span_times(m["pre"] or m["post"], ts)
             per = Fraction(60) if m["per"] == "hour" else Fraction(1)
-            sign = 1 if m["v"] == "filled" else -1
+            sign = 1 if m["v"] in ("filled", "refilled") else -1
             st.rates.append([start, end, sign * num(m["r"]) * u[1] / st.unit[1] / per])
             return True
         m = EVENT.match(p)
@@ -394,13 +401,13 @@ class Level(Family):
             if st is None:
                 return False
             touched.append(st)
-            sign = 1 if m["v"] in ("added", "poured in", "put in", "tipped in") else -1
+            sign = 1 if m["v"] in ADDED else -1
             st.events.append((ts[0], sign * num(m["n"]) * u[1] / st.unit[1]))
             return True
         m = CLOSE.match(p)
         if m and cur is not None and len(ts) <= 1:
             touched.append(cur)
-            cur.close.append(("add" if m["what"] == "added" else "all", ts[0] if ts else None))
+            cur.close.append(("add" if m["what"] == "added" else "all", ts[0] if ts else None))  # changes ruled out
             return True
         m = NOCHANGE.match(p)
         if m and cur is not None and cur.span and same_dim(unit_of(m["u"])[0], cur.unit[0]):
@@ -594,8 +601,8 @@ PIECE_WORDS = {"piece", "slice", "length", "portion", "share", "part", "bit", "s
                "wedge"}
 PIECE_TALK = set("my own the a one of i got had ended up with received was given took kept handed came away that which "
                  "measured measures measure to out at weighed weighs weigh in long length is were made make together "
-                 "put added combined between them two both short each ran totalled totaled total ones it me from "
-                 "came".split())
+                 "put added combined between them two both short each every all ran totalled totaled total ones it "
+                 "me from came".split())
 
 
 def ratio(m):
@@ -647,7 +654,7 @@ class Pieces(Family):
         if cut["eq"]:
             if re.search(r"\b(?:long|short) " + noun, text):
                 return None
-            sizes = {"mine": {obj["total"] / k}}
+            sizes = {"mine": {obj["total"] / k}, "each": {obj["total"] / k}}
         else:
             r = RATIO.search(text)
             shorts = re.search(r"\b(?P<s>" + NUM + r") short " + noun + r"s\b", text)
@@ -693,6 +700,8 @@ class Pieces(Family):
             ref = "short"
         elif re.search(r"\bthe (?:one )?long " + P + r"\b", s):
             ref = "long"
+        elif re.search(r"\b(?:each|every) " + P + r"\b|\b(?:the|all the|all) " + P + r"s\b.*\beach\b", s):
+            ref = "each"
         elif re.search(r"\bmy (?:own )?" + P + r"\b|\b" + P + r" (?:that )?i (?:got|had|ended up with|received|was given|"
                        r"took|kept|was handed|came away with)\b|\bi (?:got|had|received|was given|ended up with|took|"
                        r"kept|came away with) (?:a|one|the) " + P + r"\b", s):
@@ -721,10 +730,10 @@ LIST_RES = [re.compile(p, re.I) for p in (
     + r") for (?:the )?(?P<ev>(?:\d{1,2}:\d{2}|[^:,])+?): (?P<names>.+)$")]
 HELD = re.compile(r"^the (?P<ev>.+?) (?:was held|took place)\b")
 DESCRIBED = re.compile(r"\b(?:was held|took place|where the|of the year)\b")
-ALL_CAME = re.compile(r"^(?:everyone|everybody) (?:on (?:it|the (?:[a-z\-]+ )?(?:list|sheet|register|roster))|listed) "
-                      r"attended$")
+ALL_CAME = re.compile(r"^(?:(?:everyone|everybody) (?:on (?:it|the (?:[a-z\-]+ )?(?:list|sheet|register|roster))|listed)"
+                      r"|all of them|they all|each of them|all " + NUM + r"(?: of them)?) attended$")
 ONLY_THEM = re.compile(r"^(?:(?:everyone|everybody) who attended (?:is|was) (?:on it|listed|on the (?:[a-z\-]+ )?"
-                       r"(?:list|sheet|register|roster))|nobody else attended|no one else attended)$")
+                       r"(?:list|sheet|register|roster))|(?:nobody|no one) else (?:attended|did|came|was there))$")
 CAME = (r"(?:attended|went to|was at|was there at|sat through|sat in on|made it to|turned up (?:to|at|for)|"
         r"showed up (?:to|at|for)|took part in|was present at)")
 STAYED_AWAY = (r"(?:missed|skipped|wasn't at|was not at|didn't attend|did not attend|didn't go to|did not go to|"
@@ -745,14 +754,17 @@ class Attendance(Family):
             low, times = mask_times(s.lower())
             m = HELD.match(low)
             if m and len(times) <= 1 and "names" not in f:
-                held = (m["ev"], times)  # "The 1:30 PM safety briefing was held ... Its sign-in register lists ..."
+                held = (m["ev"], times, i)  # "The 1:30 PM safety briefing was held ... Its sign-in register lists ..."
                 continue
             m = next((m for m in (rx.match(s) for rx in LIST_RES) if m), None)
             if m and "names" not in f:
                 names = [x for x in re.split(r",\s*(?:and\s+)?|\s+and\s+", m["names"]) if x]
                 if len(names) != num(m["k"]) or not all(re.fullmatch(r"[A-Z][a-zA-Z'\-]+", x) for x in names):
                     return None
-                ev, ts = mask_times(m["ev"].lower()) if m["ev"] else held or (None, None)
+                if m["ev"]:
+                    ev, ts = mask_times(m["ev"].lower())
+                else:  # "Its ... register": the event named in the sentence just before
+                    ev, ts = held[:2] if held and held[2] == i - 1 else (None, None)
                 if ev is None or len(ts) != 1:
                     return None
                 noun = re.sub(r"^@T |^the @T | at @T$", "", ev)
@@ -791,6 +803,10 @@ class Attendance(Family):
              r"(?:near|by|at|next to|beside) the [a-z ]+$", True),
             (r"^(?P<who>i) (?:sat|took a seat|was sitting|was seated|stood|was standing) (?:near|by|at|next to|beside) "
              r"the [a-z ]+? during " + ev + r"$", True))]
+        f["headcount"] = [re.compile(p) for p in (
+            r"^(?:exactly |only )?(?P<k>" + NUM + r") (?:people|attendees|persons) (?:attended|went to|were at|"
+            r"turned up (?:to|at|for)|showed up (?:to|at|for)|took part in) " + ev + r"$",
+            r"^" + ev + r" had (?:exactly |only )?(?P<k>" + NUM + r") (?:people|attendees)(?: there| in attendance)?$")]
         f["where"] = re.compile(r"^(?:at @T,? )?i was (?:in|at|out in) the (?P<loc>[a-z][a-z ]*?)(?: at @T)?$")
         f["evidence"] = ctx.case.evidence.lower()
         return f
@@ -813,14 +829,20 @@ class Attendance(Family):
             who = m["who"]
             if who in ("i", "me"):
                 who = me
-            elif who in NOT_A_NAME or not re.search(r"\b" + who.capitalize() + r"\b", text):
+            elif who in NOT_A_NAME or who in WORDNUM or not re.search(r"\b" + re.escape(who.capitalize()) + r"\b", text):
                 return None
             listed = who in f["names"]
             if came and not listed and f.get("only_them"):
+                if who not in {n.lower() for n in ctx.speakers.values()}:
+                    return None  # a capitalised first word need not be a person; speakers surely are
                 return Verdict(LIE, self.name, f"{who} is not on the complete list")
             if not came and listed and f.get("all_came"):
                 return Verdict(LIE, self.name, f"{who} is on the list and everyone on it attended")
             return Verdict(OK, self.name, "agrees with the list")
+        m = next((m for m in (rx.match(s) for rx in f["headcount"]) if m), None)
+        if m and all(t == f["time"] for t in times) and f.get("all_came") and f.get("only_them"):
+            ok = num(m["k"]) == len(f["names"])
+            return Verdict(OK if ok else LIE, self.name, f"{len(f['names'])} attended")
         m = f["where"].match(s)
         if m and len(times) == 1:
             if m["loc"] in f["evidence"] or (me in f["names"] and times[0] == f["time"]):
