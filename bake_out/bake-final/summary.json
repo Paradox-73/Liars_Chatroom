@@ -1,0 +1,47 @@
+{
+ "model": "Qwen/Qwen3-14B-AWQ",
+ "env": {
+  "LC_ENGINE_STATS": "1"
+ },
+ "exit": 0,
+ "setup_min": 2.8,
+ "predict_min": 49.2,
+ "engine_ready_min": [
+  2.5
+ ],
+ "restarts": 0,
+ "accuracy": 0.93,
+ "first_samples": 299,
+ "first_correct": 278,
+ "first_forced": 89,
+ "first_forced_correct": 68,
+ "continued": 1,
+ "continued_finished": 1,
+ "extra_samples": 0,
+ "no_think_answers": 10,
+ "first_tokens_mean": 1547,
+ "first_done_min": {
+  "0.5": 33.14,
+  "0.9": 44.29,
+  "1.0": 49.13
+ },
+ "per_family": {
+  "agelimit": "18/19",
+  "battery": "14/17",
+  "library": "17/17",
+  "lift": "19/22",
+  "medicine": "16/17",
+  "overnight": "9/10",
+  "parking": "14/14",
+  "periodic": "13/16",
+  "platform": "16/17",
+  "prices": "18/19",
+  "queue": "16/19",
+  "recipe": "15/15",
+  "scores": "17/17",
+  "seats": "16/17",
+  "temperature": "17/18",
+  "timezone": "20/20",
+  "whenever": "24/26"
+ }
+}
