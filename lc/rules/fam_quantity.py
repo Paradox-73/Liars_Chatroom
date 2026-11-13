@@ -579,3 +579,132 @@ class Tickets(Family):
         if want is None:
             return None
         return Verdict(OK if int(nums[0]) == want else LIE, self.name, f"evidence {want} for {key}")
+
+
+# ------------------------------------------------------------------------------------ qty_pieces: cut objects
+
+MEASURE = re.compile(r"\bexactly (?P<n>\d+(?:\.\d+)?) (?P<u>[a-z]+)\b")
+OBJECT = re.compile(r"\b(?:the|a) (?P<o>[a-z][a-z\-]*?(?: [a-z\-]+?)??)(?=,| was\b| weighed\b| measured\b| measuring\b"
+                    r"| exactly\b| which\b|$)")
+CUT = re.compile(r"\bcut into (?P<k>" + NUM + r") (?P<eq>equal )?(?P<p>[a-z]+)")
+LEFT_OVER = re.compile(r"\bnothing (?:was )?left over\b")
+RATIO = re.compile(r"\b(?P<m>twice|three times|four times|\d+ times) as (?:long|heavy|big|large) as each of "
+                   r"(?:the (?:[a-z]+ )?short (?:[a-z]+|ones)|them)\b")
+PIECE_WORDS = {"piece", "slice", "length", "portion", "share", "part", "bit", "section", "segment", "strip", "chunk",
+               "wedge"}
+PIECE_TALK = set("my own the a one of i got had ended up with received was given took kept handed came away that which "
+                 "measured measures measure to out at weighed weighs weigh in long length is were made make together "
+                 "put added combined between them two both short each ran totalled totaled total ones it me from "
+                 "came".split())
+
+
+def ratio(m):
+    w = m["m"]
+    return 2 if w == "twice" else WORDNUM.get(w.split()[0]) or int(w.split()[0])
+
+
+@register
+class Pieces(Family):
+    name = "qty_pieces"
+
+    def parse(self, ctx):
+        obj = None
+        for i, sent in enumerate(ctx.sentences):
+            low = sent.lower().rstrip(". ")
+            if obj is None:
+                m, o = MEASURE.search(low), OBJECT.search(low)
+                if not (m and o and re.search(r"\b(?:long|measur\w*|weigh\w*|weight)\b", low)):
+                    continue
+                d, size = unit_of(m["u"])
+                if d not in ("len", "mass") or len(re.findall(r"\d+(?:\.\d+)?", low)) != 1:
+                    continue
+                obj = {"name": o["o"], "dim": d, "total": num(m["n"]) * size, "idx": [i], "text": low}
+                cut = CUT.search(low)
+                if cut is None:
+                    continue
+            else:
+                if not re.match(r"^(?:it|the " + re.escape(obj["name"]) + r") was (?:then )?cut into ", low) \
+                        and "cut" in obj and not re.search(r"\b(?:long|short) (?:[a-z]+|ones)\b", low):
+                    break
+                obj["idx"].append(i)
+                obj["text"] += " | " + low
+                cut = CUT.search(low)
+                if cut is None and "cut" not in obj:
+                    return None
+            if cut is not None:
+                if "cut" in obj:
+                    return None
+                obj["cut"] = cut
+            if "cut" in obj and (obj["cut"]["eq"] or RATIO.search(obj["text"])):
+                break
+        if obj is None or "cut" not in obj:
+            return None
+        cut, text = obj["cut"], obj["text"]
+        k = num(cut["k"])
+        if not LEFT_OVER.search(text) or k < 2 or re.search(r"\b(?:except|apart from|but|about|roughly|around)\b", text):
+            return None
+        noun = sing(cut["p"])
+        if cut["eq"]:
+            if re.search(r"\b(?:long|short) " + noun, text):
+                return None
+            sizes = {"mine": {obj["total"] / k}}
+        else:
+            r = RATIO.search(text)
+            shorts = re.search(r"\b(?P<s>" + NUM + r") short " + noun + r"s\b", text)
+            if not (r and shorts and re.search(r"\b(?:one|the) long " + noun + r"\b", text) and "equal" in text
+                    and num(shorts["s"]) == k - 1):
+                return None
+            short = obj["total"] / (ratio(r) + k - 1)
+            sizes = {"mine": {short, ratio(r) * short}, "long": {ratio(r) * short}, "short": {short},
+                     "two short": {short * (k - 1)} if k == 3 else None}
+        sizes["total"] = {obj["total"]}
+        for i in obj["idx"]:
+            ctx.consume(i)
+        return {"name": obj["name"], "dim": obj["dim"], "sizes": sizes, "nouns": PIECE_WORDS | {noun}}
+
+    def judge(self, ctx, f, msg):
+        if msg.text.strip().endswith("?"):
+            return None
+        s = body(msg.text).lower()
+        if re.search(r"\d:\d\d", s):
+            return None
+        toks = re.findall(r"\d+(?:\.\d+)?|[a-z']+", s)
+        obj_words = set(f["name"].split())
+        if not re.search(r"\d", s):
+            if re.search(r"\bcut(?:ting)?\b", s) and obj_words <= set(toks) and not re.search(
+                    r"\b(?:not|never|nobody|no one|didn't|wasn't|isn't)\b|n't\b", s):
+                return Verdict(OK, self.name, "says who cut it")
+            return None
+        qty = re.findall(r"(\d+(?:\.\d+)?) ([a-z]+)", s)
+        if len(qty) != 1 or len(re.findall(r"\d+(?:\.\d+)?", s)) != 1:
+            return None
+        n, u = qty[0]
+        d, size = unit_of(u)
+        if d != f["dim"]:
+            return None
+        nouns = {w for w in toks if sing(w) in f["nouns"]}
+        if any(w not in PIECE_TALK and w not in obj_words and w not in nouns and w != u and not w[0].isdigit()
+               for w in toks):
+            return None
+        P = r"(?:" + "|".join(sorted(f["nouns"])) + r")"
+        if re.search(r"\b(?:two|both) short " + P + r"s\b", s):
+            ref = "two short" if re.search(r"\b(?:together|combined|between them|in total|altogether)\b", s) else None
+        elif re.search(r"\b(?:the|each|one|a) short " + P + r"\b", s):
+            ref = "short"
+        elif re.search(r"\bthe (?:one )?long " + P + r"\b", s):
+            ref = "long"
+        elif re.search(r"\bmy (?:own )?" + P + r"\b|\b" + P + r" (?:that )?i (?:got|had|ended up with|received|was given|"
+                       r"took|kept|was handed|came away with)\b|\bi (?:got|had|received|was given|ended up with|took|"
+                       r"kept|came away with) (?:a|one|the) " + P + r"\b", s):
+            ref = "mine"
+        elif not nouns and re.search(r"\bthe (?:whole |entire |full )?" + re.escape(f["name"]) + r"\b", s):
+            ref = "total"
+        else:
+            ref = None
+        possible = f["sizes"].get(ref) if ref else None
+        if not possible:
+            return None
+        res = settle(num(n) * size, precision(n) * size, possible)
+        if res is None:
+            return None
+        return Verdict(res, self.name, f"{ref}: evidence {', '.join(str(float(p)) for p in sorted(possible))}")
