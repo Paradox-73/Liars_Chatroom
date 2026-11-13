@@ -3,8 +3,10 @@ the zip from submission/make_zip.py is unpacked, setup.sh runs with internet, an
 session allows it, (1) the organisers' selftest.py on 200 train cases, (2) predict.py on the first 450 ids of
 docs/ids/test_llm_order.txt, the test cases the rules leave open, and (3) predict.py on the first 40 of them with one
 card. Test rows are only written to files in /tmp, never printed or saved as output.
+With --full the kernel instead runs predict.py on all of test.csv and saves the predictions as submission.csv.
 
 python kaggle/build_predict_test.py kaggle/predict-test --zip ClaudeLaggye_code.zip --selftest <kit>/selftest.py --owner <user>
+python kaggle/build_predict_test.py kaggle/predict-full --full --zip ClaudeLaggye_code.zip --selftest <kit>/selftest.py --owner <user>
 """
 import argparse
 import base64
@@ -52,6 +54,14 @@ else:
     offline = "HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 "
     log("WARNING: the network cannot be cut here; the runs below only have HF_HUB_OFFLINE=1 and a dead proxy")
 
+if FULL:
+    t = time.time()
+    rc = sh(f"cd {SUB} && {offline}python predict.py --input {data}/test.csv --output {OUT}/submission.csv --workdir /tmp/wfull",
+            check=False)
+    log(f"predict.py on all of test.csv: exit code {rc}, {(time.time() - t) / 60:.1f} min")
+    sh(f"cp /tmp/wfull/answers.jsonl {OUT}/answers_full.jsonl; wc -l {OUT}/submission.csv", check=False)
+    raise SystemExit(0)
+
 sh(f"cp {data}/train.csv {SUB}/train.csv")
 t = time.time()
 sh(f"cd {SUB} && {offline}python selftest.py --train train.csv --n 200", check=False)
@@ -89,6 +99,7 @@ def main():
     ap.add_argument("--ids", default=os.path.join(HERE, "..", "docs", "ids", "test_llm_order.txt"))
     ap.add_argument("--n", type=int, default=450)
     ap.add_argument("--owner", default="YOUR_KAGGLE_USERNAME")
+    ap.add_argument("--full", action="store_true", help="predict.py on all of test.csv, saved as submission.csv")
     a = ap.parse_args()
     with open(a.ids) as f:
         ids = f.read().split()[:a.n]
@@ -96,7 +107,7 @@ def main():
         zip_b64 = base64.b64encode(f.read()).decode()
     with open(a.selftest, encoding="utf-8") as f:
         selftest = f.read()
-    run_py = f"ZIP = {zip_b64!r}\nSELFTEST = {selftest!r}\nIDS = {ids!r}\n{DRIVER}"
+    run_py = f"ZIP = {zip_b64!r}\nSELFTEST = {selftest!r}\nIDS = {ids!r}\nFULL = {a.full!r}\n{DRIVER}"
     compile(run_py, "run.py", "exec")
     slug = os.path.basename(os.path.normpath(a.kernel))
     meta = {"id": f"{a.owner}/{slug}", "title": slug, "code_file": "run.py", "language": "python", "kernel_type": "script",
