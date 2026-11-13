@@ -123,20 +123,12 @@ def same_name(a, b):
     return a == b or a.endswith(" " + b) or b.endswith(" " + a)
 
 
-NUMBER_IN = re.compile(r"\d|%|\b(?:" + "|".join(w for w in WORDNUM if w != "one") + r")\b")
-
-
-def unparsed_mention(ctx, used, key, time_ok=lambda t: True):
-    """True when an evidence sentence the family did not parse names its subject (a word for which key() is true)
-    together with a number, so the parsed facts may be incomplete. Clock times count only when time_ok rejects them."""
-    for i, sent in enumerate(ctx.sentences):
-        if i in used:
-            continue
-        low, times = mask_times(T.DATE_RE.sub("", sent).lower())
-        if any(key(w) for w in re.findall(r"[a-z]+", low)) and (
-                NUMBER_IN.search(low) or not all(time_ok(t) for t in times)):
-            return True
-    return False
+def unparsed_mention(ctx, used, key):
+    """True when an evidence sentence the family did not parse names its subject (a word for which key() is true):
+    the parsed facts may then be incomplete, so the family abstains."""
+    return any(i not in used and not sent.startswith("All times in this case refer to")
+               and any(key(w) for w in re.findall(r"[a-z]+", sent.lower()))
+               for i, sent in enumerate(ctx.sentences))
 
 
 # -------------------------------------------------------------------------------------- qty_level: containers
@@ -163,11 +155,14 @@ CLOSE = re.compile(r"^(?:and )?(?:with )?(?:nothing (?:else )?|no other [a-z]+ )
                    r"|^(?:and )?there (?:were|was) no other (?:additions or removals|changes)(?: (?:before|until) @T)?$")
 NOCHANGE = re.compile(r"^(?:and )?no (?P<u>[a-z]+(?: [a-z]+)?) (?:was|were) (?:added or removed|removed or added)"
                       r"(?: during that time| in that time| during that period)?$")
-SUBJECT = re.compile(r"^" + C + r" (?:stands|stood|sits|sat|is|was) (?!.*@T)[a-z ,']+$")
+COLOUR = r"(?:grey|gray|white|black|blue|red|green|brown|yellow|orange|purple|pink|silver)"
+# a plain description of a container, which only tells what "it" in the next sentence refers to
+SUBJECT = re.compile(r"^" + C + r" (?:(?:is|was) (?:painted )?" + COLOUR
+                     + r"|(?:stands|stood|sits|sat|is|was) (?:by|beside|next to|near|against|under) the [a-z]+)$")
 LEADING_TIME = re.compile(r"^(?:at @T|" + SPAN + r"|until @T|from then (?:to|until) @T)$")
 SPLIT = re.compile(r"\s*;\s*|,\s*(?:and |then |while )?|\s+and\s+(?=(?:then |it |drained|filled|emptied|leaked|exactly"
                    r"|nothing|no |from |until |at @T))")
-ASIDE = re.compile(r", (?:which|that) (?:is|was) [a-z ]+?,")  # "the cabinet, which is grey, held ..."
+ASIDE = re.compile(r", (?:which|that) (?:is|was) " + COLOUR + ",")  # "the cabinet, which is grey, held ..."
 
 
 def clauses(masked, times):
@@ -331,6 +326,7 @@ class Level(Family):
                 st.bad = True
             return st
 
+        unparsed = []
         for i, sent in enumerate(ctx.sentences):
             low, times = mask_times(ASIDE.sub("", sent.lower().rstrip(". ")))
             m = SUBJECT.match(low)
@@ -350,13 +346,17 @@ class Level(Family):
                 continue
             for st in touched:  # half-understood sentence about a store: its model may be incomplete
                 st.bad = True
-            for st in stores:  # an unparsed sentence that mentions a store's container or unit
-                if re.search(r"\b" + re.escape(head(st.name)) + r"\b", low) or (
-                        not st.unit[0].startswith("count:") and re.search(r"\d+(?:\.\d+)? " + r"[a-z]+", low)
-                        and any(sing(w) in UNITS and UNITS[sing(w)][0] == st.unit[0]
-                                for w in re.findall(r"\d+(?:\.\d+)? ([a-z]+)", low))):
-                    st.bad = True
+            if not low.startswith("all times in this case refer to"):
+                unparsed.append(low)
         for st in stores:
+            # any other sentence about the container, its items, or amounts in its unit may change what it held
+            words = {head(st.name).split()[-1]} | ({st.unit[0][6:].split()[-1]} if st.unit[0].startswith("count:")
+                                                   else set())
+            for low in unparsed:
+                if any(sing(w) in words or w in words for w in re.findall(r"[a-z]+", low)) or any(
+                        sing(w) in UNITS and UNITS[sing(w)][0] == st.unit[0]
+                        for w in re.findall(r"\d+(?:\.\d+)? ([a-z]+)", low)):
+                    st.bad = True
             st.finish()
         good = [s for s in stores if not s.bad]
         if not good:
@@ -527,27 +527,26 @@ class Tickets(Family):
         f, used = {}, []
         for i, sent in enumerate(ctx.sentences):
             parts = [p for p in re.split(r",\s*and\s+|;\s*", sent.lower().rstrip(". ")) if p]
-            got = []
+            g = dict(f)  # kept only when every clause of the sentence is understood
             for p in parts:
                 m = next((m for m in (rx.match(p) for rx in SOLD_TOTAL) if m), None)
-                if m and "total" not in f:
-                    f.update(total=int(m["n"]), unit=sing(m["u"]), event=m["e"])
-                    got.append(p)
+                if m and "total" not in g:
+                    g.update(total=int(m["n"]), unit=sing(m["u"]), event=m["e"])
                     continue
                 m = SOLD_SHARE.match(p)
-                if m and "total" in f and "before" not in f and (not m["u"] or sing(m["u"]) == f["unit"]):
-                    f["before"] = Fraction(int(m["k"])) if m["k"] else f["total"] * (
+                if m and "total" in g and "before" not in g and (not m["u"] or sing(m["u"]) == g["unit"]):
+                    g["before"] = Fraction(int(m["k"])) if m["k"] else g["total"] * (
                         Fraction(m["p"]) / 100 if m["p"] else FRACW[m["f"]])
-                    got.append(p)
                     continue
                 m = SOLD_ONLINE.match(p)
-                if m and "before" in f and sing(m["u"]) == f["unit"]:
-                    f["online"] = (Fraction(m["p"]) / 100 if m["p"] else FRACW[m["f"]]) if not m["k"] else int(m["k"])
-                    got.append(p)
+                if m and "before" in g and "online" not in g and sing(m["u"]) == g["unit"]:
+                    g["online"] = (Fraction(m["p"]) / 100 if m["p"] else FRACW[m["f"]]) if not m["k"] else int(m["k"])
                     continue
                 break
-            if got and len(got) == len(parts):
-                used.append(i)
+            else:
+                if parts:
+                    f = g
+                    used.append(i)
         if "before" not in f or unparsed_mention(ctx, used, lambda w: sing(w) == f["unit"]):
             return None
         before = f["before"]
@@ -608,13 +607,32 @@ class Tickets(Family):
 
 # ------------------------------------------------------------------------------------ qty_pieces: cut objects
 
-MEASURE = re.compile(r"\bexactly (?P<n>\d+(?:\.\d+)?) (?P<u>[a-z]+)\b")
-OBJECT = re.compile(r"\b(?:the|a) (?P<o>[a-z][a-z\-]*?(?: [a-z\-]+?)??)(?=,| was\b| weighed\b| measured\b| measuring\b"
-                    r"| exactly\b| which\b|$)")
-CUT = re.compile(r"\bcut into (?P<k>" + NUM + r") (?P<eq>equal )?(?P<p>[a-z]+)")
-LEFT_OVER = re.compile(r"\bnothing (?:was )?left over\b")
-RATIO = re.compile(r"\b(?P<m>twice|three times|four times|\d+ times) as (?:long|heavy|big|large) as each of "
-                   r"(?:the (?:[a-z]+ )?short (?:[a-z]+|ones)|them)\b")
+OBJ = r"(?P<o>[a-z][a-z\-]*(?: [a-z\-]+)??)"
+MEAS = r"exactly (?P<n>\d+(?:\.\d+)?) (?P<u>[a-z]+)"
+CUT = r"cut into (?P<k>" + NUM + r") (?P<eq>equal )?(?P<p>[a-z]+),? (?:with nothing left over|and nothing was left over)"
+UNEQUAL = r"(?:: (?P<d>.+))?"
+# every accepted sentence, whole: the object and its size, optionally with the cut in the same sentence
+WHOLE = [re.compile(r"^" + p + r"$") for p in (
+    r"(?:the|a) " + OBJ + r" (?:was|is) " + MEAS + r" long(?:(?:,? and (?:it )?was|; it was) (?:then )?" + CUT
+    + UNEQUAL + r")?",
+    r"(?:the|a) " + OBJ + r" (?:measured|weighed|measures|weighs) " + MEAS + r"(?:(?:,? and (?:it )?was|; it was) "
+    r"(?:then )?" + CUT + UNEQUAL + r")?",
+    r"(?:the|a) " + OBJ + r",? (?:which (?:was|weighed|measured) )?" + MEAS + r"(?: long)?, was (?:then )?" + CUT + UNEQUAL,
+    r"a " + OBJ + r" (?:measuring )?" + MEAS + r"(?: long)? was (?:then )?" + CUT + UNEQUAL,
+    MEAS + r" long, the " + OBJ + r" was (?:then )?" + CUT + UNEQUAL,
+    MEAS + r" was the (?:weight|length) of the " + OBJ + r", which was (?:then )?" + CUT + UNEQUAL)]
+CUT_ONLY = re.compile(r"^(?:it|the (?P<o>[a-z][a-z\- ]*?)) was (?:then )?" + CUT + UNEQUAL + r"$")
+RATIO = r"(?P<m>twice|three times|four times|\d+ times) as (?:long|heavy) as each of"
+SHORTS = r"(?P<s>" + NUM + r") short (?P<p2>[a-z]+)"
+LONG = r"one long (?P<p1>[a-z]+)"
+SHAPES = [re.compile(r"^" + p + r"$") for p in (  # one long piece and equal short ones, after the colon
+    LONG + r",? (?:that was |which was )?" + RATIO + r" the " + SHORTS + r",? which were equal",
+    LONG + r",? (?:that was |which was )?" + RATIO + r" the " + SHORTS + r",? and the (?:" + NUM + r" )?short "
+    r"[a-z]+ were equal",
+    r"the " + SHORTS + r" were equal,? and the " + LONG + r" was " + RATIO + r" them",
+    LONG + r",? and " + SHORTS + r" that were equal")]
+RATIO_ALONE = re.compile(r"^the (?:one )?long (?P<p1>[a-z]+) was " + RATIO + r" the (?:" + NUM + r" )?short "
+                         r"(?:ones|(?P<p2>[a-z]+))$")
 PIECE_WORDS = {"piece", "slice", "length", "portion", "share", "part", "bit", "section", "segment", "strip", "chunk",
                "wedge"}
 PIECE_TALK = set("my own the a one of i got had ended up with received was given took kept handed came away that which "
@@ -633,62 +651,55 @@ class Pieces(Family):
     name = "qty_pieces"
 
     def parse(self, ctx):
-        obj = None
+        obj = cut = shape = rat = None
+        idx = []
         for i, sent in enumerate(ctx.sentences):
             low = sent.lower().rstrip(". ")
             if obj is None:
-                m, o = MEASURE.search(low), OBJECT.search(low)
-                if not (m and o and re.search(r"\b(?:long|measur\w*|weigh\w*|weight)\b", low)):
-                    continue
-                d, size = unit_of(m["u"])
-                if d not in ("len", "mass") or len(re.findall(r"\d+(?:\.\d+)?", low)) != 1:
-                    continue
-                obj = {"name": o["o"], "dim": d, "total": num(m["n"]) * size, "idx": [i], "text": low}
-                cut = CUT.search(low)
-                if cut is None:
-                    continue
-            else:
-                if not re.match(r"^(?:it|the " + re.escape(obj["name"]) + r") was (?:then )?cut into ", low) \
-                        and "cut" in obj and not re.search(r"\b(?:long|short) (?:[a-z]+|ones)\b", low):
-                    break
-                obj["idx"].append(i)
-                obj["text"] += " | " + low
-                cut = CUT.search(low)
-                if cut is None and "cut" not in obj:
+                obj = next((m for m in (rx.match(low) for rx in WHOLE) if m), None)
+                if obj is not None:
+                    idx.append(i)
+                    cut = obj if obj["k"] else None
+                continue
+            if cut is None:  # the cut must come in the very next sentence
+                cut = CUT_ONLY.match(low)
+                if cut is None or (cut["o"] and not same_name(cut["o"], obj["o"])):
                     return None
-            if cut is not None:
-                if "cut" in obj:
-                    return None
-                obj["cut"] = cut
-            if "cut" in obj and (obj["cut"]["eq"] or RATIO.search(obj["text"])):
-                break
-        if obj is None or "cut" not in obj:
+                idx.append(i)
+                continue
+            m = RATIO_ALONE.match(low)
+            if m and rat is None and not cut["eq"]:
+                rat = m
+                idx.append(i)
+            break
+        if obj is None or cut is None:
             return None
-        cut, text = obj["cut"], obj["text"]
-        k = num(cut["k"])
-        if not LEFT_OVER.search(text) or k < 2 or re.search(r"\b(?:except|apart from|but|about|roughly|around)\b", text):
+        d, size = unit_of(obj["u"])
+        k, noun = num(cut["k"]), sing(cut["p"])
+        if d not in ("len", "mass") or k < 2:
             return None
-        noun = sing(cut["p"])
+        total = num(obj["n"]) * size
         if cut["eq"]:
-            if re.search(r"\b(?:long|short) " + noun, text):
+            if cut["d"] or rat:
                 return None
-            sizes = {"mine": {obj["total"] / k}, "each": {obj["total"] / k}}
+            sizes = {"mine": {total / k}, "each": {total / k}}
         else:
-            r = RATIO.search(text)
-            shorts = re.search(r"\b(?P<s>" + NUM + r") short " + noun + r"s\b", text)
-            if not (r and shorts and re.search(r"\b(?:one|the) long " + noun + r"\b", text) and "equal" in text
-                    and num(shorts["s"]) == k - 1):
+            shape = next((m for m in (rx.match(cut["d"] or "") for rx in SHAPES) if m), None)
+            gd = shape.groupdict() if shape else {}
+            r = shape if gd.get("m") else rat
+            nouns = {sing(x) for x in (gd.get("p1"), gd.get("p2"), rat and rat["p1"], rat and rat["p2"]) if x}
+            if shape is None or r is None or (gd.get("m") and rat) or nouns != {noun} or num(gd["s"]) != k - 1:
                 return None
-            short = obj["total"] / (ratio(r) + k - 1)
+            short = total / (ratio(r) + k - 1)
             sizes = {"mine": {short, ratio(r) * short}, "long": {ratio(r) * short}, "short": {short},
                      "two short": {short * (k - 1)} if k == 3 else None}
-        sizes["total"] = {obj["total"]}
-        words = set(obj["name"].split())
-        if unparsed_mention(ctx, obj["idx"], lambda w: w in words or sing(w) == noun):
+        sizes["total"] = {total}
+        words = set(obj["o"].split())
+        if unparsed_mention(ctx, idx, lambda w: w in words or sing(w) == noun):
             return None
-        for i in obj["idx"]:
+        for i in idx:
             ctx.consume(i)
-        return {"name": obj["name"], "dim": obj["dim"], "sizes": sizes, "nouns": PIECE_WORDS | {noun}}
+        return {"name": obj["o"], "dim": d, "sizes": sizes, "nouns": PIECE_WORDS | {noun}}
 
     def judge(self, ctx, f, msg):
         if msg.text.strip().endswith("?"):
@@ -749,8 +760,10 @@ LIST_RES = [re.compile(p, re.I) for p in (
     r"(?P<k>" + NUM + r") " + PEOPLE + r"[:,] (?P<names>.+)$",
     r"^exactly (?P<k>" + NUM + r") " + PEOPLE + r" (?:are listed on|appear on|are on|are named on) the (?:" + LISTNOUN
     + r") for (?:the )?(?P<ev>(?:\d{1,2}:\d{2}|[^:,])+?): (?P<names>.+)$")]
-HELD = re.compile(r"^the (?P<ev>.+?) (?:was held|took place)\b")
-DESCRIBED = re.compile(r"\b(?:was held|took place|where the|of the year)\b")
+PLACE = r"(?:in|at) the [a-z]+(?: [a-z]+)?"
+HELD = re.compile(r"^the (?P<ev>.+?) (?:was held|took place) " + PLACE + r"$")
+DESCRIBED = [r"^the {ev} (?:was held|took place) " + PLACE + r"$", r"^the [a-z]+(?: [a-z]+)? (?:was|is) where the {ev} was held$",
+             r"^the {ev} was the first of the year$", r"^it was the first {ev} of the year$"]
 ALL_CAME = re.compile(r"^(?:(?:everyone|everybody) (?:on (?:it|the (?:[a-z\-]+ )?(?:list|sheet|register|roster))|listed)"
                       r"|all of them|they all|each of them|all " + NUM + r"(?: of them)?) attended$")
 ONLY_THEM = re.compile(r"^(?:(?:everyone|everybody) who attended (?:is|was) (?:on it|listed|on the (?:[a-z\-]+ )?"
@@ -803,14 +816,15 @@ class Attendance(Family):
                     used.append(i)
         if not f.get("names") or not (f.get("all_came") or f.get("only_them")):
             return None
-        word = re.escape(f["noun"].split()[-1])
+        word = f["noun"].split()[-1]
+        ev = r"(?:@T )?(?:" + re.escape(f["noun"]) + "|" + re.escape(word) + ")"
+        described = [re.compile(p.format(ev=ev)) for p in DESCRIBED]
         for i, sent in enumerate(ctx.sentences):  # where it was held, "the first of the year": nothing to judge
-            low, times = mask_times(sent.lower())
-            if i not in used and re.search(r"\b" + word + r"\b", low) and DESCRIBED.search(low) and not re.search(
-                    r"\d", low) and all(t == f["time"] for t in times):
+            low, times = mask_times(sent.lower().rstrip(". "))
+            if i not in used and any(rx.match(low) for rx in described) and all(t == f["time"] for t in times):
                 used.append(i)
-        if unparsed_mention(ctx, used, lambda w: w == f["noun"].split()[-1] or w in ("list", "sheet", "register"),
-                            lambda t: t == f["time"]):
+        if unparsed_mention(ctx, used, lambda w: w == word or w in (
+                "list", "sheet", "register", "roster", "attended", "attend", "attendance", "present", "absent")):
             return None  # another session of the event, or more about the list than this family reads
         for i in used:
             ctx.consume(i)
