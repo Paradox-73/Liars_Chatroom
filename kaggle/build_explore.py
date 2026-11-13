@@ -201,6 +201,17 @@ BENCH_RUNS = [
     {"tag": "dp-10", "tp": 1, "seqs": 10, "max_len": 8192, "dp": True},
     {"tag": "dp-16-fp8kv", "tp": 1, "seqs": 16, "max_len": 8192, "dp": True, "engine": {"kv_cache_dtype": "fp8_e5m2"}},
 ]
+# second set: 8-bit KV cache with tensor parallel (the engine log shows decode slowing from about 300 to 150 tokens/s as
+# the cache fills, so reading the cache is a large part of each step), more slots with the doubled cache, a shorter
+# speculation, and the baseline again so that the comparison is within one machine
+BENCH_RUNS_B = [
+    {"tag": "tp2-40", "tp": 2, "seqs": 40, "max_len": 18432},
+    {"tag": "tp2-40-fp8e4m3", "tp": 2, "seqs": 40, "max_len": 18432, "engine": {"kv_cache_dtype": "fp8_e4m3"}},
+    {"tag": "tp2-56-fp8e4m3", "tp": 2, "seqs": 56, "max_len": 18432, "engine": {"kv_cache_dtype": "fp8_e4m3"}},
+    {"tag": "tp2-40-ngram2", "tp": 2, "seqs": 40, "max_len": 18432,
+     "engine": {"speculative_config": {"method": "ngram", "num_speculative_tokens": 2, "prompt_lookup_max": 3,
+                                       "prompt_lookup_min": 2}}},
+]
 
 
 def variant_zip(path, lines):
@@ -246,12 +257,13 @@ def main():
     ap.add_argument("--variant", help="probe: extra rule lines for a second prompt arm; pipe: run with them")
     ap.add_argument("--max-tokens", type=int, default=12288, help="probe: cap per sample")
     ap.add_argument("--env", default="{}", help="pipe: JSON of environment overrides for predict.py")
+    ap.add_argument("--runs", default="a", choices=["a", "b"], help="bench: which set of engine settings")
     a = ap.parse_args()
     with open(a.zip, "rb") as f:
         zip_b64 = base64.b64encode(f.read()).decode()
     cases = open(a.csv, encoding="utf-8", newline="").read()
     if a.kind == "bench":
-        cfg = dict(MODEL, runs=BENCH_RUNS)
+        cfg = dict(MODEL, runs=BENCH_RUNS_B if a.runs == "b" else BENCH_RUNS)
         run_py = f"ZIP = {zip_b64!r}\nCASES = {cases!r}\nBENCH = {BENCH!r}\nCFG = {cfg!r}\n{BENCH_DRIVER}"
         compile(BENCH, "bench.py", "exec")
     elif a.kind == "probe":
