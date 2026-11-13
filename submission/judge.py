@@ -273,11 +273,13 @@ def main():
         for o in eng.step():
             if not o.finished:
                 continue
+            if o.request_id not in flight:  # an output of a request this loop already stopped
+                continue
             kind, cid, k, text, tokens, src = flight.pop(o.request_id)
             counts[kind] += 1
             out = o.outputs[0]
             if kind not in THINKING:
-                p = letter_probs(out.logprobs[0])
+                p = letter_probs(out.logprobs[0] if out.logprobs else {})
                 record(cid, k, src, max(p, key=p.get) if any(p.values()) else None, p, kind == "force", tokens)
                 continue
             text, tokens = text + out.text, tokens + len(out.token_ids)

@@ -55,7 +55,8 @@ def log(msg):
 
 def read_cases(path):
     """(ids in file order, fixed answers id -> (letter, tier), cases left to the model, their open speakers)."""
-    with open(path, newline="", encoding="utf-8-sig") as f:
+    csv.field_size_limit(2**31 - 1)  # the default 128 KiB per field would stop the whole run on one long chat
+    with open(path, newline="", encoding="utf-8-sig", errors="replace") as f:  # a stray byte changes one case, not all
         rows = list(csv.DictReader(f))
     ids, fixed, cases, cands = [], {}, {}, {}
     for r in rows:
