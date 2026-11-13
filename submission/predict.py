@@ -24,6 +24,7 @@ import json  # noqa: E402
 import os  # noqa: E402
 import signal  # noqa: E402
 import subprocess  # noqa: E402
+import shutil  # noqa: E402
 import sys  # noqa: E402
 import tempfile  # noqa: E402
 
@@ -147,7 +148,7 @@ def run_model(a, cases, cands, write, stop_new, hard):
     log(f"model answers go to {out_path}")
     recs, pos, child = {}, 0, None
     try:
-        for extra, attempt_env in ATTEMPTS:
+        for n, (extra, attempt_env) in enumerate(ATTEMPTS, 1):
             if os.path.exists(hb):
                 os.remove(hb)
             if os.path.exists(out_path):  # cut a line a killed process left half-written, before the next one appends
@@ -177,10 +178,12 @@ def run_model(a, cases, cands, write, stop_new, hard):
             log(f"model process exited with code {child.returncode}; {len(recs)} answers so far")
             if child.returncode == 0 or child.returncode in NO_RETRY or time.time() > stop_new - 10 * 60:
                 break
-            log("MODEL PROCESS FAILED: restarting it with safer settings")
+            log("MODEL PROCESS FAILED" + ("; restarting it with safer settings" if n < len(ATTEMPTS) else " on every attempt"))
     finally:
         if child is not None and child.poll() is None:
             stop(child)
+        if not a.workdir:
+            shutil.rmtree(work, ignore_errors=True)
     return recs
 
 
