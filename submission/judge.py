@@ -93,7 +93,8 @@ def main():
         f"presence penalty {presence}, eager {a.eager}")
     llm = LLM(a.model, tensor_parallel_size=tp, dtype="float16", gpu_memory_utilization=util, max_model_len=max_len,
               max_num_seqs=think_slots + quick_slots, max_num_batched_tokens=step_tokens, seed=0,
-              disable_custom_all_reduce=True, enforce_eager=a.eager, **({"language_model_only": True} if multimodal else {}))
+              disable_custom_all_reduce=True, enforce_eager=a.eager, disable_log_stats=os.environ.get("LC_ENGINE_STATS") != "1",
+              **({"language_model_only": True} if multimodal else {}))
     eng, tok = llm.llm_engine, llm.get_tokenizer()
     t_ready = time.time()
     cache = eng.vllm_config.cache_config
