@@ -464,3 +464,118 @@ class Level(Family):
                 re.search(r"\b" + re.escape(head(st.name).split()[-1]) + r"\b", s) for st in stores):
             return Verdict(OK, self.name, "opinion")
         return None
+
+
+# ---------------------------------------------------------------------------------------- qty_tickets: sales
+
+FRACW = {"half": Fraction(1, 2), "a half": Fraction(1, 2), "one half": Fraction(1, 2), "a third": Fraction(1, 3),
+         "one third": Fraction(1, 3), "two thirds": Fraction(2, 3), "a quarter": Fraction(1, 4),
+         "one quarter": Fraction(1, 4), "three quarters": Fraction(3, 4), "a fifth": Fraction(1, 5),
+         "one fifth": Fraction(1, 5), "two fifths": Fraction(2, 5), "three fifths": Fraction(3, 5),
+         "four fifths": Fraction(4, 5), "a tenth": Fraction(1, 10), "one tenth": Fraction(1, 10)}
+SHARE = r"(?:(?P<p>\d+(?:\.\d+)?)%|(?P<f>" + "|".join(sorted(FRACW, key=len, reverse=True)) + r"))"
+EVT = r"(?P<e>[a-z][a-z'\- ]*?)"
+SOLD_TOTAL = [re.compile(r"^" + p + r"$") for p in (
+    r"(?:a total of )?exactly (?P<n>\d+) (?P<u>[a-z]+) (?:were|was) sold(?: for the " + EVT + r")?(?: in total)?",
+    r"for the " + EVT + r",? exactly (?P<n>\d+) (?P<u>[a-z]+) (?:were|was) sold(?: in total)?",
+    r"the " + EVT + r" (?:sold|had) exactly (?P<n>\d+) (?P<u>[a-z]+)(?: sold)?(?: in total)?")]
+SOLD_SHARE = re.compile(r"^exactly " + SHARE + r" of (?:them|those (?P<u>[a-z]+)|the (?P<u2>[a-z]+)) "
+                        r"(?:were sold|were bought|went|sold) before (?:noon|midday)$")
+SOLD_ONLINE = re.compile(r"^exactly (?:" + SHARE + r"|(?P<k>\d+)) of the morning (?P<u>[a-z]+) were (?:sold|bought) online$")
+PERIODS = [(re.compile(r"\b(?:before (?:noon|midday)|in the morning|morning)\b"), " _m_ "),
+           (re.compile(r"\b(?:after (?:noon|midday)|in the afternoon|afternoon)\b"), " _a_ "),
+           (re.compile(r"\b(?:at the box office|box office)\b"), " _b_ "),
+           (re.compile(r"\bonline\b"), " _o_ "),
+           (re.compile(r"^i make it\b"), " ")]
+SALE_WORDS = set("there were was sold got went bought purchased booked in the of at number count came to sales total "
+                 "for only just exactly a all overall altogether".split())
+BOUGHT = [re.compile(p) for p in (
+    r"^(?:at @T,? )?i (?:bought|purchased|got|booked) (?:mine|my (?:own )?(?P<u>[a-z]+)|one|a (?P<u2>[a-z]+))"
+    r"(?: (?P<ch>online|at the box office))?(?: at @T)?$",
+    r"^my (?:own )?(?P<u>[a-z]+) was (?:bought|purchased|booked)(?: (?P<ch>online|at the box office))? at @T$")]
+
+
+@register
+class Tickets(Family):
+    name = "qty_tickets"
+
+    def parse(self, ctx):
+        f, used = {}, []
+        for i, sent in enumerate(ctx.sentences):
+            parts = [p for p in re.split(r",\s*and\s+|;\s*", sent.lower().rstrip(". ")) if p]
+            got = []
+            for p in parts:
+                m = next((m for m in (rx.match(p) for rx in SOLD_TOTAL) if m), None)
+                if m and "total" not in f:
+                    f.update(total=int(m["n"]), unit=sing(m["u"]), event=m["e"])
+                    got.append(p)
+                    continue
+                m = SOLD_SHARE.match(p)
+                if m and "total" in f and "share" not in f:
+                    f["share"] = Fraction(m["p"]) / 100 if m["p"] else FRACW[m["f"]]
+                    got.append(p)
+                    continue
+                m = SOLD_ONLINE.match(p)
+                if m and "share" in f and sing(m["u"]) == f["unit"]:
+                    f["online"] = (Fraction(m["p"]) / 100 if m["p"] else FRACW[m["f"]]) if not m["k"] else int(m["k"])
+                    got.append(p)
+                    continue
+                break
+            if got and len(got) == len(parts):
+                used.append(i)
+        if "share" not in f:
+            return None
+        before = f["total"] * f["share"]
+        if before.denominator != 1:
+            return None
+        counts = {("m", None): before, ("a", None): f["total"] - before, (None, None): Fraction(f["total"])}
+        if "online" in f:
+            on = f["online"] if isinstance(f["online"], int) else before * f["online"]
+            if Fraction(on).denominator != 1 or not 0 <= on <= before:
+                return None
+            counts[("m", "o")] = Fraction(on)
+            counts[("m", "b")] = before - on  # the generator's two channels: online or the box office
+        for i in used:
+            ctx.consume(i)
+        words = SALE_WORDS | set((f["event"] or "").split())
+        return {"counts": counts, "unit": f["unit"], "words": words}
+
+    def judge(self, ctx, f, msg):
+        if msg.text.strip().endswith("?"):
+            return None
+        low = body(msg.text).lower()
+        try:
+            masked, times = mask_times(low)
+        except ValueError:
+            return None
+        for rx in BOUGHT:
+            m = rx.match(masked)
+            if m is None:
+                continue
+            u = m["u"] or (m.groupdict().get("u2"))
+            if (u and sing(u) != f["unit"]) or len(times) != 1 or times[0] == 720:
+                return None
+            ch = {"online": "o", "at the box office": "b"}.get(m["ch"])
+            n = f["counts"].get(("m" if times[0] < 720 else "a", ch))
+            if n is None:
+                return None
+            return Verdict(OK if n > 0 else LIE, self.name, f"{n} sold in that part of the day")
+        if re.search(r"\d:\d\d", low):
+            return None
+        s = low
+        for rx, tag in PERIODS:
+            s = rx.sub(tag, s)
+        toks = re.findall(r"_[mabo]_|\d+(?:\.\d+)?|[a-z']+", s)
+        nums = [t for t in toks if t[0].isdigit()]
+        if len(nums) != 1 or "." in nums[0] or any(
+                t not in f["words"] and sing(t) != f["unit"] for t in toks if t[0].isalpha()):
+            return None
+        period = {t for t in toks if t in ("_m_", "_a_")}
+        chan = {t for t in toks if t in ("_o_", "_b_")}
+        if len(period) > 1 or len(chan) > 1:
+            return None
+        key = (period.pop()[1] if period else None, chan.pop()[1] if chan else None)
+        want = f["counts"].get(key)
+        if want is None:
+            return None
+        return Verdict(OK if int(nums[0]) == want else LIE, self.name, f"evidence {want} for {key}")
