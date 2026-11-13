@@ -967,11 +967,12 @@ class MoveCount(Family):
                           re.compile(rf"the {c} (?:held|had|contained|was holding|housed) {NUM_WORD} {things}"
                                      rf"(?: in it)?"),
                           re.compile(rf"{NUM_WORD} {things} (?:were|was) (?:in|inside) the {c}"),
-                          re.compile(rf"i (?:counted|saw|photographed|checked) (?:all )?{NUM_WORD} {things} (?:in|"
-                                     rf"inside) the {c}"),
-                          re.compile(rf"(?:in|inside) the {c} i (?:counted|saw|photographed) (?:all )?{NUM_WORD} "
-                                     rf"{things}"),
-                          re.compile(rf"i (?:took|got) (?:photos|pictures|a photo|a picture) of (?:all )?{NUM_WORD} "
+                          # 'I saw five' may be some of them; 'I counted five' and 'all five' give the total
+                          re.compile(rf"i (?:counted(?: all)?|(?:saw|photographed|checked) all) {NUM_WORD} {things} "
+                                     rf"(?:in|inside) the {c}"),
+                          re.compile(rf"(?:in|inside) the {c} i (?:counted(?: all)?|(?:saw|photographed) all) "
+                                     rf"{NUM_WORD} {things}"),
+                          re.compile(rf"i (?:took|got) (?:photos|pictures|a photo|a picture) of all {NUM_WORD} "
                                      rf"{things} (?:in|inside) the {c}")],
                 "change": event_res(rf"{TAKE_PAST} (?:out )?{some} {OUT_OF} the {c}",
                                     rf"{TAKE_BASE} (?:out )?{some} {OUT_OF} the {c}",
