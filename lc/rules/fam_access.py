@@ -116,6 +116,9 @@ def claim(ctx, msg):
     m = re.match(rf"^(.*?),\s+({NAME})$", t)
     if m and m.group(2) not in NOT_NAMES:
         addressee, t = m.group(2), m.group(1)
+    m = re.search(rf",\s+({NAME}),\s+", t)  # "At 6:50 PM, Sana, I saw you ..."
+    if addressee is None and m and m.group(1) not in NOT_NAMES and re.search(r"\byou\b", t):
+        addressee, t = m.group(1), t[:m.start()] + ", " + t[m.end():]
     t = LEAD_RE.sub("", t)
     saw_it = SAW_IT_RE.search(t)
     if saw_it:
@@ -224,6 +227,7 @@ ENTER = (r"(?:entered|enters|enter|entering|went into|go into|goes into|going in
          r"ducked into|popped into|hurried into|hurry into|rushed into|rush into|strolled into|stroll into|"
          r"wandered into|wander into|went in to|moved into|went onto|go onto|got onto|get onto|walked onto|"
          r"walk onto|stepped onto|step onto|came onto|come onto|let @ in to|was let into|"
+         r"(?:made|make|making|found|find) (?:@'s|his|her|their) way into|"
          r"(?:came|come|walked|walk|went|go|got|get|stepped|step|headed|head|slipped|slip) in to)")
 
 
@@ -450,7 +454,7 @@ class AccessSupply(Family):
         act = rf"(?:{forms}){rest}\b"
         tool = rf"(?:with|using|on|from|in) {obj}"
         return bool(re.search(rf"@ {AUX}{act} (?:\S+ ){{0,3}}?{tool}", c.text)
-                    or re.search(rf"^{tool} @ {AUX}{act}", c.text)
+                    or re.search(rf"\b{tool} @ {AUX}{act}", c.text)
                     or re.search(rf"@ {AUX}(?:used|use|using) {obj} to {act}", c.text))
 
     def judge(self, ctx, facts, msg):
@@ -1081,7 +1085,7 @@ class AccessPresence(Family):
                 return None
             if not (re.search(rf"@ (?:was |were )?(?:standing |sitting |working |waiting |stationed |posted |"
                               rf"over |down |right |still )?at {pr}", text)
-                    or re.search(rf"^(?:over )?(?:at )?{pr} is where @ was\b", text)):
+                    or re.search(rf"\b{pr} is where @ was\b", text)):
                 continue
             t = event_time(c)
             if t is None or (actor not in names and not between and t in (t1, t2)):
@@ -1179,12 +1183,12 @@ class AccessBooking(Family):
             rf"(?:in|inside) {rr}",
             rf"\b{rr} had (?:the )?(?P<team>[a-z]+) team in it\b",
             rf"\b(?P<team>[a-z]+) team (?:had|occupied|was using|were using|used) {rr}",
-            rf"^(?:in|inside) {rr} (?:\S+ ){{0,4}}?(?:the )?(?P<team>[a-z]+) team (?:{self.THERE}|held its meeting|"
-            rf"had its meeting)\b",
+            rf"^(?:at \S+ [ap]m )?(?:in|inside) {rr} (?:\S+ ){{0,4}}?(?:the )?(?P<team>[a-z]+) team (?:{self.THERE}|"
+            rf"held its meeting|had its meeting)\b",
             rf"\bit was the (?P<team>[a-z]+) team (?:in|inside) {rr}",
             rf"\b(?P<team>[a-z]+) team's meeting (?:in|inside) {rr} was\b",
             rf"\b{rr} (?:hosted (?:the )?(?P<team>[a-z]+) team's meeting|saw (?:the )?(?P<team2>[a-z]+) team meet)\b",
-            rf"^(?:in|inside) {rr} (?:\S+ ){{0,4}}?was the (?P<team>[a-z]+) team$",
+            rf"^(?:at \S+ [ap]m )?(?:in|inside) {rr} (?:\S+ ){{0,4}}?was the (?P<team>[a-z]+) team$",
         ]
         for p in pats:
             m = re.search(p, text)
