@@ -44,7 +44,8 @@ NOT_NAMES = {
 
 LEAD_RE = re.compile(
     r"^\s*(?:(?:honestly|for the record|okay so|ok so|okay|ok|so|well|to be honest|frankly|actually|look|right|yes|"
-    r"yeah|anyway|i think|i believe|i'm sure|i am sure|as far as i know|just so you know)\s*[,:]?\s+)+", re.I)
+    r"yeah|anyway|i think|i believe|i'm sure|i am sure|as far as i know|just so you know|i can tell you(?: that)?|"
+    r"i can confirm(?: that)?|i can say(?: that)?|i know(?: that)?)\s*[,:]?\s+)+", re.I)
 TAIL_RE = re.compile(
     r"(?:\s*,\s*(?:honestly|for the record|okay|ok|to be honest|i think|i believe|i'm sure|for sure|i promise|"
     r"definitely|i swear))+\s*$", re.I)
@@ -1013,3 +1014,193 @@ class AccessArrival(Family):
         # exactly the logged time (27 of 27), liars an earlier or later one.
         return verdict(self, t == me, f"{c.actor} first arrived at {T.fmt_time(me)}"
                                       f"{'' if is_first else ' (arrival read as the first one)'}")
+
+
+# ---------------------------------------------------------------------------------------------------------------
+@register
+class AccessPresence(Family):
+    """'From 12:55 PM to 4:55 PM, only Ivan and Carmen were at the ticket booth. Nobody else was at the ticket booth
+    during that time.' Anyone else said to be at the ticket booth inside the window is a lie. Both ends of 'between'
+    count; the ends of 'from T1 to T2' are left alone. 'Yuki was the only cashier on duty that day' lets 'I saw the
+    cashier at ...' name Yuki."""
+
+    name = "access_presence"
+    WIN = (rf"(?:from (?P<a>{TIME}) (?:to|until) (?P<b>{TIME})|between (?P<c>{TIME}) and (?P<d>{TIME}))")
+    PATS = [
+        re.compile(rf"^{WIN},? only (?P<n>{NAMES}) (?:was|were) at (?:the )?(?P<p>{NP})$", re.I),
+        re.compile(rf"^only (?P<n>{NAMES}) (?:was|were) at (?:the )?(?P<p>{NP}) {WIN}$", re.I),
+    ]
+    ELSE = re.compile(rf"^(?:and )?{NOBODY} else was (?:at (?:the )?(?P<p>{NP})|there) (?:during that time|then)$", re.I)
+    ROLE = re.compile(rf"^(?P<n>{NAME}) was the only (?P<r>[a-z -]+?) on duty(?: that day)?$")
+
+    def parse(self, ctx):
+        wins, roles, extra = [], {}, []
+        for i, s in enumerate(ctx.sentences):
+            for n, m in match_pieces(s, self.PATS + [self.ELSE, self.ROLE]):
+                if n < len(self.PATS):
+                    names = set(re.findall(NAME, m.group("n")))
+                    t1, t2 = tm(m.group("a") or m.group("c")), tm(m.group("b") or m.group("d"))
+                    wins.append((clean_np(m.group("p")), names, t1, t2, m.group("c") is not None))
+                    ctx.consume(i)
+                elif n == len(self.PATS):
+                    extra.append(i)
+                else:
+                    roles[m.group("r").lower()] = m.group("n")
+                    extra.append(i)
+        if not wins:
+            return None
+        for i in extra:
+            ctx.consume(i)
+        return {"wins": wins, "roles": roles}
+
+    def judge(self, ctx, facts, msg):
+        c = claim(ctx, msg)
+        if c is None:
+            return None
+        for p, names, t1, t2, between in facts["wins"]:
+            pr = place_re(p)
+            if not re.search(pr, c.text) or negated(c):
+                continue
+            actor = c.actor
+            m = re.search(rf"@ (?:saw|spotted|noticed) the (?P<r>[a-z -]+?) (?:at|by) {pr}", c.text)
+            if m:
+                actor = facts["roles"].get(m.group("r"))
+                text = "@ at " + c.text[m.end("r") + 4:]
+            else:
+                text = c.text
+            if actor is None:
+                return None
+            if not (re.search(rf"@ (?:was |were )?(?:standing |sitting |working |waiting |stationed |posted |"
+                              rf"over |down |right |still )?at {pr}", text)
+                    or re.search(rf"^(?:over )?(?:at )?{pr} is where @ was\b", text)):
+                continue
+            t = event_time(c)
+            if t is None or (actor not in names and not between and t in (t1, t2)):
+                return None
+            inside = t1 <= t <= t2
+            ok = actor in names or not inside
+            return verdict(self, ok, f"only {', '.join(sorted(names))} at the {p} {T.fmt_time(t1)}-{T.fmt_time(t2)}; "
+                                     f"{actor} at {T.fmt_time(t)}")
+        return None
+
+
+# ---------------------------------------------------------------------------------------------------------------
+@register
+class AccessBooking(Family):
+    """'The main hall was booked from 11:35 AM to 4:05 PM: the sales team had it until 1:05 PM, the finance team
+    until 2:35 PM, and then the research team. During each booking, only that team was in the room.' (or 'booked
+    without gaps from 10:10 AM: the finance team for 1 hour 15 minutes, then ...'). Another team in the room during
+    a booking is a lie; outside the bookings anything goes; times on a changeover are left alone."""
+
+    name = "access_booking"
+    ROOM = r"(?P<room>room \d+|[a-z][a-z ]*?)"
+    SPAN = [
+        re.compile(rf"^(?:the )?{ROOM} was (?:booked|reserved) from (?P<s>{TIME}) to (?P<e>{TIME})(?::|,) (?P<l>.+)$",
+                   re.I),
+        re.compile(rf"^from (?P<s>{TIME}) to (?P<e>{TIME}),? (?:the )?{ROOM} was (?:booked|reserved)(?::|,) (?P<l>.+)$",
+                   re.I),
+        re.compile(rf"^the booking for (?:the )?{ROOM} ran from (?P<s>{TIME}) to (?P<e>{TIME})(?::|,) (?P<l>.+)$", re.I),
+    ]
+    GAPLESS = [
+        re.compile(rf"^(?:the )?{ROOM} was (?:booked|reserved) without gaps from (?P<s>{TIME})(?::|,) (?P<l>.+)$", re.I),
+        re.compile(rf"^(?:from|starting at|starting from) (?P<s>{TIME}),? (?:the )?{ROOM} was (?:booked|reserved) "
+                   rf"without gaps(?::|,) (?P<l>.+)$", re.I),
+    ]
+    ONLY = re.compile(r"\bonly (?:that|the booked|the booking) team was in the room\b", re.I)
+    UNTIL = re.compile(r"(?:the )?(?P<team>[a-z]+) team(?: had it| holding it| had the room)? until (?P<t>"
+                       + TIME + r")", re.I)
+    LAST = re.compile(r"(?:then|next)(?: by)? (?:the )?(?P<team>[a-z]+) team$", re.I)
+    FOR = re.compile(r"(?:the )?(?P<team>[a-z]+) team for (?P<d>[^,]+?)(?=,|$)", re.I)
+
+    def parse(self, ctx):
+        rooms, exclusive = [], False
+        for i, s in enumerate(ctx.sentences):
+            body = s.rstrip(".")
+            if self.ONLY.search(body):
+                exclusive = True
+                ctx.consume(i)
+                continue
+            m = next((m for m in (p.match(body) for p in self.SPAN) if m), None)
+            if m:
+                start, end = tm(m.group("s")), tm(m.group("e"))
+                cuts = [(x.group("team").lower(), tm(x.group("t"))) for x in self.UNTIL.finditer(m.group("l"))]
+                last = self.LAST.search(m.group("l"))
+                if not cuts or not last:
+                    continue
+                slots, t0 = [], start
+                for team, t in cuts:
+                    slots.append((t0, t, team))
+                    t0 = t
+                slots.append((t0, end, last.group("team").lower()))
+                if any(a >= b for a, b, _ in slots):
+                    continue
+                rooms.append((m.group("room").lower(), slots))
+                ctx.consume(i)
+                continue
+            m = next((m for m in (p.match(body) for p in self.GAPLESS) if m), None)
+            if m:
+                t0, slots = tm(m.group("s")), []
+                for x in self.FOR.finditer(m.group("l")):
+                    d = T.find_durations(x.group("d"))
+                    if len(d) != 1:
+                        slots = []
+                        break
+                    slots.append((t0, t0 + d[0][0], x.group("team").lower()))
+                    t0 += d[0][0]
+                if len(slots) >= 2:
+                    rooms.append((m.group("room").lower(), slots))
+                    ctx.consume(i)
+        if not rooms or not exclusive:
+            return None
+        return rooms
+
+    PV = (r"(?:was|were|met|met up|had|held|sat|gathered|convened|got together|was meeting|were meeting|was sitting|"
+          r"were sitting|was present|were present|was having|was holding|was working|were working)")
+    THERE = r"(?:met|met up|was present|were present|was meeting|were meeting|gathered|sat|convened|was there|were there)"
+    AWAY = re.compile(r"\b(?:past|outside|left|leave|leaving|booked|book|reserved|cancel\w*|clean\w*|near|beside|"
+                      r"waiting|walked|walk|passed|toward|towards|empty|vacated|locked|instead|moved|arrived|came|"
+                      r"went|headed|after|before|until|since|from|between)\b")
+
+    def team_in(self, text, rr):
+        """The team the claim puts in the room, or None."""
+        if len(re.findall(r"\bteams?\b", text)) != 1 or self.AWAY.search(text):
+            return None
+        pats = [
+            rf"\b(?P<team>[a-z]+) team {self.PV}(?: (?:its|their|a|the) meeting| a meeting| meeting| together)? "
+            rf"(?:in|inside) {rr}",
+            rf"\b{rr} had (?:the )?(?P<team>[a-z]+) team in it\b",
+            rf"\b(?P<team>[a-z]+) team (?:had|occupied|was using|were using|used) {rr}",
+            rf"^(?:in|inside) {rr} (?:\S+ ){{0,4}}?(?:the )?(?P<team>[a-z]+) team (?:{self.THERE}|held its meeting|"
+            rf"had its meeting)\b",
+            rf"\bit was the (?P<team>[a-z]+) team (?:in|inside) {rr}",
+            rf"\b(?P<team>[a-z]+) team's meeting (?:in|inside) {rr} was\b",
+            rf"\b{rr} (?:hosted (?:the )?(?P<team>[a-z]+) team's meeting|saw (?:the )?(?P<team2>[a-z]+) team meet)\b",
+            rf"^(?:in|inside) {rr} (?:\S+ ){{0,4}}?was the (?P<team>[a-z]+) team$",
+        ]
+        for p in pats:
+            m = re.search(p, text)
+            if m:
+                return m.groupdict().get("team") or m.groupdict().get("team2")
+        return None
+
+    def judge(self, ctx, facts, msg):
+        c = claim(ctx, msg)
+        if c is None or negated(c):
+            return None
+        for room, slots in facts:
+            rr = rf"(?:the )?{re.escape(room)}\b"
+            team = self.team_in(c.text, rr)
+            if team is None:
+                continue
+            t = event_time(c)
+            if t is None:
+                return None
+            first, last = slots[0][0], slots[-1][1]
+            if t < first or t > last:
+                return verdict(self, True, f"no booking of the {room} at {T.fmt_time(t)}")
+            if t in {b for _, b, _ in slots}:
+                return None  # a changeover, or the very end
+            owner = next(o for a, b, o in slots if a <= t < b)
+            return verdict(self, team == owner, f"the {room} was booked by the {owner} team at {T.fmt_time(t)}")
+        return None
+
