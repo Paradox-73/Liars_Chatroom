@@ -51,6 +51,10 @@ The clock starts with `predict.py`. A file of 450 to 600 cases gets 80 minutes; 
 case without a finished sample gets a one-token answer without thinking; 90 seconds before the end, unfinished first
 samples stop too. At the end the model process is stopped and the final file is written. `--minutes` overrides it.
 
+Nothing cuts reasoning short to make room for waiting cases. On two T4 cards every case reached a thinking answer in
+time (our 300 new-family cases and 450 test cases). On a slower machine, a case not reached by the stop time gets the
+one-token answer, which is right far less often (40% for Qwen3-8B on the new-family cases, against 95% with thinking).
+
 ### Failure handling
 
 - The predictions file is complete from the first second and is rewritten every 30 s as answers arrive, by writing
