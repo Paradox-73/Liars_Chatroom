@@ -51,6 +51,7 @@ TAIL_RE = re.compile(
 SAW_IT_RE = re.compile(r",?\s*(?:and )?I (?:saw|watched|noticed|spotted|witnessed) (?:it|this|that|them|him|her)"
                        r"(?: happen)?(?: myself)?\s*$")
 WITNESS_RE = re.compile(r"\bI (?:saw|watched|noticed|spotted|witnessed|observed)(?: that)? (you|" + NAME + r")\b")
+FIRST_PERSON = re.compile(r"\b(?:I|[Mm]e|[Mm]y|[Mm]yself|[Mm]ine)\b")
 NEG_RE = re.compile(r"\b(?:not|never|n't|didnt|no point|nobody|no one|nowhere|neither|nor|cannot|without|almost|"
                     r"nearly|tried to|try to|wanted to|meant to|planned to|hoped to|was going to|were going to)\b|n't\b")
 TIMES_WORD_RE = re.compile(r"(\w+)\W*$")
@@ -124,20 +125,20 @@ def claim(ctx, msg):
             return None
         actor = who
         t = t[:m.start()] + "@" + t[m.end():]
-        if re.search(r"\b(?:I|me|my|myself|you)\b", t):
+        if FIRST_PERSON.search(t) or re.search(r"\byou\b", t, re.I):
             return None
     else:
         m = re.match(rf"^({NAME}) (?=[a-z])", t)
-        if m and m.group(1) in names and not re.search(r"\b(?:I|me|my|myself)\b", t):
+        if m and m.group(1) in names and not FIRST_PERSON.search(t):
             actor = m.group(1)
             t = "@" + t[m.end() - 1:]
-        elif re.search(r"\b(?:I|me|my|myself)\b", t):
+        elif FIRST_PERSON.search(t):
             if re.search(r"\byou\b", t, re.I):
                 return None
             actor = ctx.speakers.get(msg.label)
-            t = re.sub(r"\bmyself\b", "@", t)
-            t = re.sub(r"\b(?:my|mine)\b", "@'s", t)
-            t = re.sub(r"\b(?:I|me)\b", "@", t)
+            t = re.sub(r"\b[Mm]yself\b", "@", t)
+            t = re.sub(r"\b(?:[Mm]y|[Mm]ine)\b", "@'s", t)
+            t = re.sub(r"\b(?:I|[Mm]e)\b", "@", t)
             t = t.replace("@'m", "@ am")
         else:
             actor = None  # a statement about things, not people ("The stage lamps were lit at 2:00 PM")
@@ -763,7 +764,8 @@ def name_times(items):
     parts = re.split(r",\s+(?:and\s+)?|\s+and\s+", items.strip().rstrip("."))
     out = []
     for p in parts:
-        m = re.fullmatch(rf"({NAME})(?: was logged| arrived| first arrived)? at ({TIME})", p.strip())
+        m = re.fullmatch(rf"({NAME})(?: was logged| was recorded| arrived| first arrived| came| got there)? at ({TIME})",
+                         p.strip())
         if not m:
             return None
         out.append((m.group(1), tm(m.group(2))))
@@ -877,3 +879,137 @@ class AccessLog(Family):
     @staticmethod
     def fmt(ts):
         return ", ".join(T.fmt_time(t) for t in ts) or "none"
+
+
+# ---------------------------------------------------------------------------------------------------------------
+@register
+class AccessArrival(Family):
+    """First arrivals, either logged ('The door log accurately records when each of these four people first arrived
+    at the depot that day: Emeka at 9:50 AM, ...') or chained ('Wei first arrived at the workshop at 8:15 AM.
+    Exactly 15 minutes after Wei, Sara first arrived.'). Checks 'my first arrival was at T', 'I first got there
+    before/after X', 'I got there at T' (a lie only if T is earlier than the first arrival) and 'I was the first
+    person in'. Only the listed people are known, so being the earliest of them never proves anything."""
+
+    name = "access_arrival"
+    LOG = re.compile(rf"\brecords (?:when|the time) each of these (?:\w+ )?people first arrived at (?:the )?(?P<p>{NP})"
+                     rf"(?: that day)?(?:: (?P<items>.+))?$", re.I)
+    LOG2 = re.compile(rf"\brecords when they first arrived at (?:the )?(?P<p>{NP})(?: that day)?: (?P<items>.+)$", re.I)
+    LOG3 = re.compile(rf"^(?P<items>.+?) are the times when each of these (?:\w+ )?people first arrived at (?:the )?"
+                      rf"(?P<p>{NP})(?: that day)?,? and the door log accurately records them$", re.I)
+    ITEMS = re.compile(rf"^(?P<items>{NAME} (?:was logged|was recorded|came|arrived|first arrived|got there) at .+)$")
+    ABS = [  # found anywhere in a sentence, between commas: "Elena first arrived at the workshop at 8:35 AM, ..."
+        re.compile(rf"(?:^|, (?:and )?)(?P<n>{NAME}) first arrived at (?:the )?(?P<p>{NP}) at (?P<t>{TIME})(?=,|$)"),
+        re.compile(rf"(?:^|, (?:and )?)[Aa]t (?P<t>{TIME}),? (?P<n>{NAME}) first arrived at (?:the )?(?P<p>{NP})"
+                   rf"(?=,|$)"),
+        re.compile(rf"(?:^|, (?:and )?)(?P<n>{NAME})'s first arrival at (?:the )?(?P<p>{NP}) was at (?P<t>{TIME})"
+                   rf"(?=,|$)"),
+    ]
+    REL = [
+        re.compile(rf"(?:^|, (?:and )?)(?P<n>{NAME}) first arrived exactly (?P<k>\d+) minutes (?P<d>before|after) "
+                   rf"(?P<m>{NAME})(?: did)?(?=,|$)"),
+        re.compile(rf"(?:^|, (?:and )?)[Ee]xactly (?P<k>\d+) minutes (?P<d>before|after) (?P<m>{NAME}),? "
+                   rf"(?P<n>{NAME}) first arrived(?=,|$)"),
+    ]
+
+    def parse(self, ctx):
+        place, known, rels, logged = None, {}, [], False
+        for i, s in enumerate(ctx.sentences):
+            body = s.rstrip(".")
+            m = self.LOG.search(body) or self.LOG2.search(body) or self.LOG3.match(body)
+            if m:
+                place = clean_np(m.group("p"))
+                logged = True
+                ctx.consume(i)
+                if m.group("items"):
+                    items = name_times(m.group("items"))
+                    if items is None:
+                        return None
+                    known.update(items)
+                continue
+            m = self.ITEMS.match(body)
+            if m and logged and not known:
+                items = name_times(m.group("items"))
+                if items:
+                    known.update(items)
+                    ctx.consume(i)
+                continue
+            used = False
+            for mm in (mm for pat in self.ABS for mm in pat.finditer(body)):
+                p = clean_np(mm.group("p"))
+                if place not in (None, p):
+                    return None
+                place = p
+                known[mm.group("n")] = tm(mm.group("t"))
+                used = True
+            for pat in self.REL:
+                for mm in pat.finditer(body):
+                    k = int(mm.group("k")) * (1 if mm.group("d") == "after" else -1)
+                    rels.append((mm.group("n"), mm.group("m"), k))
+                    used = True
+            if used:
+                ctx.consume(i)
+        if place is None or not known:
+            return None
+        changed = True
+        while changed:  # n first arrived k minutes after m
+            changed = False
+            for n, m, k in rels:
+                if m in known and n not in known:
+                    known[n] = known[m] + k
+                    changed = True
+                elif n in known and m not in known:
+                    known[m] = known[n] - k
+                    changed = True
+                elif n in known and m in known and known[n] != known[m] + k:
+                    return None  # misread evidence; stay out
+        return {"place": place, "first": known}
+
+    ARRIVE = (r"(?:arrived at|arrive at|got to|get to|reached|reach|showed up at|show up at|made it to|make it to|"
+              r"came to|come to|turned up at|turn up at|got in to|got into|walked into|came into|entered)")
+    BEFORE = r"(?:before|ahead of|earlier than|sooner than)"
+    AFTER = r"(?:after|later than|behind)"
+
+    def judge(self, ctx, facts, msg):
+        c = claim(ctx, msg)
+        if c is None or c.actor is None:
+            return None
+        p, first = facts["place"], facts["first"]
+        pr = place_re(p)
+        if not re.search(pr, c.text) or negated(c):
+            return None
+        me = first.get(c.actor)
+        if me is None:
+            return None
+        if re.search(rf"@ was the (?:very )?first (?:person|one|to arrive|to get there)?\s*(?:in|into|at|to arrive at|"
+                     rf"to get to|to reach)? {pr}", c.text) or re.search(rf"@ (?:got to|reached|arrived at) {pr} first\b",
+                                                                        c.text):
+            others = [t for n, t in first.items() if n != c.actor]
+            if any(t < me for t in others):
+                return verdict(self, False, f"{c.actor} first arrived at {T.fmt_time(me)}, someone listed was earlier")
+            if all(t > me for t in others):
+                return verdict(self, True, f"{c.actor} is the earliest of the listed people")
+            return None
+        arrival = (re.search(rf"@ {AUX}(?:first )?{self.ARRIVE} {pr}", c.text)
+                   or re.search(rf"@'s first arrival at {pr}", c.text)
+                   or re.search(rf"\bfirst time @ {AUX}{self.ARRIVE} {pr}", c.text))
+        if not arrival:
+            return None
+        is_first = bool(re.search(r"\bfirst\b", c.text))
+        m = re.search(rf"\b(?P<rel>{self.BEFORE}|{self.AFTER}) (?P<who>[a-z]+)(?:'s)?(?: did| had| arrived)?\b", c.text)
+        if m and m.group("who") in c.names:
+            other = first.get(c.names[m.group("who")])
+            if other is None or c.times:
+                return None
+            before = re.fullmatch(self.BEFORE, m.group("rel")) is not None
+            ok = me < other if before else me > other
+            return verdict(self, ok, f"first arrivals: {c.actor} {T.fmt_time(me)}, {c.names[m.group('who')]} "
+                                     f"{T.fmt_time(other)}")
+        if m:
+            return None
+        if len(c.times) != 1 or c.times[0][1] not in ("at", "was"):
+            return None
+        t = c.times[0][0]
+        # Without "first" ("I got to the office at 9:55 AM") train always means the first arrival: innocents give
+        # exactly the logged time (27 of 27), liars an earlier or later one.
+        return verdict(self, t == me, f"{c.actor} first arrived at {T.fmt_time(me)}"
+                                      f"{'' if is_first else ' (arrival read as the first one)'}")
