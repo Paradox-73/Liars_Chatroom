@@ -203,6 +203,23 @@ BENCH_RUNS = [
 ]
 
 
+def variant_zip(path, lines):
+    """The code zip with lines appended to the rule list of lc/llm/prompt.py (the prompt arm the probe calls variant)."""
+    import io
+    import zipfile
+    end = '- Questions and opinions are never the answer."""'
+    buf = io.BytesIO()
+    with zipfile.ZipFile(path) as zin, zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zout:
+        for info in zin.infolist():
+            data = zin.read(info)
+            if info.filename == "lc/llm/prompt.py":
+                text = data.decode("utf-8")
+                assert text.count(end) == 1
+                data = text.replace(end, end[:-3] + "\n" + lines.strip("\n") + '"""').encode("utf-8")
+            zout.writestr(info, data)
+    return buf.getvalue()
+
+
 def write_kernel(out, owner, run_py):
     compile(run_py, "run.py", "exec")
     slug = os.path.basename(os.path.normpath(out))
@@ -226,7 +243,7 @@ def main():
     ap.add_argument("--meta", help="pipe: id,family CSV for the per-family accuracy")
     ap.add_argument("--owner", required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--variant", help="probe: file with extra rule lines for a second prompt arm")
+    ap.add_argument("--variant", help="probe: extra rule lines for a second prompt arm; pipe: run with them")
     ap.add_argument("--max-tokens", type=int, default=12288, help="probe: cap per sample")
     ap.add_argument("--env", default="{}", help="pipe: JSON of environment overrides for predict.py")
     a = ap.parse_args()
@@ -244,6 +261,8 @@ def main():
     else:
         meta = open(a.meta, encoding="utf-8", newline="").read()
         cfg = dict(MODEL, env=json.loads(a.env))
+        if a.variant:  # the same code with the variant's rule lines at the end of the prompt's rule list
+            zip_b64 = base64.b64encode(variant_zip(a.zip, open(a.variant, encoding="utf-8").read())).decode()
         run_py = f"ZIP = {zip_b64!r}\nNEWFAM = {cases!r}\nMETA = {meta!r}\nCFG = {cfg!r}\n{PIPE_DRIVER}"
     write_kernel(a.out, a.owner, run_py)
 
