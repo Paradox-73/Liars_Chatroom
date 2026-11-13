@@ -34,8 +34,8 @@ from lc.combine import tally
 from lc.data import Case, Message
 from lc.llm.prompt import build_prompt
 
-MAIN_TOKENS = int(os.environ.get("LC_MAIN_TOKENS", 8192))  # first sample; lowered only to test the capped path
-CONT_TOKENS = 16384  # a continued sample in total
+MAIN_TOKENS = int(os.environ.get("LC_MAIN_TOKENS", 8192))  # first sample
+CONT_TOKENS = int(os.environ.get("LC_CONT_TOKENS", 16384))  # a continued sample in total
 MAX_SAMPLES, SETTLED = 5, 1.5
 THINKING = ("main", "cont", "extra")
 # per tensor-parallel size: max model length, thinking slots, one-token slots, tokens per engine step
