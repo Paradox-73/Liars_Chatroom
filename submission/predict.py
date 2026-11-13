@@ -43,7 +43,8 @@ ATTEMPTS = [  # (judge.py arguments, environment), tried in order until one exit
     (["--eager", "--tp", "1"], {}),
 ]
 # How the judge model that setup.sh downloads runs; the environment can override each value.
-MODEL_ENV = {}
+MODEL_ENV = {"LC_MAIN_TOKENS": "4096",  # first samples stop at 4,096 tokens; capped ones continue to 16,384 if on time
+             "LC_TOKEN_LOGPROBS": "0"}  # no log-probabilities on every token: 15% faster on T4, the letter votes alone
 START_LIMIT, STALL_LIMIT = 20 * 60, 5 * 60  # seconds without a heartbeat from judge.py before it counts as hung
 NO_RETRY = (3, 4)  # judge.py exit codes: no GPU, no vLLM
 
