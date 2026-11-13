@@ -205,7 +205,8 @@ MAX_SPEED = re.compile(
     r"never (?:went|going|goes|got|getting|travelled|travelling|traveling) (?:above|over|faster than|beyond)"
     r"|never above|never exceed|without (?:ever )?(?:going|getting) (?:above|over|faster than)"
     r"|(?:did not|didn't) (?:go|travel|get) (?:above|over|faster than)|(?:did not|didn't) exceed"
-    r"|no faster than|at no point did its speed (?:go|get) (?:above|over)|top speed|maximum speed|speed limit")
+    r"|no faster than|at no point did its speed (?:go|get) (?:above|over)|top speed|maximum speed|speed limit"
+    r"|(?:never|no|not) more than|at most|(?:could not|couldn't|cannot|can't) (?:go|travel) (?:above|over|faster than)")
 EXACT_SPEED = re.compile(r"\b(?:average|averaged|exactly|constant|steady|steadily|precisely)\b")
 DELAY = re.compile(r"\b(?:stopp?ed|stops|waited|paused|break|delay|delayed|detour|broke down|refuel)")
 ARRIVE = (r"(?:reached|got to|arrived at|arrived in|made it to|pulled up at|pulled up to|pulled into|pulled in at|"
@@ -321,8 +322,10 @@ class MoveRoute(Family):
 # ---------------------------------------------------------------- move_away
 
 AWAY_HEAD = re.compile(rf"^(?:at {TM},? )?(?:the|a|an) ({NP}) {DEPART} the ({NP})(?: at {TM})?(?=[,.;]|$| and\b)")
-AWAY_RET = re.compile(rf"(?:did not|didn't|was not|wasn't|could not be|couldn't be) (?:return|come back|get back|"
-                      rf"arrive back|back)(?: (?:at|to) the ({NP}))? (?:before|until) {TM}")
+AWAY_RET = [re.compile(rf"(?:did not|didn't|was not|wasn't|could not be|couldn't be) (?:return|come back|get back|"
+                       rf"arrive back|back)(?: (?:at|to) the ({NP}))? (?:before|until) {TM}"),
+            re.compile(rf"(?:was|stayed) away(?: from the ({NP}))? (?:until|till) {TM}"),
+            re.compile(rf"(?:returned|came back|got back)(?: to the ({NP}))? at {TM}")]  # (stop, time)
 ROUND = re.compile(rf"round trip(?: of the ({NP}))? took at least ([^,;.]+)")
 ROUND_BACK = re.compile(rf"could not be back(?: at the ({NP}))? before then")
 BOARD = (r"(?:got on|got onto|got on board|got aboard|got into|boarded|climbed onto|climbed on|climbed aboard|"
@@ -359,9 +362,10 @@ class MoveAway(Family):
                 sj = sents[j] if j > i else s[m.end():]
                 if j > i and not re.match(rf"(?:its|it|the round trip of the {esc(veh)}|the {esc(veh)})\b", sj):
                     break
-                r = AWAY_RET.search(sj)
-                if r and r.group(1) in (None, stop):
-                    t1 = tm(r.group(2))
+                for rx in AWAY_RET:
+                    r = rx.search(sj)
+                    if r and r.group(1) in (None, stop) and t1 is None:
+                        t1 = tm(r.group(2))
                 r = ROUND.search(sj)
                 if r and r.group(1) in (None, veh):
                     back = ROUND_BACK.search(sj)
@@ -412,10 +416,12 @@ class MoveAway(Family):
 # ---------------------------------------------------------------- move_place
 
 PERSON_AT = re.compile(rf"^(?:at {TM},? )?([a-z]+) was at the ({NP})(?: at {TM})?(?=[,.;]|$| and\b)")
-ROUTE_MIN = [re.compile(rf"every (?:route|road|path|way) from the ({NP}) to the ({NP}) (?:also )?takes at least "
-                        rf"([^,;.]+)"),
-             re.compile(rf"(?:getting|going|travelling|traveling|walking|driving|the journey|the trip) from the ({NP}) "
-                        rf"to the ({NP}) (?:always )?takes at least ([^,;.]+)")]
+ROUTE_MIN = [re.compile(rf"every (?:route|road|path|way) from the (?P<a>{NP}) to the (?P<b>{NP}) (?:also )?takes at "
+                        rf"least (?P<d>[^,;.]+)"),
+             re.compile(rf"(?:getting|going|travelling|traveling|walking|driving|the journey|the trip) from the "
+                        rf"(?P<a>{NP}) to the (?P<b>{NP}) (?:always )?takes at least (?P<d>[^,;.]+)"),
+             re.compile(rf"it takes at least (?P<d>[^,;.]+?) to (?:get|go|travel|walk|drive) from the (?P<a>{NP}) to the "
+                        rf"(?P<b>{NP})(?=[,.;]|$| and\b)")]
 ROUTE_VIA = re.compile(rf"every (?:route|road|path|way) from the ({NP}) to the ({NP}) (?:passes|goes|runs) "
                        rf"through the ({NP})(?=[,.;]|$| and\b)")
 SEPARATE = re.compile(rf"the ({NP})(?:, which [^,]*,)?(?:, the ({NP}))?,? and the ({NP})(?:, which [^,]*,)? are "
@@ -443,9 +449,9 @@ class MovePlace(Family):
         for i, s in enumerate(sents):
             for rx in ROUTE_MIN:
                 for r in rx.finditer(s):
-                    d = T.find_durations(r.group(3))
+                    d = T.find_durations(r.group("d"))
                     if len(d) == 1 and d[0][0] > 0:
-                        edges[(r.group(1), r.group(2))] = d[0][0]
+                        edges[(r.group("a"), r.group("b"))] = d[0][0]
                         used.add(i)
             for r in ROUTE_VIA.finditer(s):
                 via[(r.group(1), r.group(2))] = r.group(3)
@@ -506,11 +512,19 @@ class MovePlace(Family):
 
 # ---------------------------------------------------------------- move_room
 
-STAY_VERB = r"(?:stayed|remained)"
-STAY_A = re.compile(rf"^([a-z]+) {STAY_VERB} (?:in|inside) the ({NP}) from {TM} (?:to|until|till) {TM}"
-                    rf"(?=[,.;]|$| and\b)")
-STAY_B = re.compile(rf"^from {TM} (?:to|until|till) {TM},? ([a-z]+) {STAY_VERB} (?:in|inside) the ({NP})"
-                    rf"(?=[,.;]|$| and\b)")
+SPAN = r"from (?P<t1>\d{1,2}:\d{2} (?:am|pm)|noon) (?:to|until|till) (?P<t2>\d{1,2}:\d{2} (?:am|pm)|noon)"
+BETWEEN = r"between (?P<t1>\d{1,2}:\d{2} (?:am|pm)|noon) and (?P<t2>\d{1,2}:\d{2} (?:am|pm)|noon)"
+STAY_END = r"(?=[,.;]|$| and\b)"
+NOT_LEAVE = r"(?:did not|didn't|never) (?:leave|left)"
+WHOLE = r"(?:the whole time|the entire time|throughout)"
+STAYS = [  # a person who stayed in one room for a window, as (p, r, t1, t2) named groups
+    re.compile(rf"^(?P<p>[a-z]+) (?:stayed|remained) (?:in|inside) the (?P<r>{NP}) (?:{WHOLE} )?{SPAN}{STAY_END}"),
+    re.compile(rf"^(?P<p>[a-z]+) was (?:in|inside) the (?P<r>{NP}) {WHOLE} {SPAN}{STAY_END}"),
+    re.compile(rf"^{SPAN},? (?P<p>[a-z]+) (?:stayed|remained) (?:in|inside) the (?P<r>{NP}){STAY_END}"),
+    re.compile(rf"^(?P<p>[a-z]+) {NOT_LEAVE} the (?P<r>{NP}) (?:at any point )?{BETWEEN}{STAY_END}"),
+    re.compile(rf"^(?P<p>[a-z]+) {NOT_LEAVE} the (?P<r>{NP}) {SPAN}{STAY_END}"),
+    re.compile(rf"^{BETWEEN},? (?P<p>[a-z]+) {NOT_LEAVE} the (?P<r>{NP}){STAY_END}"),
+]
 LEAVE = r"(?:left|walked out of|came out of|stepped out of|went out of|exited)"
 LEAVE_BASE = r"(?:leave|walk out of|come out of|step out of|go out of|exit)"
 LEAVE_ING = r"(?:leaving|walking out of|coming out of|stepping out of|going out of|exiting)"
@@ -525,15 +539,11 @@ class MoveRoom(Family):
         groups = separate_groups(sents)
         out = []
         for i, s in enumerate(sents):
-            m = STAY_A.match(s)
-            if m:
-                person, room, t1, t2 = m.groups()
-            else:
-                m = STAY_B.match(s)
-                if not m:
-                    continue
-                t1, t2, person, room = m.groups()
-            if not is_person(person, ctx.sentences[i]):
+            m = next((m for m in (rx.match(s) for rx in STAYS) if m), None)
+            if not m:
+                continue
+            person, room, t1, t2 = m.group("p", "r", "t1", "t2")
+            if not is_person(person, ctx.sentences[i]) or tm(t2) <= tm(t1):
                 continue
             others = set().union(*[g - {room} for g in groups if room in g]) if groups else set()
             if not others:
@@ -575,6 +585,7 @@ class MoveRoom(Family):
 # ---------------------------------------------------------------- move_object
 
 OBJ_INTRO = re.compile(rf"^there was (?:one|a single|only one|exactly one) ({NP}){END}")
+STAY_VERB = r"(?:stayed|remained|was kept|was locked|was left)"
 OBJ_STAY = re.compile(rf"(?:^|, and |, which |; )(it|which|(?:the|that) {NP})? ?(?:{STAY_VERB}|was) in the ({NP})"
                       rf"(?:, which [^,]*,)? from {TM} (?:to|until|till) {TM}(?=[,.;]|$| and\b)")
 OBJ_STAY_B = re.compile(rf"^from {TM} (?:to|until|till) {TM},? (it|(?:the|that) {NP}) {STAY_VERB} in the ({NP})"
@@ -920,8 +931,13 @@ class MoveChain(Family):
 
 # ---------------------------------------------------------------- move_count
 
-COUNT = re.compile(rf"^(?:from {TM} (?:to|until|till) {TM},? )?(?:the ({NP})(?:, which [^,]*,)?|it) (?:held|contained)"
-                   rf" exactly ([a-z0-9]+) ({NP})(?: from {TM} (?:to|until|till) {TM})?(?=[,.;]|$| and\b)")
+T_A = r"(?P<a1>\d{1,2}:\d{2} (?:am|pm)|noon) (?:to|until|till) (?P<a2>\d{1,2}:\d{2} (?:am|pm)|noon)"
+T_B = T_A.replace("<a1>", "<b1>").replace("<a2>", "<b2>")
+COUNTS = [  # a container that held exactly N items for a window, as named groups
+    re.compile(rf"^(?:from {T_A},? )?(?:the (?P<c>{NP})(?:, which [^,]*,)?|it) (?:held|contained) exactly "
+               rf"(?P<n>[a-z0-9]+) (?P<items>{NP})(?: from {T_B})?(?=[,.;]|$| and\b)"),
+    re.compile(rf"^(?:from {T_A},? )?there were exactly (?P<n>[a-z0-9]+) (?P<items>{NP}) in the (?P<c>{NP})"
+               rf"(?: from {T_B})?(?=[,.;]|$| and\b)")]
 NO_CHANGE = re.compile(rf"no ({NP}) (?:was|were) added (?:to it |to the {NP} )?or removed(?: from it)? during that time")
 NUM_WORD = r"(\d+|no|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"
 
@@ -934,16 +950,15 @@ class MoveCount(Family):
         sents = [low(s) for s in ctx.sentences]
         out, last_subject = [], None
         for i, s in enumerate(sents):
-            m = COUNT.match(s)
+            m = next((m for m in (rx.match(s) for rx in COUNTS) if m), None)
             if not m:
                 sm = re.match(rf"^the ({NP}) (?:stands|stood|sits|sat|is|was) ", s)
                 last_subject = sm.group(1) if sm else last_subject
                 continue
-            g = m.groups()
-            cont = g[2] or last_subject
-            times = [x for x in g[:2] + g[5:] if x]
-            n = T.word_num(g[3])
-            items = g[4]
+            cont = m.group("c") or last_subject
+            times = [x for x in m.group("a1", "a2", "b1", "b2") if x]
+            n = T.word_num(m.group("n"))
+            items = m.group("items")
             if cont is None or len(times) != 2 or n is None or not items.endswith("s"):
                 continue
             nc, nc_idx = NO_CHANGE.search(s), None
