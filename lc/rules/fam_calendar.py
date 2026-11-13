@@ -630,6 +630,126 @@ class RoomBooking(Family):
         return Verdict(LIE, self.name, f"the {'/'.join(sorted(holders))} team had {f['room']} at {T.fmt_time(tm)}")
 
 
+# ----------------------------------------------------------------------------------------------- owners over a month
+
+NOBODY_ELSE_RE = re.compile(
+    rf"\b(?:[Nn]obody|[Nn]o one) else owned the ([a-z][a-z -]*?) (?:in|during) ({MONTH_ALT}) (\d{{4}})\."
+    rf"|^(?:In|During) ({MONTH_ALT}) (\d{{4}}),? (?:nobody|no one) else owned the ([a-z][a-z -]*?)\.")
+SALE_RE = re.compile(rf"\b(?:sold|selling) it (?:on )?to ({NAME})\b")
+AFTER_BUYING_RE = re.compile(r"\bexactly (\w+) days? after buying it\b", re.I)
+NOT_SELLERS = NOT_NAMES | {"On", "Until", "At", "Exactly", "In", "During", "From", "Then", "After", "The"}
+
+
+def sale(clause):
+    """'Camila owned the kayak until selling it to Tomas on 8 September 2026.' -> (seller, buyer, date), where date
+    is ('after', n) for 'Tariq sold it to Rahul exactly 14 days after buying it.'; None if it is not one sale."""
+    m = SALE_RE.search(clause)
+    if not m or len(SALE_RE.findall(clause)) != 1:
+        return None
+    buyer = m.group(1)
+    sellers = {w for w in CAPITAL_RE.findall(clause) if w not in NOT_SELLERS and w != buyer}
+    dates, rel = T.find_dates(clause), AFTER_BUYING_RE.search(clause)
+    if len(sellers) != 1 or len(dates) + bool(rel) != 1:
+        return None
+    if rel:
+        n = T.word_num(rel.group(1))
+        return (sellers.pop(), buyer, ("after", n)) if n else None
+    return sellers.pop(), buyer, dates[0][0]
+
+
+@register
+class MonthOwners(Family):
+    """'Camila owned the kayak until selling it to Tomas on 8 September 2026. Tomas sold it to Isla on 20 September
+    2026. Nobody else owned the kayak in September 2026.' Within that month the owners follow one another: the first
+    owner up to the first sale, each buyer from their purchase to their own sale (sale days count for both). A
+    speaker's claim to own it, or to have sold or bought it, on a day of that month that does not fit is a lie."""
+
+    name = "cal_owner"
+
+    def parse(self, ctx):
+        heads = [(i, NOBODY_ELSE_RE.search(s)) for i, s in enumerate(ctx.sentences) if NOBODY_ELSE_RE.search(s)]
+        if len(heads) != 1:
+            return None
+        hi, hm = heads[0]
+        item, mon, yr = (hm.group(1), hm.group(2), hm.group(3)) if hm.group(1) else (hm.group(6), hm.group(4),
+                                                                                    hm.group(5))
+        sales, used = [], [hi]
+        for i, s in enumerate(ctx.sentences):
+            if i == hi or not re.search(r"\b(?:sold|selling|bought|buying|owned|owner|belonged)\b", s):
+                continue
+            for clause in re.split(r",? and (?=[A-Z])", s):  # 'X sold it to Y on D, and Y sold it to Z on E.'
+                if SALE_RE.search(clause):
+                    one = sale(clause)
+                    if one is None:
+                        return None
+                    sales.append(one)
+            used.append(i)
+        bought = {b: d for _, b, d in sales if not isinstance(d, tuple)}
+        resolved = []
+        for s_, b, d in sales:
+            if isinstance(d, tuple):
+                if s_ not in bought:
+                    return None
+                d = bought[s_] + dt.timedelta(days=d[1])
+                bought[b] = d
+            resolved.append((s_, b, d))
+        resolved.sort(key=lambda x: x[2])
+        if not resolved or any(resolved[k][0] != resolved[k - 1][1] or resolved[k][2] <= resolved[k - 1][2]
+                               for k in range(1, len(resolved))):
+            return None
+        names = [resolved[0][0]] + [b for _, b, _ in resolved]
+        if len(set(names)) != len(names):
+            return None  # someone owned it twice: keep out
+        month = (int(yr), T.MONTHS.index(mon) + 1)
+        if any((d.year, d.month) != month for _, _, d in resolved):
+            return None
+        for i in used:
+            ctx.consume(i)
+        cuts = [None] + [d for _, _, d in resolved] + [None]
+        spans = [(n, cuts[k], cuts[k + 1]) for k, n in enumerate(names)]
+        return {"item": item, "month": month, "sales": set(resolved), "spans": spans}
+
+    @staticmethod
+    def owners_on(f, d):
+        return {n for n, a, b in f["spans"] if (a is None or a <= d) and (b is None or d <= b)}
+
+    def judge(self, ctx, f, msg):
+        t = plain_claim(msg.text, names_ok=True)
+        it = re.escape(f["item"])
+        if not t or not re.search(rf"\b{it}\b", t):
+            return None
+        d = the_date(t)
+        if d is None or (d.year, d.month) != f["month"]:
+            return None
+        me = ctx.speakers.get(msg.label)
+        names = [w for w in CAPITAL_RE.findall(t) if w not in NOT_SELLERS and w not in ("I", "As", "For")]
+        if re.search(rf"\bI owned the {it}\b|\bI was the owner of the {it}\b|\bI was the {it}'s owner\b"
+                     rf"|\b[Tt]he {it} (?:was mine|belonged to me)\b", t):
+            if names:
+                return None
+            if me in self.owners_on(f, d):
+                return Verdict(OK, self.name, "the speaker owned it that day")
+            return Verdict(LIE, self.name, f"{'/'.join(sorted(self.owners_on(f, d)))} owned it on {d}")
+        sold = re.search(rf"\bI sold the {it} (?:on )?to ({NAME})\b|\bI sold ({NAME}) the {it}\b"
+                         rf"|\b[Tt]he {it} was sold by me to ({NAME})\b|\b({NAME}) bought the {it} (?:from|off) me\b",
+                         t)
+        bought = re.search(rf"\bI (?:bought|purchased) the {it} (?:from|off) ({NAME})\b|\b({NAME}) sold me the {it}\b", t)
+        lent = re.search(rf"\bI borrowed the {it} (?:from|off) ({NAME})\b", t)
+        hits = [(k, m) for k, m in (("sold", sold), ("bought", bought), ("lent", lent)) if m]
+        if len(hits) != 1:
+            return None
+        kind, m = hits[0]
+        other = next(g for g in m.groups() if g)
+        if names != [other] or other == me:
+            return None
+        if kind == "lent":  # borrowing changes no ownership; only a lender who owned it that day is clearly fine
+            return Verdict(OK, self.name, "the lender owned it that day") if other in self.owners_on(f, d) else None
+        deal = (me, other, d) if kind == "sold" else (other, me, d)
+        if deal in f["sales"]:
+            return Verdict(OK, self.name, "matches a recorded sale")
+        return Verdict(LIE, self.name, f"no such sale: the {f['item']} changed hands only as recorded that month")
+
+
 if __name__ == "__main__":  # self-check of the calendar arithmetic
     assert weekday_span("Wednesday", "Sunday") == {2, 3, 4, 5, 6} and weekday_span("Friday", "Monday") == {4, 5, 6, 0}
     assert weekday(dt.date(2026, 4, 14), (dt.date(2026, 4, 1), 2)) == 1
