@@ -166,7 +166,7 @@ def main():
                                                                        max_tokens=FLOOR_TOKENS, output_kind=final))
             elif kind in THINKING:
                 room = max_len - plen(cid) - tokens - 64  # 64: re-tokenising the text so far can add a few tokens
-                cap = min(MAIN_TOKENS if kind != "cont" else CONT_TOKENS - tokens, room)
+                cap = min(MAIN_TOKENS if kind == "extra" else share() if kind == "main" else CONT_TOKENS - tokens, room)
                 if cap < 256:
                     raise ValueError(f"only {room} tokens of room")
                 eng.add_request(rid, prompt(cid) + text, SamplingParams(
@@ -203,6 +203,16 @@ def main():
                 if best is None or key < best[0]:
                     best = (key, cid, max(ks) + 1)
         return best and ("extra", best[1], best[2])
+
+    def share():
+        """The first-sample cap: MAIN_TOKENS, or less once the tokens left before the stop time do not cover every case
+        still waiting. 1,024 tokens of thought and a forced answer beat no thought at all (67% against 40% for
+        Qwen3-8B on our new-family cases)."""
+        if seq_n < 20:
+            return MAIN_TOKENS
+        now = time.time()
+        left = len(main_q) + 1 + sum(v[0] == "main" for v in flight.values())
+        return max(768, min(MAIN_TOKENS, int(tokens_out / (now - t_ready) * (a.stop_new - now) / left)))
 
     def on_schedule(now):
         done = sum(1 for i in order if 0 in samples.get(i, {}))
