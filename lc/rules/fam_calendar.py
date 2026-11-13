@@ -68,6 +68,13 @@ def the_noun(noun):
     return r"\bthe " + re.escape(noun) + AFTER_NOUN
 
 
+def the_date(t):
+    """The one full date in a claim, or None when there is none, several, or another bare number besides clock
+    times (so 'on 5 and 6 March 2026' and 'from 8 to 20 September 2026' are not read as one day)."""
+    dates = T.find_dates(t)
+    return dates[0][0] if len(dates) == 1 and not T.find_numbers(t) else None
+
+
 def month_years(s):
     return [(int(m.group(2)), T.MONTHS.index(m.group(1)) + 1) for m in MONTH_YEAR_RE.finditer(s)]
 
@@ -159,10 +166,9 @@ class OpeningHours(Family):
         t = plain_claim(msg.text)
         if not t or not re.search(the_noun(f["noun"]), t, re.I) or not FIRST_PERSON_RE.search(t):
             return None
-        dates = T.find_dates(t)
-        if len(dates) != 1:
+        d = the_date(t)
+        if d is None:
             return None
-        d = dates[0][0]
         if waiting_only(t):
             return Verdict(OK, self.name, "waiting outside is always possible")
         times = T.find_times(t)
@@ -243,10 +249,9 @@ class ClosedWeekday(Family):
         t = plain_claim(msg.text)
         if not t or not re.search(the_noun(f["noun"]), t, re.I) or not FIRST_PERSON_RE.search(t):
             return None
-        dates = T.find_dates(t)
-        if len(dates) != 1:
+        d = the_date(t)
+        if d is None:
             return None
-        d = dates[0][0]
         if waiting_only(t):
             return Verdict(OK, self.name, "waiting outside is always possible")
         if WAIT_RE.search(t) or NOT_USE_RE.search(t) or not f["inside"].search(t):
@@ -363,10 +368,9 @@ class NightRota(Family):
         mine = t and (WORK_RE.search(t) or t.startswith("My " + " ".join(f["duty"])))  # 'My late shift was on ...'
         if not mine or NOT_WORK_RE.search(t):
             return None
-        dates = T.find_dates(t)
-        if len(dates) != 1 or T.find_times(t):
+        d = the_date(t)
+        if d is None or T.find_times(t):
             return None
-        d = dates[0][0]
         said = set(words(t))
         extra = (said & DUTY_QUALIFIERS) - set(f["duty"])
         if not all(w in said for w in f["duty"]):
