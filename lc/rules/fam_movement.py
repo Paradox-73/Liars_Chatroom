@@ -31,8 +31,8 @@ NP_WORD = (r"(?!(?:and|or|but|was|were|is|are|be|been|held|stayed|remained|left|
            r"not|never|from|to|until|till|between|at|on|in|during|for|with|without|after|before|which|that|who|whom|"
            r"then|so|its|it|when|while|unless|except|if|only|every|each|daily|weekdays|weekends)\b)[a-z0-9][a-z0-9'-]*")
 NP = rf"(?:{NP_WORD}(?: {NP_WORD})*?)"
-NAME = (r"(?!(?:nobody|no one|noone|none|someone|somebody|anyone|anybody|everyone|everybody|nothing|not|never|who|"
-        r"whom|whoever|what|which)\b)[a-z]+")
+NAME = (r"(?!(?:nobody|no one|noone|none|neither|no|someone|somebody|anyone|anybody|everyone|everybody|nothing|not|"
+        r"never|who|whom|whoever|what|which)\b)[a-z]+")
 PRONOUNS = {"i", "me", "you", "he", "him", "she", "her", "they", "them", "we", "us", "it", "this", "that", "there",
             "who", "one", "the", "nobody", "everyone", "someone"}
 EPS = 1e-6
@@ -96,9 +96,12 @@ def claim(text):
     messages with no time or several times, dates or other days, and times after any word but 'at' (before, after,
     around, by ...)."""
     s = text.strip().replace("’", "'")
-    if "?" in s or T.find_dates(s) or T.find_weekdays(s):
+    try:
+        if "?" in s or T.find_dates(s) or T.find_weekdays(s):
+            return None
+        times = T.find_times(s)
+    except ValueError:  # '13:30 PM', '31 February 2026'
         return None
-    times = T.find_times(s)
     if len(times) != 1:
         return None
     minutes, m = times[0]
@@ -378,6 +381,8 @@ class MoveRoute(Family):
                 if mins is None:
                     continue  # speeds we could not pair: claims stay unjudged
                 earliest = t0 + mins
+            elif any(SPEED_SENT.match(x) for x in sents):
+                continue  # a speed sentence we could not tie to this vehicle may still bind it
             if tainted(ctx, used, {veh, orig, dest}):
                 continue
             for j in used:
@@ -994,7 +999,7 @@ class MoveChain(Family):
         if not c:
             return None
         sender = ctx.speakers.get(msg.label, "").lower()
-        return best(self.one(f, sender, *c) for f in facts)
+        return best(self.one(f, sender, msg.text, *c) for f in facts)
 
     @staticmethod
     def holder(f, t):
@@ -1006,7 +1011,10 @@ class MoveChain(Family):
                 return "edge"
         return None
 
-    def one(self, f, sender, t, cl):
+    def one(self, f, sender, text, t, cl):
+        def unnamed(w):  # 'her', 'security': not a person we can place in the chain
+            return w != sender and (w in PRONOUNS or not re.search(rf"\b{esc(w.capitalize())}\b", text))
+
         start, end = f["segs"][0][1], f["segs"][-1][2]
         outside = t < start - EPS or t > end + EPS
         who = sender if f["self"].fullmatch(cl) else None
@@ -1014,8 +1022,8 @@ class MoveChain(Family):
         if m:
             who = m.group(1) or m.group(2)
         if who:
-            if who in PRONOUNS:
-                return None  # 'I saw her holding it': we cannot tell who 'her' is
+            if unnamed(who):
+                return None
             if outside:
                 return Verdict(OK, self.name, f"outside the hand-over chain of the {f['obj']}")
             h = self.holder(f, t)
@@ -1033,7 +1041,7 @@ class MoveChain(Family):
         m = f["take"].fullmatch(cl)
         if m:
             giver, receiver = m.group(1) or m.group(2), sender
-        if giver is None or giver in PRONOUNS or receiver in PRONOUNS:
+        if giver is None or unnamed(giver) or unnamed(receiver):
             return None
         if outside:
             return Verdict(OK, self.name, "hand-over outside the chain")
