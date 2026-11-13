@@ -14,11 +14,14 @@ import random
 import re
 
 from . import base
-from . import fam_medicine, fam_whenever
+from . import (fam_agelimit, fam_battery, fam_library, fam_lift, fam_medicine, fam_overnight, fam_parking, fam_periodic,
+               fam_platform, fam_prices, fam_queue, fam_recipe, fam_scores, fam_seats, fam_temperature, fam_timezone,
+               fam_whenever)
 
-FAMILIES = [fam_medicine, fam_whenever]
-OVERNIGHT = []  # families kept out of combined cases: their evidence spans two dates
-PER_FAMILY = 16
+FAMILIES = [fam_agelimit, fam_battery, fam_library, fam_lift, fam_medicine, fam_parking, fam_periodic, fam_platform,
+            fam_prices, fam_queue, fam_recipe, fam_scores, fam_seats, fam_temperature, fam_timezone, fam_whenever]
+OVERNIGHT = [fam_overnight]  # families kept out of combined cases: their evidence spans two dates
+PER_FAMILY = 13
 PER_OVERNIGHT = 10
 TOTAL = 300
 LENGTHS = {6: 19, 7: 14, 8: 19, 9: 11, 10: 5, 11: 8, 12: 23}  # train's chat lengths, in percent
@@ -135,18 +138,25 @@ def build(seed=2026):
     jobs = plan(rng)
     labels = [x for x in "ABCD" for _ in range(TOTAL // 4)]
     rng.shuffle(labels)
-    cases = []
+    cases, retries = [], collections.Counter()
     for i, fams in enumerate(jobs):
-        crng = random.Random(f"newfam-{seed}-{i}")
-        names = crng.sample(base.NAMES, 14)
-        people, others = names[:4], names[4:]
-        day = base.random_day(crng)
-        bundles = []
-        for j, fam in enumerate(fams):
-            b = fam.make(crng, people, others[5 * j: 5 * j + 5], day)
-            b.people = people
-            bundles.append(b)
-        scenario, evidence, msgs = assemble(crng, bundles, day)
+        for attempt in range(30):  # a combined case whose claim pools run short is drawn again
+            crng = random.Random(f"newfam-{seed}-{i}-{attempt}")
+            names = crng.sample(base.NAMES, 14)
+            people, others = names[:4], names[4:]
+            day = base.random_day(crng)
+            bundles = []
+            for j, fam in enumerate(fams):
+                b = fam.make(crng, people, others[5 * j: 5 * j + 5], day)
+                b.people = people
+                bundles.append(b)
+            try:
+                scenario, evidence, msgs = assemble(crng, bundles, day)
+                break
+            except AssertionError:
+                retries[fams[0].NAME + "+".join(f.NAME for f in fams[1:])] += 1
+        else:
+            raise RuntimeError(f"case {i} {[f.NAME for f in fams]} never assembled")
         liar = bundles[0].lie.who
         rest = [p for p in people if p != liar]
         crng.shuffle(rest)
@@ -157,6 +167,7 @@ def build(seed=2026):
                     tags=bundles[0].lie.tags, lie_num=next(k + 1 for k, m in enumerate(msgs) if m.claim is bundles[0].lie))
         check_case(case)
         cases.append(case)
+    print("redraws:", dict(retries))
     return cases
 
 
