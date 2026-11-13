@@ -14,18 +14,12 @@ Rules:
 - The answer is the sender of the contradicting message, even if the message is about someone else.
 - Questions and opinions are never the answer."""
 
-ANSWER_LINE = "Then end your reply with one final line of the form:\nANSWER: <letter>"
-TASK = {  # the closing instruction; "full" is the prompt of every model run so far
-    "full": "Check every claim in the chat one at a time against the evidence. " + ANSWER_LINE,
-    "brief": ("Think briefly. First write the facts the evidence fixes, in short notes. Then go through each claim message "
-              "once, one line each: consistent, or impossible and why. Stop once one claim is impossible and every other "
-              "claim has been checked. " + ANSWER_LINE),
-    "lines": ("Write one line for each chat message that makes a claim: its number, then consistent, or impossible and "
-              "why. " + ANSWER_LINE),
-}
 
-
-def build_prompt(case, style="full"):
+def build_prompt(case):
     speakers = "; ".join(f"{k} = {v}" for k, v in case.speakers.items())
     chat = "\n".join(f"{m.num}. {m.label} ({case.speakers[m.label]}): {m.text}" for m in case.messages)
-    return f"{RULES}\n\nScenario: {case.scenario}\nSpeakers: {speakers}\nEvidence: {case.evidence}\n\nChat:\n{chat}\n\n{TASK[style]}"
+    return (
+        f"{RULES}\n\nScenario: {case.scenario}\nSpeakers: {speakers}\nEvidence: {case.evidence}\n\nChat:\n{chat}\n\n"
+        "Check every claim in the chat one at a time against the evidence. "
+        "Then end your reply with one final line of the form:\nANSWER: <letter>"
+    )

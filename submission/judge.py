@@ -26,7 +26,7 @@ from collections import deque
 T0 = time.time()
 try:
     import torch
-    from lc.llm.judge_vllm import ANSWER_RE, NUM_LOGPROBS, letter_probs, read_answer  # also turns off the FlashInfer sampler
+    from lc.llm.judge_vllm import NUM_LOGPROBS, letter_probs, read_answer  # also turns off the FlashInfer sampler
     from vllm import LLM, SamplingParams
     from vllm.sampling_params import RequestOutputKind
 except ImportError as e:
@@ -39,9 +39,7 @@ from lc.llm.prompt import build_prompt
 MAIN_TOKENS = int(os.environ.get("LC_MAIN_TOKENS", 8192))  # first sample
 CONT_TOKENS = int(os.environ.get("LC_CONT_TOKENS", 16384))  # a continued sample in total
 MAX_SAMPLES, SETTLED = 5, 1.5
-# optional first pass without thinking: every case gets a short per-claim answer before any thinking starts
-FLOOR, FLOOR_TOKENS = os.environ.get("LC_FLOOR", ""), int(os.environ.get("LC_FLOOR_TOKENS", 768))
-THINKING = ("main", "cont", "extra", "floor")  # the kinds that generate many tokens and hold a thinking slot
+THINKING = ("main", "cont", "extra")  # the kinds that generate many tokens and hold a thinking slot
 # per tensor-parallel size: max model length, thinking slots, one-token slots, tokens per engine step
 ENGINE = {2: (CONT_TOKENS + 2048, 40, 24, 4096), 1: (8192 + 2048, 8, 8, 2048)}
 
@@ -90,7 +88,6 @@ def main():
     think_slots = int(os.environ.get("LC_SLOTS", think_slots))  # per model: fewer when the weights leave little room
     max_len = int(os.environ.get("LC_MAX_LEN", max_len))  # per model: a small one has room for continuations on one card
     presence = float(os.environ.get("LC_PRESENCE_PENALTY", 0))  # per model: the Qwen3.5 models use 1.5
-    style = os.environ.get("LC_PROMPT", "full")  # the closing instruction of lc/llm/prompt.py
     # letter probabilities at the answer need log-probabilities on every sampled token; without them the letter alone votes
     token_logprobs = NUM_LOGPROBS if os.environ.get("LC_TOKEN_LOGPROBS", "1") == "1" else None
     util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered only to test on a shared card
@@ -116,13 +113,9 @@ def main():
 
     def prompt(cid):
         if cid not in prompts:
-            prompts[cid] = tok.apply_chat_template([{"role": "user", "content": build_prompt(cases[cid], style)}], tokenize=False,
+            prompts[cid] = tok.apply_chat_template([{"role": "user", "content": build_prompt(cases[cid])}], tokenize=False,
                                                    add_generation_prompt=True, enable_thinking=True)
         return prompts[cid]
-
-    def floor_prompt(cid):
-        return tok.apply_chat_template([{"role": "user", "content": build_prompt(cases[cid], FLOOR)}], tokenize=False,
-                                       add_generation_prompt=True, enable_thinking=False)
 
     def no_think(cid):
         # an empty thought, then the answer: Qwen3's own form without thinking, and it works for templates that
@@ -146,7 +139,7 @@ def main():
     fout = open(a.out, "a", encoding="utf-8")
     flight = {}  # request id -> (kind, case id, k, text so far, tokens so far, kind of the sample it answers for)
     queued_cont, quick, dead = deque(), deque(), set()  # dead: cases whose request could not start
-    counts = dict.fromkeys(("floor", "main", "cont", "extra", "force", "nothink", "main_capped", "cont_finished", "not_started"), 0)
+    counts = dict.fromkeys(("main", "cont", "extra", "force", "nothink", "main_capped", "cont_finished", "not_started"), 0)
     tokens_out = n_req = seq_tokens = seq_n = 0
 
     def record(cid, k, src, letter, p, forced, tokens):
@@ -163,10 +156,7 @@ def main():
         rid = str(n_req)
         n_req += 1
         try:
-            if kind == "floor":
-                eng.add_request(rid, floor_prompt(cid), SamplingParams(temperature=0.7, top_p=0.8, top_k=20, seed=0,
-                                                                       max_tokens=FLOOR_TOKENS, output_kind=final))
-            elif kind in THINKING:
+            if kind in THINKING:
                 room = max_len - plen(cid) - tokens - 64  # 64: re-tokenising the text so far can add a few tokens
                 cap = min(MAIN_TOKENS if kind == "extra" else share() if kind == "main" else CONT_TOKENS - tokens, room)
                 if cap < 256:
@@ -223,11 +213,7 @@ def main():
         left = len(main_q) + sum(v[0] == "main" for v in flight.values())
         return now + left * (now - t_ready) / done < a.stop_new - 120
 
-    floor_q = deque(order if FLOOR else [])
-
     def next_work(now, slots):
-        if floor_q:
-            return ("floor", floor_q.popleft(), -1)
         # a continuation holds its slot for thousands of tokens, so at most half the slots while first samples wait
         if queued_cont and (not main_q or (on_schedule(now) and sum(v[0] == "cont" for v in flight.values()) < slots // 2)):
             return ("cont",) + queued_cont.popleft()
@@ -293,13 +279,6 @@ def main():
             if kind not in THINKING:
                 p = letter_probs(out.logprobs[0])
                 record(cid, k, src, max(p, key=p.get) if any(p.values()) else None, p, kind == "force", tokens)
-                continue
-            if kind == "floor":
-                found = ANSWER_RE.findall(out.text.rsplit("</think>", 1)[-1])
-                if found:
-                    record(cid, -1, "floor", found[-1], None, False, len(out.token_ids))
-                else:
-                    quick.appendleft(("force", cid, -1, floor_prompt(cid) + out.text + "\n\nANSWER:", len(out.token_ids), "floor"))
                 continue
             text, tokens = text + out.text, tokens + len(out.token_ids)
             tokens_out += len(out.token_ids)
