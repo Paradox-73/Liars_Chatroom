@@ -708,3 +708,123 @@ class Pieces(Family):
         if res is None:
             return None
         return Verdict(res, self.name, f"{ref}: evidence {', '.join(str(float(p)) for p in sorted(possible))}")
+
+
+# ------------------------------------------------------------------------------- qty_attendance: complete lists
+
+LISTNOUN = r"[\w' -]*?(?:sheet|list|register|roster|record)"
+PEOPLE = r"(?:people|names|attendees|persons|members)"
+LIST_RES = [re.compile(p, re.I) for p in (
+    r"^(?:the|its) (?:" + LISTNOUN + r")(?: for (?:the )?(?P<ev>(?:\d{1,2}:\d{2}|[^:,])+?))? (?:lists|names|shows|records) exactly "
+    r"(?P<k>" + NUM + r") " + PEOPLE + r"[:,] (?P<names>.+)$",
+    r"^exactly (?P<k>" + NUM + r") " + PEOPLE + r" (?:are listed on|appear on|are on|are named on) the (?:" + LISTNOUN
+    + r") for (?:the )?(?P<ev>(?:\d{1,2}:\d{2}|[^:,])+?): (?P<names>.+)$")]
+HELD = re.compile(r"^the (?P<ev>.+?) (?:was held|took place)\b")
+DESCRIBED = re.compile(r"\b(?:was held|took place|where the|of the year)\b")
+ALL_CAME = re.compile(r"^(?:everyone|everybody) (?:on (?:it|the (?:[a-z\-]+ )?(?:list|sheet|register|roster))|listed) "
+                      r"attended$")
+ONLY_THEM = re.compile(r"^(?:(?:everyone|everybody) who attended (?:is|was) (?:on it|listed|on the (?:[a-z\-]+ )?"
+                       r"(?:list|sheet|register|roster))|nobody else attended|no one else attended)$")
+CAME = (r"(?:attended|went to|was at|was there at|sat through|sat in on|made it to|turned up (?:to|at|for)|"
+        r"showed up (?:to|at|for)|took part in|was present at)")
+STAYED_AWAY = (r"(?:missed|skipped|wasn't at|was not at|didn't attend|did not attend|didn't go to|did not go to|"
+               r"never went to|stayed away from|didn't make it to|did not make it to|was absent from|sat out|"
+               r"didn't turn up (?:to|at|for)|did not turn up (?:to|at|for)|wasn't present at|was not present at)")
+NOT_A_NAME = set("i me everyone everybody nobody someone somebody anyone anybody he she they we it one all none no "
+                 "the this that".split())
+
+
+@register
+class Attendance(Family):
+    name = "qty_attendance"
+
+    def parse(self, ctx):
+        f, used, held = {}, [], None
+        for i, sent in enumerate(ctx.sentences):
+            s = sent.rstrip(". ")
+            low, times = mask_times(s.lower())
+            m = HELD.match(low)
+            if m and len(times) <= 1 and "names" not in f:
+                held = (m["ev"], times)  # "The 1:30 PM safety briefing was held ... Its sign-in register lists ..."
+                continue
+            m = next((m for m in (rx.match(s) for rx in LIST_RES) if m), None)
+            if m and "names" not in f:
+                names = [x for x in re.split(r",\s*(?:and\s+)?|\s+and\s+", m["names"]) if x]
+                if len(names) != num(m["k"]) or not all(re.fullmatch(r"[A-Z][a-zA-Z'\-]+", x) for x in names):
+                    return None
+                ev, ts = mask_times(m["ev"].lower()) if m["ev"] else held or (None, None)
+                if ev is None or len(ts) != 1:
+                    return None
+                noun = re.sub(r"^@T |^the @T | at @T$", "", ev)
+                if "@T" in noun:
+                    return None
+                f.update(names={x.lower() for x in names}, noun=noun, time=ts[0])
+                used.append(i)
+                continue
+            if "names" in f:
+                parts = [p for p in re.split(r",\s*and\s+|;\s*|,\s*|\s+and\s+", low) if p]
+                kinds = ["a" if ALL_CAME.match(p) else "b" if ONLY_THEM.match(p) else None for p in parts]
+                if parts and all(kinds):
+                    f["all_came"] = f.get("all_came") or "a" in kinds
+                    f["only_them"] = f.get("only_them") or "b" in kinds
+                    used.append(i)
+        if not f.get("names") or not (f.get("all_came") or f.get("only_them")):
+            return None
+        word = re.escape(f["noun"].split()[-1])
+        for i, sent in enumerate(ctx.sentences):  # where it was held, "the first of the year": nothing to judge
+            low, times = mask_times(sent.lower())
+            if i not in used and re.search(r"\b" + word + r"\b", low) and DESCRIBED.search(low) and not re.search(
+                    r"\d", low) and all(t == f["time"] for t in times):
+                used.append(i)
+        for i in used:
+            ctx.consume(i)
+        n = re.escape(f["noun"])
+        ev = r"(?:the )?(?:@T )?" + n + r"(?: at @T)?"
+        f["frames"] = [(re.compile(p), sign) for p, sign in (
+            (r"^(?P<who>[a-z][a-z'\-]*) " + CAME + " " + ev + r"$", True),
+            (r"^(?P<who>[a-z][a-z'\-]*) " + STAYED_AWAY + " " + ev + r"$", False),
+            (r"^(?P<who>[a-z][a-z'\-]*) gave " + ev + r" a miss$", False),
+            (r"^" + ev + r" (?:was|is) one (?P<who>[a-z][a-z'\-]*) (?:attended|went to)$", True),
+            (r"^" + ev + r" (?:was|is) one (?P<who>[a-z][a-z'\-]*) (?:skipped|missed)$", False),
+            (r"^" + ev + r" (?:passed|went ahead|happened|took place) without (?P<who>[a-z][a-z'\-]*)$", False),
+            (r"^during " + ev + r",? (?P<who>i) (?:sat|took a seat|was sitting|was seated|stood|was standing) "
+             r"(?:near|by|at|next to|beside) the [a-z ]+$", True),
+            (r"^(?P<who>i) (?:sat|took a seat|was sitting|was seated|stood|was standing) (?:near|by|at|next to|beside) "
+             r"the [a-z ]+? during " + ev + r"$", True))]
+        f["where"] = re.compile(r"^(?:at @T,? )?i was (?:in|at|out in) the (?P<loc>[a-z][a-z ]*?)(?: at @T)?$")
+        f["evidence"] = ctx.case.evidence.lower()
+        return f
+
+    def judge(self, ctx, f, msg):
+        if msg.text.strip().endswith("?"):
+            return None
+        text = body(msg.text)
+        try:
+            s, times = mask_times(text.lower())
+        except ValueError:
+            return None
+        me = ctx.speakers.get(msg.label, "").lower()
+        for rx, came in f["frames"]:
+            m = rx.match(s)
+            if m is None:
+                continue
+            if any(t != f["time"] for t in times) or len(times) > 1:
+                return None  # a different session of the same kind of event
+            who = m["who"]
+            if who in ("i", "me"):
+                who = me
+            elif who in NOT_A_NAME or not re.search(r"\b" + who.capitalize() + r"\b", text):
+                return None
+            listed = who in f["names"]
+            if came and not listed and f.get("only_them"):
+                return Verdict(LIE, self.name, f"{who} is not on the complete list")
+            if not came and listed and f.get("all_came"):
+                return Verdict(LIE, self.name, f"{who} is on the list and everyone on it attended")
+            return Verdict(OK, self.name, "agrees with the list")
+        m = f["where"].match(s)
+        if m and len(times) == 1:
+            if m["loc"] in f["evidence"] or (me in f["names"] and times[0] == f["time"]):
+                return None
+            return Verdict(OK, self.name, "somewhere the evidence never mentions")
+        return None
+
