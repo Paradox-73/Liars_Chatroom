@@ -48,11 +48,11 @@ def parse_chat(chat):
     return msgs
 
 
+def case_from_row(r):
+    return Case(r["id"], r["scenario"], parse_speakers(r["speakers"]), r["evidence"], parse_chat(r["chat"]), r.get("label"))
+
+
 def load(split, data_dir=None):
     path = os.path.join(data_dir or DATA_DIR, f"{split}.csv")
     with open(path, encoding="utf-8", newline="") as f:
-        rows = list(csv.DictReader(f))
-    return [
-        Case(r["id"], r["scenario"], parse_speakers(r["speakers"]), r["evidence"], parse_chat(r["chat"]), r.get("label"))
-        for r in rows
-    ]
+        return [case_from_row(r) for r in csv.DictReader(f)]
