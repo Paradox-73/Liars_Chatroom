@@ -7,6 +7,7 @@ Deterministic: the plan comes from one seed, each case from its own seeded gener
 check_case() re-derives every case's liar from the fact models and asserts exactly one contradicting message.
 """
 import argparse
+import collections
 import csv
 import os
 import random
@@ -40,6 +41,24 @@ def plan(rng):
     return out[:TOTAL]
 
 
+def pick(pool, k, counts):
+    """k claims from a shuffled pool: first one for each speaker with no claim yet, so most chats hear claims from
+    three or four speakers as train chats do; then the rest, at most four claims per speaker while the pool allows."""
+    out, rest = [], []
+    for c, b in pool:
+        if counts[c.who] == 0 and len(out) < k:
+            out.append((c, b))
+            counts[c.who] += 1
+        else:
+            rest.append((c, b))
+    for cap in (4, len(pool) + 1):
+        for c, b in rest:
+            if len(out) < k and (c, b) not in out and counts[c.who] < cap:
+                out.append((c, b))
+                counts[c.who] += 1
+    return out
+
+
 def assemble(rng, bundles, day):
     main = bundles[0]
     n = rng.choices(list(LENGTHS), weights=list(LENGTHS.values()))[0]
@@ -53,18 +72,23 @@ def assemble(rng, bundles, day):
                 seen.add(c.text)
                 pool.append((c, b))
         pools.append(pool)
+    counts = collections.Counter({main.lie.who: 1})
     if len(bundles) == 1:
-        picked = pools[0][:need]
+        picked = pick(pools[0], need, counts)
     else:
         k2 = rng.randint(1, max(1, need // 2))
-        picked = pools[1][:k2] + pools[0][: need - k2]
+        picked = pick(pools[1], k2, counts)
+        picked += pick(pools[0], need - k2, counts)
     assert len(picked) == need, (main.family, len(picked), need)
     msgs = [Msg(main.lie.who, base.lead(rng, main.lie.text), main.lie, main)]
     msgs += [Msg(c.who, base.lead(rng, c.text), c, b) for c, b in picked]
-    pool = base.GENERIC_QUESTIONS + base.GENERIC_OPINIONS + [x for b in bundles for x in b.fillers] * 2
-    people = sorted({m.who for m in msgs} | set(bundles[0].people))
-    for text in rng.sample(sorted(set(pool)), n_fill):
-        msgs.append(Msg(rng.choice(people), text))
+    fam_fill = [x for b in bundles for x in b.fillers]
+    n_fam = min(len(fam_fill), sum(rng.random() < 0.35 for _ in range(n_fill)))
+    texts = rng.sample(fam_fill, n_fam) + rng.sample(base.GENERIC_QUESTIONS + base.GENERIC_OPINIONS, n_fill - n_fam)
+    for text in texts:  # train chats hear from all four speakers, rarely more than four messages each
+        have = collections.Counter(m.who for m in msgs)
+        low = min(have[p] for p in main.people)
+        msgs.append(Msg(rng.choice([p for p in main.people if have[p] <= low + (low > 0)]), text))
     rng.shuffle(msgs)
     evidence = [f"All times in this case refer to {base.date_text(day)}."] if any(b.timed for b in bundles) else []
     blocks = [list(b.evidence) for b in bundles]
