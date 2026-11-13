@@ -163,8 +163,27 @@ NOT_USE_RE = re.compile(
     r"texted|wrote|looked|saw|seen|watched|noticed|website|online|closed|shut|locked|unlocked|booked|reserved|by|"
     r"arrived|drove|walked|cycled|headed|reached|travelled|traveled|left|got|came|turned|showed|parked|parking|"
     r"dropped|returned|posted|ticket|tickets|photo|photos|photographed|picture|pictures|cleaned|cleaning|repaired|"
-    r"fixed|inspected|checked|delivered|painted|guarded|patrolled|maintained|worked|working|staff|security|"
-    r"volunteered)\b", re.I)
+    r"fixed|inspected|checked(?!(?: (?:a|an|some|the|my))? [a-z]+ out\b)|delivered|painted|guarded|patrolled|"
+    r"maintained|worked(?! out)|working(?! out)|staff|security|volunteered)\b",
+    re.I)  # 'worked out at the gym' and 'checked a book out of the library' are uses; 'worked at the gym' may be a job
+
+
+def use_re(noun):
+    """Claims of using the place, in the wordings train uses for that ('I swam at the pool', 'I borrowed a book from
+    the library', 'I bought bread at the bakery', 'I visited the museum', 'My visit to the museum was ...') plus a few
+    plain equivalents (used, trained, worked out, ate, played). Any other wording is left unjudged."""
+    n = the_noun(noun)[2:]  # 'the pool' as the place itself
+    obj = r"(?:(?:a|an|some|the|my) )?[a-z]+"  # 'a book', 'bread', 'some bread'
+    return re.compile("|".join([
+        rf"\bI (?:swam|went swimming|went for a swim|had a swim|trained|worked out|played|ate) (?:at|in) {n}",
+        rf"\bI (?:visited|used|went to|paid a visit to) {n}",
+        rf"\bI paid {n} a visit\b",
+        rf"\bI (?:borrowed|bought|picked up) {obj} (?:at|from) {n}",
+        rf"\bI (?:took|checked) {obj} out (?:of|from) {n}",
+        rf"\bI borrowed (?:a|an) {re.escape(noun)} book\b",
+        rf"^My (?:visit|swim|[a-z]+ purchase) (?:to|at) {n} was at\b",
+        rf"^At {n}, .*\bI (?:bought|borrowed|picked up|swam|ate|played|trained|worked out)\b",
+    ]), re.I)
 
 
 @register
@@ -201,12 +220,7 @@ class OpeningHours(Family):
         for k in used:
             ctx.consume(k)
         return {"noun": noun, "days": weekday_span(m.group("d1"), m.group("d2")), "hours": times,
-                "month": months[0] if months else None, "anchor": anchor,
-                # 'I was at the pool' may mean outside it; 'a photo of the pool' or 'tickets for the pool' are not
-                # uses of it ('out of the library' is)
-                "not_use": re.compile(rf"\b(?:was|were) at the {re.escape(noun)}\b|"
-                                      rf"\b(?:for|about|towards|toward|around|beyond|(?<!out )of) the {re.escape(noun)}\b",
-                                      re.I)}
+                "month": months[0] if months else None, "anchor": anchor, "use": use_re(noun)}
 
     def judge(self, ctx, f, msg):
         t = plain_claim(msg.text)
@@ -218,8 +232,8 @@ class OpeningHours(Family):
         if waiting_only(t):
             return Verdict(OK, self.name, "waiting outside is always possible")
         times = T.find_times(t)
-        if WAIT_RE.search(t) or NOT_USE_RE.search(t) or len(times) > 1 or f["not_use"].search(t):
-            return None
+        if not f["use"].search(t) or WAIT_RE.search(t) or NOT_USE_RE.search(t) or len(times) > 1:
+            return None  # only wordings known to mean using the place are judged
         if f["month"] and (d.year, d.month) != f["month"]:
             return Verdict(OK, self.name, "the opening days cover another month")
         wd = weekday(d, f["anchor"])
@@ -249,10 +263,11 @@ CLOSED_RES = [
 
 
 def inside_re(noun):
-    """Claims of being inside the place."""
-    n = re.escape(noun)
-    return re.compile(rf"\b(?:inside|in|into|within|visited|entered) {the_noun(noun)[2:]}|\bthe {n} is where I was\b"
-                      rf"|\bfound me (?:inside|in) the {n}\b", re.I)
+    """Claims of being inside the place, in the wordings train uses ('I was inside the library', 'Inside the library
+    is where I was', '14 April 2026 found me inside the library') plus visiting or entering it."""
+    n = the_noun(noun)[2:]
+    return re.compile(rf"\bI was (?:inside|in) {n}|\bI (?:visited|entered|went into|went inside) {n}"
+                      rf"|\b{n} is where I was\b|\bfound me (?:inside|in) {n}", re.I)
 
 
 def month_days(y, m):
