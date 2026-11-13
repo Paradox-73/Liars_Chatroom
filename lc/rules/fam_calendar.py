@@ -109,6 +109,13 @@ def weekday_span(a, b):
     return {(i + k) % 7 for k in range((j - i) % 7 + 1)}
 
 
+# words that add an exception to a calendar rule, or limit it to part of a day; such rules are left alone
+EXCEPTION_RE = re.compile(r"\b(?:except|excepting|also|apart|but|besides|plus|unless|holidays?|as well|alternate|"
+                          r"other)\b", re.I)
+PART_OF_DAY_RE = re.compile(r"\b(?:before|after|until|till|between|from|morning|afternoon|evening|night|noon|"
+                            r"midday|midnight)\b", re.I)
+
+
 def waiting_only(t):
     """'I waited outside the pool on 14 April 2026': a single clause about waiting, with no clock time."""
     t = re.sub(rf"({DATE_PAT}),", r"\1", t)  # 'On 21 December 2026, I waited ...' is still one clause
@@ -151,6 +158,8 @@ class OpeningHours(Family):
         times = [t for t, _ in T.find_times(s)]
         if len(times) not in (0, 2) or (times and times[0] >= times[1]):
             return None
+        if len(T.find_weekdays(s)) != 2 or T.find_dates(s) or EXCEPTION_RE.search(s):
+            return None  # extra days, dates or exceptions would change the opening days
         months = month_years(s)
         anchor = find_anchor(ctx)
         if len(months) > 1 or anchor is False:
@@ -225,6 +234,8 @@ class ClosedWeekday(Family):
         nth, anyd = NTH_WD_RE.search(s), ANY_WD_RE.search(s)
         if bool(nth) == bool(anyd) or len(T.find_weekdays(s)) != 1:
             return None
+        if T.find_times(s) or T.find_dates(s) or EXCEPTION_RE.search(s) or PART_OF_DAY_RE.search(s):
+            return None  # 'on any Tuesday after 5:00 PM' or '... except 14 April' close less than whole days
         if nth:
             y, mo, wd_name = int(nth.group(4)), T.MONTHS.index(nth.group(3)) + 1, nth.group(2)
         else:
@@ -637,6 +648,11 @@ NOBODY_ELSE_RE = re.compile(
     rf"|^(?:In|During) ({MONTH_ALT}) (\d{{4}}),? (?:nobody|no one) else owned the ([a-z][a-z -]*?)\.")
 SALE_RE = re.compile(rf"\b(?:sold|selling) it (?:on )?to ({NAME})\b")
 AFTER_BUYING_RE = re.compile(r"\bexactly (\w+) days? after buying it\b", re.I)
+OTHER_HANDOVER_RE = re.compile(r"\b(?:gave|given|handed|lent|loaned|passed|transferred|inherited|swapped|traded|"
+                               r"returned|donated|gifted|stole|stolen|lost|found|rented|shared|co-owned|jointly)\b",
+                               re.I)
+START_OWNER_RE = re.compile(rf"^(?:At the start of (?:{MONTH_ALT}) \d{{4}},? )?{NAME} owned the [a-z][a-z -]*?"
+                            rf"(?: at the start of (?:{MONTH_ALT}) \d{{4}})?\.$")
 NOT_SELLERS = NOT_NAMES | {"On", "Until", "At", "Exactly", "In", "During", "From", "Then", "After", "The"}
 
 
@@ -675,14 +691,22 @@ class MonthOwners(Family):
                                                                                     hm.group(5))
         sales, used = [], [hi]
         for i, s in enumerate(ctx.sentences):
-            if i == hi or not re.search(r"\b(?:sold|selling|bought|buying|owned|owner|belonged)\b", s):
+            if i == hi:
                 continue
+            if OTHER_HANDOVER_RE.search(s):
+                return None  # a gift, loan or swap would change who owned it when
+            if not re.search(r"\b(?:sold|selling|bought|buying|owned|owner|belonged)\b", s):
+                continue
+            found = 0
             for clause in re.split(r",? and (?=[A-Z])", s):  # 'X sold it to Y on D, and Y sold it to Z on E.'
                 if SALE_RE.search(clause):
                     one = sale(clause)
                     if one is None:
                         return None
                     sales.append(one)
+                    found += 1
+            if not found and not START_OWNER_RE.match(s):
+                return None  # some other fact about owning or buying it
             used.append(i)
         bought = {b: d for _, b, d in sales if not isinstance(d, tuple)}
         resolved = []
