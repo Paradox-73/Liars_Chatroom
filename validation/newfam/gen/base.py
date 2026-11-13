@@ -96,6 +96,7 @@ class Claim:
     text: str  # one sentence, without the number and label
     ok: object  # ok(facts) -> True when the claim can be true together with the evidence
     tags: tuple = ()  # boundary, two-fact, about-other, distractor, neutral, ...
+    key: object = None  # the single-valued fact the claim is about; the liar never gets a true claim with the lie's key
 
 
 @dataclass

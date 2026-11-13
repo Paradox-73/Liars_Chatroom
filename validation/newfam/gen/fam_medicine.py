@@ -88,9 +88,9 @@ def make(rng, people, others, day):
         s = rng.choice(sp)
         truths.append(Claim(s, took(s, t), lambda f, t=t: can_take(f, t)))
         s = rng.choice(sp)
-        truths.append(Claim(s, nth(s, i + 1, t), lambda f, n=i + 1, t=t: can_nth(f, n, t)))
+        truths.append(Claim(s, nth(s, i + 1, t), lambda f, n=i + 1, t=t: can_nth(f, n, t), (), ("nth", i + 1)))
     s = rng.choice(sp)
-    truths.append(Claim(s, count(s, len(sched)), lambda f, n=len(sched): can_count(f, n)))
+    truths.append(Claim(s, count(s, len(sched)), lambda f, n=len(sched): can_count(f, n), (), ("count",)))
     gaps = [b - a for a, b in zip(sched, sched[1:])]
     if gap in gaps:  # the hidden world has a dose exactly at the minimum gap: true, and it sounds risky
         s = rng.choice(sp)
@@ -101,7 +101,7 @@ def make(rng, people, others, day):
         s = rng.choice(sp)
         who, _ = subj(s)
         truths.append(Claim(s, f"{who} took fewer than {word(k)} {many} that day.",
-                            lambda f: can_count(f, len(sched)), ("distractor",)))
+                            lambda f: can_count(f, len(sched)), ("distractor",), ("count",)))
     for _ in range(3):
         s = rng.choice([x for x in sp if x != p] or sp)
         t = rng.randrange(7 * 60, 21 * 60, 5)
@@ -116,17 +116,17 @@ def make(rng, people, others, day):
     kind = rng.choice(kinds)
     if kind == "early":
         t = rng.randrange(max(5 * 60 + 30, t0 - 150), t0 - 10, 5)
-        lie = Claim(s, took(s, t), lambda f, t=t: can_take(f, t), about)
+        lie = Claim(s, took(s, t), lambda f, t=t: can_take(f, t), about, ("nth", 1))
     elif kind == "gap":  # needs the first dose and the minimum gap
         t = rng.randrange(t0 + 20, t0 + gap - 10, 5)
-        lie = Claim(s, took(s, t), lambda f, t=t: can_take(f, t), ("two-fact",) + about)
+        lie = Claim(s, took(s, t), lambda f, t=t: can_take(f, t), ("two-fact",) + about, ("nth", 2))
     elif kind == "between":  # fixed schedule only: a time strictly between two of the doses
         a = rng.randrange(len(sched) - 1)
         t = rng.randrange(sched[a] + 20, sched[a + 1] - 10, 5)
-        lie = Claim(s, took(s, t), lambda f, t=t: can_take(f, t), ("two-fact",) + about)
+        lie = Claim(s, took(s, t), lambda f, t=t: can_take(f, t), ("two-fact",) + about, ("nth", a + 2))
     elif kind == "count":
         n = k + rng.choice([1, 1, 2])
-        lie = Claim(s, count(s, n), lambda f, n=n: can_count(f, n), about)
+        lie = Claim(s, count(s, n), lambda f, n=n: can_count(f, n), about, ("count",))
     elif kind == "pair":
         d = rng.randrange(60, gap - 29, 30)
         who, _ = subj(s)
@@ -135,7 +135,7 @@ def make(rng, people, others, day):
     else:  # nth dose earlier than the chain of gaps allows
         n = rng.randint(2, k)
         t = rng.randrange(t0 + (n - 2) * gap + 20, t0 + (n - 1) * gap - 10, 5)
-        lie = Claim(s, nth(s, n, t), lambda f, n=n, t=t: can_nth(f, n, t), ("two-fact",) + about)
+        lie = Claim(s, nth(s, n, t), lambda f, n=n, t=t: can_nth(f, n, t), ("two-fact",) + about, ("nth", n))
 
     group = rng.choice(["Carers", "Family members", "Ward staff", "Housemates"])
     return Bundle(

@@ -11,6 +11,7 @@ import collections
 import csv
 import os
 import random
+import re
 
 from . import base
 from . import fam_medicine, fam_whenever
@@ -66,17 +67,27 @@ def assemble(rng, bundles, day):
     need = n - n_fill - 1
     pools = []
     for b in bundles:
+        # another family's evidence may pin a named speaker somewhere else, which this family's claims cannot see
+        pinned = {p for o in bundles if o is not b for p in main.people
+                  if re.search(rf"\b{p}\b", " ".join(o.evidence))}
         seen, pool = {main.lie.text}, []
         for c in rng.sample(b.truths, len(b.truths)):
-            if c.text not in seen:
+            if c.who == main.lie.who and c.key is not None and c.key == main.lie.key and b is main:
+                continue  # the liar would contradict their own lie
+            if c.text not in seen and c.who not in pinned:
                 seen.add(c.text)
                 pool.append((c, b))
         pools.append(pool)
+    if need > sum(map(len, pools)):  # a short pool after the filters: drop to the longest chat it can fill
+        need = sum(map(len, pools))
+        n = need + n_fill + 1
+        assert n >= 6, (main.family, n)
     counts = collections.Counter({main.lie.who: 1})
     if len(bundles) == 1:
         picked = pick(pools[0], need, counts)
     else:
         k2 = rng.randint(1, max(1, need // 2))
+        k2 = max(min(k2, len(pools[1])), need - len(pools[0]))  # keep both parts within their pools
         picked = pick(pools[1], k2, counts)
         picked += pick(pools[0], need - k2, counts)
     assert len(picked) == need, (main.family, len(picked), need)
