@@ -1,0 +1,47 @@
+{
+ "model": "Qwen/Qwen3-8B",
+ "env": {
+  "LC_SLOTS": "20"
+ },
+ "exit": 0,
+ "setup_min": 3.2,
+ "predict_min": 53.4,
+ "engine_ready_min": [
+  3.0
+ ],
+ "restarts": 0,
+ "accuracy": 0.6433,
+ "first_samples": 115,
+ "first_correct": 112,
+ "first_forced": 5,
+ "first_forced_correct": 3,
+ "continued": 0,
+ "continued_finished": 0,
+ "extra_samples": 0,
+ "no_think_answers": 197,
+ "first_tokens_mean": 3018,
+ "first_done_min": {
+  "0.5": 28.3,
+  "0.9": 49.19,
+  "1.0": 52.94
+ },
+ "per_family": {
+  "agelimit": "10/19",
+  "battery": "14/17",
+  "library": "12/17",
+  "lift": "16/22",
+  "medicine": "13/17",
+  "overnight": "6/10",
+  "parking": "9/14",
+  "periodic": "6/16",
+  "platform": "15/17",
+  "prices": "11/19",
+  "queue": "14/19",
+  "recipe": "8/15",
+  "scores": "9/17",
+  "seats": "8/17",
+  "temperature": "13/18",
+  "timezone": "15/20",
+  "whenever": "14/26"
+ }
+}
