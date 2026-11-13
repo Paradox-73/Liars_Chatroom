@@ -27,6 +27,7 @@ KERNELS = {
     "bake-qwen3-14b-awq-v2": ("paradox73", "Qwen/Qwen3-14B-AWQ", "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
                               {"LC_TOKEN_LOGPROBS": "0", "LC_MAIN_TOKENS": "4096", "LC_ENGINE_STATS": "1"}),
     "bake-final": ("nirbhaysharma504", "Qwen/Qwen3-14B-AWQ", "31c69efc29464b6bb0aee1398b5a7b50a99340c3", {"LC_ENGINE_STATS": "1"}),
+    "bake-final-nocap": ("paradox73", "Qwen/Qwen3-14B-AWQ", "31c69efc29464b6bb0aee1398b5a7b50a99340c3", {"LC_ENGINE_STATS": "1"}),
     "bake-qwen3-8b-awq-v2": ("paradox73", "Qwen/Qwen3-8B-AWQ", "4da05a8edb55c6046cce958586c33b61da07bb79",
                              {"LC_SLOTS": "48", "LC_TOKEN_LOGPROBS": "0", "LC_MAIN_TOKENS": "2048", "LC_CONT_TOKENS": "8192",
                               "LC_ENGINE_STATS": "1"}),
