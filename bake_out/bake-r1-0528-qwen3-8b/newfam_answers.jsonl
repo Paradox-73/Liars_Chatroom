@@ -1,0 +1,16 @@
+{"id": "NF0198", "k": 0, "stage": 0, "kind": "main", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [5619], "min": 16.58}
+{"id": "NF0269", "k": 0, "stage": 0, "kind": "main", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [6183], "min": 18.43}
+{"id": "NF0100", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [6396], "min": 19.43}
+{"id": "NF0054", "k": 0, "stage": 0, "kind": "main", "pred": null, "p_mean": {"A": 0.0, "B": 0.0, "C": 0.0, "D": 0.0}, "forced": [true], "out_tokens": [8192], "min": 25.77}
+{"id": "NF0062", "k": 0, "stage": 1, "kind": "cont", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [8904], "min": 29.2}
+{"id": "NF0287", "k": 0, "stage": 1, "kind": "cont", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [8897], "min": 31.31}
+{"id": "NF0238", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [6451], "min": 33.9}
+{"id": "NF0276", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [7782], "min": 37.21}
+{"id": "NF0182", "k": 0, "stage": 0, "kind": "main", "pred": null, "p_mean": {"A": 0.0, "B": 0.0, "C": 0.0, "D": 0.0}, "forced": [true], "out_tokens": [8192], "min": 37.55}
+{"id": "NF0168", "k": 0, "stage": 0, "kind": "main", "pred": null, "p_mean": {"A": 0.0, "B": 0.0, "C": 0.0, "D": 0.0}, "forced": [true], "out_tokens": [8192], "min": 37.55}
+{"id": "NF0273", "k": 0, "stage": 1, "kind": "cont", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [11472], "min": 38.21}
+{"id": "NF0287", "k": 0, "stage": 0, "kind": "main", "pred": null, "p_mean": {"A": 0.0, "B": 0.0, "C": 0.0, "D": 0.0}, "forced": [true], "out_tokens": [8192], "min": 38.59}
+{"id": "NF0241", "k": 0, "stage": 0, "kind": "main", "pred": null, "p_mean": {"A": 0.0, "B": 0.0, "C": 0.0, "D": 0.0}, "forced": [true], "out_tokens": [8192], "min": 38.59}
+{"id": "NF0273", "k": 0, "stage": 0, "kind": "main", "pred": null, "p_mean": {"A": 0.0, "B": 0.0, "C": 0.0, "D": 0.0}, "forced": [true], "out_tokens": [8192], "min": 38.88}
+{"id": "NF0062", "k": 0, "stage": 0, "kind": "main", "pred": null, "p_mean": {"A": 0.0, "B": 0.0, "C": 0.0, "D": 0.0}, "forced": [true], "out_tokens": [8192], "min": 39.23}
+{"id": "NF0116", "k": 0, "stage": 0, "kind": "main", "pred": null, "p_mean": {"A": 0.0, "B": 0.0, "C": 0.0, "D": 0.0}, "forced": [true], "out_tokens": [8192], "min": 39.57}
