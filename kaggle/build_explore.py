@@ -107,12 +107,13 @@ sh(f"LC_MODEL_REPO={CFG['repo']} LC_MODEL_REV={CFG['rev']} LC_MODEL_DIR=/tmp/mod
 py = "VLLM_USE_FLASHINFER_SAMPLER=0 HF_HUB_OFFLINE=1 PYTHONPATH=/tmp/sub /tmp/sub/.venv/bin/python /tmp/bench.py"
 W = {"warm": 90, "window": 330}
 for run in CFG["runs"]:
+    env = " ".join(f"{k}={v}" for k, v in run.get("env", {}).items())  # per-setting environment, e.g. a backend
     if run.get("dp"):  # one engine per card, each with every second prompt; the two BENCH lines add up
-        cmds = [f"CUDA_VISIBLE_DEVICES={i} {py} '{json.dumps(dict(W, **run, tag=run['tag'] + f'-card{i}', part=i, parts=2))}'"
+        cmds = [f"CUDA_VISIBLE_DEVICES={i} {env} {py} '{json.dumps({**W, **run, 'tag': run['tag'] + f'-card{i}', 'part': i, 'parts': 2})}'"
                 for i in (0, 1)]
         sh(f"({cmds[0]} & {cmds[1]} & wait)")
     else:
-        sh(f"{py} '{json.dumps(dict(W, **run))}'")
+        sh(f"{env} {py} '{json.dumps({**W, **run})}'")
 log("done")
 '''
 
@@ -212,6 +213,18 @@ BENCH_RUNS_B = [
      "engine": {"speculative_config": {"method": "ngram", "num_speculative_tokens": 2, "prompt_lookup_max": 3,
                                        "prompt_lookup_min": 2}}},
 ]
+# third set: the attention kernel. Fitting the engine log, each step costs about 30 ms plus 2.6 ms per 1,000 tokens of
+# cache in use, which is about a tenth of the T4's memory bandwidth, so another kernel may be much faster: the separate
+# prefill and decode kernels, a larger cache block, FlexAttention; and one engine per card again (the first kernel's
+# driver could not start it)
+BENCH_RUNS_C = [
+    {"tag": "tp2-40", "tp": 2, "seqs": 40, "max_len": 18432},
+    {"tag": "tp2-40-splitkernels", "tp": 2, "seqs": 40, "max_len": 18432,
+     "env": {"VLLM_V1_USE_PREFILL_DECODE_ATTENTION": "1"}},
+    {"tag": "tp2-40-block32", "tp": 2, "seqs": 40, "max_len": 18432, "engine": {"block_size": 32}},
+    {"tag": "dp-10", "tp": 1, "seqs": 10, "max_len": 8192, "dp": True},
+    {"tag": "tp2-40-flex", "tp": 2, "seqs": 40, "max_len": 18432, "env": {"VLLM_ATTENTION_BACKEND": "FLEX_ATTENTION"}},
+]
 
 
 def variant_zip(path, lines):
@@ -257,13 +270,13 @@ def main():
     ap.add_argument("--variant", help="probe: extra rule lines for a second prompt arm; pipe: run with them")
     ap.add_argument("--max-tokens", type=int, default=12288, help="probe: cap per sample")
     ap.add_argument("--env", default="{}", help="pipe: JSON of environment overrides for predict.py")
-    ap.add_argument("--runs", default="a", choices=["a", "b"], help="bench: which set of engine settings")
+    ap.add_argument("--runs", default="a", choices=["a", "b", "c"], help="bench: which set of engine settings")
     a = ap.parse_args()
     with open(a.zip, "rb") as f:
         zip_b64 = base64.b64encode(f.read()).decode()
     cases = open(a.csv, encoding="utf-8", newline="").read()
     if a.kind == "bench":
-        cfg = dict(MODEL, runs=BENCH_RUNS_B if a.runs == "b" else BENCH_RUNS)
+        cfg = dict(MODEL, runs={"a": BENCH_RUNS, "b": BENCH_RUNS_B, "c": BENCH_RUNS_C}[a.runs])
         run_py = f"ZIP = {zip_b64!r}\nCASES = {cases!r}\nBENCH = {BENCH!r}\nCFG = {cfg!r}\n{BENCH_DRIVER}"
         compile(BENCH, "bench.py", "exec")
     elif a.kind == "probe":

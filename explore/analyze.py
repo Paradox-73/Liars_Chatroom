@@ -100,5 +100,16 @@ def probe(path):
         print(f"  {cid} {groups.get(cid, '?'):12s} label {rs[0]['label'] if rs else '?'}  " + "   ".join(line))
 
 
+def pair(cases_csv, a_csv, b_csv):
+    """Two prediction files on the same cases: accuracy of each and the cases that flip between them."""
+    labels = {r["id"]: r["label"] for r in csv.DictReader(open(cases_csv, encoding="utf-8"))}
+    a = {r["id"]: r["label"] for r in csv.DictReader(open(a_csv, encoding="utf-8"))}
+    b = {r["id"]: r["label"] for r in csv.DictReader(open(b_csv, encoding="utf-8"))}
+    ra = {i for i in labels if a.get(i) == labels[i]}
+    rb = {i for i in labels if b.get(i) == labels[i]}
+    print(f"A {len(ra)}/{len(labels)}  B {len(rb)}/{len(labels)}  wrong->right {len(rb - ra)} {sorted(rb - ra)}  "
+          f"right->wrong {len(ra - rb)} {sorted(ra - rb)}")
+
+
 if __name__ == "__main__":
-    {"pipe": pipe, "probe": probe}[sys.argv[1]](*sys.argv[2:])
+    {"pipe": pipe, "probe": probe, "pair": pair}[sys.argv[1]](*sys.argv[2:])
