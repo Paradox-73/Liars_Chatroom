@@ -243,7 +243,7 @@ Set `LC_DATA_DIR` to the folder holding `train.csv`, `test.csv` and `sample_subm
 
 ### What to compare
 
-The upload `s2_rules_4b_8b.csv` has md5 `32d33d2a8a1485ba12955a459e4e09b4`. It cannot be rebuilt from the output files as they stand today. When it was made, the Qwen3-8B file held only part of its cases, and that file has since grown to 469. Running step 5 with the 4B and 8B files as they are now gives a file that differs from the upload in 23 of 3,500 labels. Every upload is logged with its md5 and commit in `submissions/LOG.md`, and the final upload's row names the exact files and weights. Rerunning `lc.combine` on the same model files, at the same commit, always gives the same file, because the combiner has no random step. Rerunning a judge can change a few answers, because batched GPU inference is not bit-exact between runs.
+The upload `s2_rules_4b_8b.csv` has md5 `32d33d2a8a1485ba12955a459e4e09b4`. It is rebuilt byte for byte from the model answers frozen in [`results/frozen/s2/`](results/frozen/s2/REBUILD.md): the full Qwen3.5-4B file and the first 210 lines of the Qwen3-8B file, which was all the 8B had written at upload time (its output file is append-only). The command is in `REBUILD.md`; the rebuilt file's md5 matches the upload. Every upload is logged with its md5 and commit in `submissions/LOG.md`, and the final upload's row names the exact files and weights. Rerunning `lc.combine` on the same model files, at the same commit, always gives the same file, because the combiner has no random step. Rerunning a judge can change a few answers, because batched GPU inference is not bit-exact between runs.
 
 ## How we tested
 
