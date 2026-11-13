@@ -13,8 +13,10 @@ NUM_WORDS = {"zero": 0, "no": 0, "none": 0, "one": 1, "a single": 1, "single": 1
 TIME_RE = re.compile(r"\b(\d{1,2}):(\d{2})\s*(AM|PM)\b|\b(noon|midday|midnight)\b", re.I)
 DATE_RE = re.compile(r"\b(\d{1,2}) (" + "|".join(MONTHS) + r") (\d{4})\b")
 WEEKDAY_RE = re.compile(r"\b(" + "|".join(WEEKDAYS) + r")s?\b")
+# "half an hour" is listed first so it wins over the "an hour" inside it (leftmost match).
 DUR_RE = re.compile(
-    r"\b(\d+|an?|one|two|three|four|five|six)\s*(hours?|hrs?)(?:\s*(?:and\s*)?(\d+)\s*(minutes?|mins?))?"
+    r"\b(half an hour)\b"
+    r"|\b(\d+|an?|one|two|three|four|five|six)\s*(hours?|hrs?)(?:\s*(?:and\s*)?(\d+)\s*(minutes?|mins?)|\s*and a (half))?"
     r"|\b(\d+)\s*(minutes?|mins?)\b", re.I)
 NUM_RE = re.compile(r"(?<![\d:])(\d+(?:\.\d+)?)(?![\d:])")
 
@@ -85,12 +87,15 @@ def find_durations(s):
     out = []
     for m in DUR_RE.finditer(s):
         if m.group(1):
-            h = word_num(m.group(1))
+            out.append((30, m))
+        elif m.group(2):
+            h = word_num(m.group(2))
             if h is None:
                 continue
-            out.append((h * 60 + (int(m.group(3)) if m.group(3) else 0), m))
+            extra = int(m.group(4)) if m.group(4) else (30 if m.group(6) else 0)
+            out.append((h * 60 + extra, m))
         else:
-            out.append((int(m.group(5)), m))
+            out.append((int(m.group(7)), m))
     return out
 
 
