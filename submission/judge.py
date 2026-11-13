@@ -92,11 +92,13 @@ def main():
     # letter probabilities at the answer need log-probabilities on every sampled token; without them the letter alone votes
     token_logprobs = NUM_LOGPROBS if os.environ.get("LC_TOKEN_LOGPROBS", "1") == "1" else None
     util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered only to test on a shared card
+    kv_dtype = os.environ.get("LC_KV_DTYPE", "auto")  # exploration: fp8_e4m3 halves the KV cache's memory and reads
     with open(os.path.join(a.model, "config.json")) as f:
         multimodal = "vision_config" in json.load(f)  # Qwen3.5 checkpoints carry a vision tower; it is not loaded
     log(f"{gpus} GPU(s): tensor parallel {tp}, max model length {max_len}, {think_slots}+{quick_slots} slots, "
-        f"presence penalty {presence}, eager {a.eager}")
+        f"presence penalty {presence}, eager {a.eager}, KV cache {kv_dtype}")
     llm = LLM(a.model, tensor_parallel_size=tp, dtype="float16", gpu_memory_utilization=util, max_model_len=max_len,
+              kv_cache_dtype=kv_dtype,
               max_num_seqs=think_slots + quick_slots, max_num_batched_tokens=step_tokens, seed=0,
               disable_custom_all_reduce=True, enforce_eager=a.eager, disable_log_stats=os.environ.get("LC_ENGINE_STATS") != "1",
               **({"language_model_only": True} if multimodal else {}))
