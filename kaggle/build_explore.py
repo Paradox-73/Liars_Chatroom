@@ -77,6 +77,12 @@ while eng.has_unfinished_requests():
 dt = (t_end or time.time()) - (t_start or time.time())
 print(f"BENCH {c['tag']}: {tokens} tokens in {dt:.0f} s = {tokens / max(dt, 1e-9):.1f} tokens/s over {steps} steps; "
       f"{finished} finished in {time.time() - t0:.0f} s, {right} of them with the right letter", flush=True)
+import psutil  # the engine's processes rename themselves (VLLM::EngineCore, VLLM::Worker_TP0) and outlive os._exit
+for child in psutil.Process().children(recursive=True):
+    try:
+        child.kill()
+    except psutil.Error:
+        pass
 os._exit(0)
 '''
 
@@ -90,10 +96,23 @@ def log(msg):
     print(f"[bench {(time.time() - T0) / 60:6.1f} min] {msg}", flush=True)
 
 
+def used_mib():
+    out = subprocess.run("nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits", shell=True,
+                         capture_output=True, text=True).stdout
+    return [int(x) for x in out.split()]
+
+
 def sh(cmd, check=False):
     log(f"$ {cmd}")
     rc = subprocess.run(cmd, shell=True, check=check, executable="/bin/bash").returncode
-    subprocess.run("pkill -9 -f /tmp/sub/.venv/bin/python; sleep 8", shell=True)  # engines left behind hold the cards
+    # engines left behind hold the cards; vLLM renames its processes, so match those names too, then wait for the cards
+    for _ in range(36):
+        # the brackets keep each pattern from matching this shell's own command line
+        subprocess.run("pkill -9 -f '[/]tmp/sub/.venv/bin/python'; pkill -9 -f '[V]LLM::'", shell=True)
+        time.sleep(5)
+        if all(u < 1500 for u in used_mib()):
+            break
+    log(f"cards after cleanup: {used_mib()} MiB used")
     return rc
 
 
@@ -202,29 +221,30 @@ BENCH_RUNS = [
     {"tag": "dp-10", "tp": 1, "seqs": 10, "max_len": 8192, "dp": True},
     {"tag": "dp-16-fp8kv", "tp": 1, "seqs": 16, "max_len": 8192, "dp": True, "engine": {"kv_cache_dtype": "fp8_e5m2"}},
 ]
-# second set: 8-bit KV cache with tensor parallel (the engine log shows decode slowing from about 300 to 150 tokens/s as
-# the cache fills, so reading the cache is a large part of each step), more slots with the doubled cache, a shorter
-# speculation, and the baseline again so that the comparison is within one machine
+# second set: the settings with a smaller expected gain, each against the baseline on the same machine: a larger
+# cache block, 56 slots with an 8-bit cache (twice the room), a shorter speculation, FlexAttention
 BENCH_RUNS_B = [
     {"tag": "tp2-40", "tp": 2, "seqs": 40, "max_len": 18432},
-    {"tag": "tp2-40-fp8e4m3", "tp": 2, "seqs": 40, "max_len": 18432, "engine": {"kv_cache_dtype": "fp8_e4m3"}},
+    {"tag": "tp2-40-block32", "tp": 2, "seqs": 40, "max_len": 18432, "engine": {"block_size": 32}},
     {"tag": "tp2-56-fp8e4m3", "tp": 2, "seqs": 56, "max_len": 18432, "engine": {"kv_cache_dtype": "fp8_e4m3"}},
     {"tag": "tp2-40-ngram2", "tp": 2, "seqs": 40, "max_len": 18432,
      "engine": {"speculative_config": {"method": "ngram", "num_speculative_tokens": 2, "prompt_lookup_max": 3,
                                        "prompt_lookup_min": 2}}},
+    {"tag": "tp2-40-flex", "tp": 2, "seqs": 40, "max_len": 18432, "env": {"VLLM_ATTENTION_BACKEND": "FLEX_ATTENTION"}},
 ]
-# third set: the attention kernel. Fitting the engine log, each step costs about 30 ms plus 2.6 ms per 1,000 tokens of
-# cache in use, which is about a tenth of the T4's memory bandwidth, so another kernel may be much faster: the separate
-# prefill and decode kernels, a larger cache block, FlexAttention; and one engine per card again (the first kernel's
-# driver could not start it)
+# third set, most likely gains first: fitting the engine log, each step costs about 30 ms plus 2.6 ms per 1,000 tokens
+# of cache in use, about a tenth of the T4's memory bandwidth, so the attention kernel limits decode: FlashInfer, the
+# separate prefill and decode kernels, an 8-bit cache, n-gram speculation, and one engine per card
 BENCH_RUNS_C = [
     {"tag": "tp2-40", "tp": 2, "seqs": 40, "max_len": 18432},
+    {"tag": "tp2-40-flashinfer", "tp": 2, "seqs": 40, "max_len": 18432, "env": {"VLLM_ATTENTION_BACKEND": "FLASHINFER"}},
     {"tag": "tp2-40-splitkernels", "tp": 2, "seqs": 40, "max_len": 18432,
      "env": {"VLLM_V1_USE_PREFILL_DECODE_ATTENTION": "1"}},
-    {"tag": "tp2-40-block32", "tp": 2, "seqs": 40, "max_len": 18432, "engine": {"block_size": 32}},
+    {"tag": "tp2-40-fp8e4m3", "tp": 2, "seqs": 40, "max_len": 18432, "engine": {"kv_cache_dtype": "fp8_e4m3"}},
+    {"tag": "tp2-40-ngram4", "tp": 2, "seqs": 40, "max_len": 18432,
+     "engine": {"speculative_config": {"method": "ngram", "num_speculative_tokens": 4, "prompt_lookup_max": 4,
+                                       "prompt_lookup_min": 2}}},
     {"tag": "dp-10", "tp": 1, "seqs": 10, "max_len": 8192, "dp": True},
-    {"tag": "tp2-40-flex", "tp": 2, "seqs": 40, "max_len": 18432, "env": {"VLLM_ATTENTION_BACKEND": "FLEX_ATTENTION"}},
-    {"tag": "tp2-40-flashinfer", "tp": 2, "seqs": 40, "max_len": 18432, "env": {"VLLM_ATTENTION_BACKEND": "FLASHINFER"}},
 ]
 
 
