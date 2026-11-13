@@ -59,7 +59,7 @@ if FULL:
     rc = sh(f"cd {SUB} && {offline}python predict.py --input {data}/test.csv --output {OUT}/submission.csv --workdir /tmp/wfull",
             check=False)
     log(f"predict.py on all of test.csv: exit code {rc}, {(time.time() - t) / 60:.1f} min")
-    sh(f"cp /tmp/wfull/answers.jsonl {OUT}/answers_full.jsonl; wc -l {OUT}/submission.csv", check=False)
+    sh(f"cat /tmp/wfull/answers* > {OUT}/answers_full.jsonl; wc -l {OUT}/submission.csv", check=False)
     raise SystemExit(0)
 
 sh(f"cp {data}/train.csv {SUB}/train.csv")
@@ -81,13 +81,13 @@ t = time.time()
 rc = sh(f"cd {SUB} && {offline}python predict.py --input /tmp/hidden450.csv --output {OUT}/hidden450_predictions.csv "
         f"--workdir /tmp/w450", check=False)
 log(f"predict.py on 450 test cases: exit code {rc}, {(time.time() - t) / 60:.1f} min")
-sh(f"cp /tmp/w450/answers.jsonl {OUT}/answers450.jsonl; wc -l {OUT}/hidden450_predictions.csv {OUT}/answers450.jsonl", check=False)
+sh(f"cat /tmp/w450/answers* > {OUT}/answers450.jsonl; wc -l {OUT}/hidden450_predictions.csv {OUT}/answers450.jsonl", check=False)
 
 t = time.time()  # one card only: tensor parallel 1, smaller batch and context
 rc = sh(f"cd {SUB} && CUDA_VISIBLE_DEVICES=0 {offline}python predict.py --input /tmp/hidden40.csv "
         f"--output {OUT}/one_t4_predictions.csv --workdir /tmp/w1 --minutes 15", check=False)
 log(f"predict.py on 40 test cases with one T4: exit code {rc}, {(time.time() - t) / 60:.1f} min")
-sh(f"cp /tmp/w1/answers.jsonl {OUT}/answers_one_t4.jsonl", check=False)
+sh(f"cat /tmp/w1/answers* > {OUT}/answers_one_t4.jsonl", check=False)
 '''
 
 
