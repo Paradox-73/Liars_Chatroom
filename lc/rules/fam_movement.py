@@ -3,8 +3,8 @@
 Each family reads one kind of evidence and judges only messages that name the same vehicle, place, person or object
 the evidence names. The nouns come from the evidence, so the patterns carry no scenario nouns of their own:
 
-- move_route: a vehicle leaves at a time and goes along a route with speed limits, so it cannot arrive before
-  departure + distance / top speed.
+- move_route: a vehicle leaves at a time and goes straight along a route with speed limits, so it cannot arrive
+  before departure + distance / top speed.
 - move_away: a vehicle leaves a stop and cannot be back before a time, so nobody boards it at that stop meanwhile.
 - move_place: a person is at one place at a time, and every route to another place takes at least some minutes.
 - move_room: a person stayed in one room for a window, so they were not in a separate room then.
@@ -12,6 +12,10 @@ the evidence names. The nouns come from the evidence, so the patterns carry no s
 - move_seal: a container stayed sealed for a window, so nobody removed what it held then.
 - move_chain: one object passed from hand to hand at known times, and only one person held it at any moment.
 - move_count: a container held exactly N items for a window, and none were added or removed.
+
+Evidence is read only through whole-sentence grammars: a sentence with any clause the grammar does not know (an
+exception, a second window, a condition) is not read. A fact is dropped when another sentence the grammars cannot
+read names one of its nouns or people, or follows it starting with a pronoun, since that sentence may change it.
 
 Claims at the exact edge of a window are left to the fallback judge, since "left at 2:15 PM" and "stayed until
 1:20 PM" read both ways. Each judge returns LIE if any parsed fact rules the claim out, else OK if one allows it.
@@ -21,9 +25,12 @@ import re
 from .core import LIE, OK, Family, Verdict, register
 from . import text as T
 
-TM = r"(\d{1,2}:\d{2} (?:am|pm)|noon|midday|midnight)"  # evidence and claims are matched in lower case
-NP = r"[a-z][a-z0-9' -]*?"  # a noun phrase after "the"; lazy, so the following words decide where it ends
-END = r"(?=[,.;:]|$| and\b| which\b| with\b)"
+# a noun phrase after "the": lazy, so the following words decide where it ends, and never a clause word, so
+# 'the white packet held the signed form and was kept on a shelf' cannot be read as one long noun
+NP_WORD = (r"(?!(?:and|or|but|was|were|is|are|be|been|held|stayed|remained|left|had|has|have|could|would|did|does|"
+           r"not|never|from|to|until|till|between|at|which|that|who|whom|then|so|its|it|when|while|unless|except|if|"
+           r"only)\b)[a-z0-9][a-z0-9'-]*")
+NP = rf"(?:{NP_WORD}(?: {NP_WORD})*?)"
 NAME = (r"(?!(?:nobody|no one|noone|none|someone|somebody|anyone|anybody|everyone|everybody|nothing|not|never|who|"
         r"whom|whoever|what|which)\b)[a-z]+")
 PRONOUNS = {"i", "me", "you", "he", "him", "she", "her", "they", "them", "we", "us", "it", "this", "that", "there",
@@ -42,6 +49,12 @@ def esc(s):
 def tm(s):
     """Minutes since midnight for one clock time such as '2:45 pm'."""
     return T.parse_time(s)
+
+
+def dur(s):
+    """Minutes in one duration such as '1 hour 20 minutes', or None."""
+    d = T.find_durations(s)
+    return d[0][0] if len(d) == 1 and d[0][0] > 0 else None
 
 
 LOC_MOD = re.compile(r"^(.+?) (?:by|near|beside|next to|behind|under|opposite) the [a-z ]+$")
@@ -190,26 +203,129 @@ def near_res(pl):
     return [re.compile(rf"i (?:was|stood|was standing|was waiting|waited|sat|was sitting) (?:right )?{NEAR} the {pl}")]
 
 
+# ---------------------------------------------------------------- whole-sentence evidence grammar
+# Sentences are matched in lower case. Every grammar below must cover a sentence from its first word to its last.
+
+TM_ = r"(?:\d{1,2}:\d{2} (?:am|pm)|noon|midday|midnight)"
+DUR_ = r"(?:(?:\d+|an?|one|two|three|four|five|six) hours?(?: (?:and )?\d+ minutes?)?|\d+ minutes?)"
+NUM_ = r"\d+(?:\.\d+)?"
+COLOUR = r"(?:grey|gray|blue|red|green|white|black|yellow|brown|orange|silver|wooden|metal)"
+DECOR_PRED = (rf"(?:has an? {COLOUR} (?:door|label|lid)|is (?:painted )?{COLOUR}|(?:is|sits|stands) on the [a-z]+ floor|"
+              rf"seats [a-z]+ people|has seating for [a-z]+ people|(?:stands|sits) (?:by|beside|next to|near) the window|"
+              rf"was labelled in {COLOUR} ink|was kept on a shelf)")
+DECOR_SENTS = [re.compile(p) for p in (  # decoration that changes no time or place: 'The red key has a white label.'
+    rf"^the (?P<d>{NP}) {DECOR_PRED}\.?$",
+    rf"^an? {COLOUR} label is (?:stuck|fixed|attached) (?:on|to) the (?P<d>{NP})\.?$",
+    rf"^{COLOUR} ink was used to label the (?P<d>{NP})\.?$",
+    rf"^[a-z]+ people can sit in the (?P<d>{NP})\.?$")]
+JOIN = re.compile(r", and |, while |; ")
+BOUND = r"(?=$|, and |, while |; )"
+
+
+def decor(s):
+    """The noun a decoration sentence describes, or None."""
+    m = next((m for m in (r.match(s) for r in DECOR_SENTS) if m), None)
+    return m.group("d") if m else None
+
+
+def clause(p):
+    return re.compile(p + BOUND)
+
+
+def split_clauses(s, kinds):
+    """[(kind, match)] when the sentence is a chain of known clauses joined by ', and', ', while' or ';', else None."""
+    s = s.rstrip(".")
+
+    def go(pos):
+        for kind, rx in kinds:
+            m = rx.match(s, pos)
+            if not m:
+                continue
+            if m.end() == len(s):
+                return [(kind, m)]
+            j = JOIN.match(s, m.end())
+            rest = go(j.end()) if j else None
+            if rest is not None:
+                return [(kind, m)] + rest
+        return None
+    return go(0)
+
+
+SEP_P = (rf"the (?P<s1>{NP})(?:, which {DECOR_PRED},)?(?:, the (?P<s2>{NP}))?,? and the (?P<s3>{NP})"
+         rf"(?:, which {DECOR_PRED},)? are (?:two )?separate (?:locations|places|rooms|sites|buildings|areas)")
+SEP_C = clause(SEP_P)
+SEP_SENT = re.compile(rf"^{SEP_P}\.?$")
+DECOR_C = clause(rf"the (?P<d>{NP}) {DECOR_PRED}")
+
+
+def separate_groups(sents):
+    """Sets of places named in 'The A and the B are separate locations' clauses of fully read sentences."""
+    groups = []
+    for s in sents:
+        for kind, m in split_clauses(s, PLACE_KINDS) or split_clauses(s, ROOM_KINDS) or []:
+            if kind == "sep":
+                groups.append({g for g in m.group("s1", "s2", "s3") if g})
+    return groups
+
+
+def previous_fact(sents, i):
+    """Index of the sentence before i, skipping decoration sentences ('The red key has a white label.')."""
+    j = i - 1
+    while j >= 0 and decor(sents[j]):
+        j -= 1
+    return j
+
+
+def understood(ctx):
+    """Indices of evidence sentences some grammar of this module reads in full (cached on ctx)."""
+    got = getattr(ctx, "_move_read", None)
+    if got is None:
+        sents = [low(s) for s in ctx.sentences]
+        got = {i for i, s in enumerate(sents) if s.startswith("all times in this case refer to") or reads(s)}
+        ctx._move_read = got
+    return got
+
+
+def tainted(ctx, used, nouns, names=()):
+    """True when an evidence sentence this module cannot read names one of the fact's nouns or people, or follows
+    one of the fact's sentences and starts with a pronoun."""
+    read = understood(ctx)
+    for j, orig in enumerate(ctx.sentences):
+        if j in read:
+            continue
+        s = low(orig)
+        if any(re.search(rf"\b{esc(n)}\b", s) for n in nouns if n):
+            return True
+        if any(re.search(rf"\b{esc(n.capitalize())}\b", orig) for n in names if n):
+            return True
+        if j - 1 in used and re.match(r"(?:it|its|this|that|they|their|he|she|his|her|there)\b", s):
+            return True
+    return False
+
+
 # ---------------------------------------------------------------- move_route
 
-DEPART = (r"(?:left|set off from|setting off from|set out from|pulled out of|pulled out from|pulled away from|"
-          r"departed from|departed|leaving|departing from|departing|drove off from|drove out of|started from)")
-GO = r"(?:went|drove|travelled|traveled|headed|ran|sailed|rode|moved|continued|going|driving|heading)"
-STRAIGHT = r"(?:straight |directly |non-stop )?"
-ROUTE_KM = r"(?:along the [\d.]+ km route |the [\d.]+ km route |along a [\d.]+ km route )?"
-DEST_END = r"(?=[:,;.]|$| along\b| covering\b| first\b| never\b| and\b| at\b| without\b| on\b| via\b)"
-ROUTE_A = re.compile(rf"^(?:at {TM},? )?(?:the|a|an) ({NP}) {DEPART} the ({NP})(?: at {TM})?,? (?:and |then |"
-                     rf"and then )?{GO} {STRAIGHT}{ROUTE_KM}to the ({NP}){DEST_END}")
-ROUTE_B = re.compile(rf"^(?:leaving|setting off from|departing from|departing|pulling out of) the ({NP}) at {TM},? "
-                     rf"the ({NP}) {GO} {STRAIGHT}{ROUTE_KM}to the ({NP}){DEST_END}")
-MAX_SPEED = re.compile(
-    r"never (?:went|going|goes|got|getting|travelled|travelling|traveling) (?:above|over|faster than|beyond)"
-    r"|never above|never exceed|without (?:ever )?(?:going|getting) (?:above|over|faster than)"
-    r"|(?:did not|didn't) (?:go|travel|get) (?:above|over|faster than)|(?:did not|didn't) exceed"
-    r"|no faster than|at no point did its speed (?:go|get) (?:above|over)|top speed|maximum speed|speed limit"
-    r"|(?:never|no|not) more than|at most|(?:could not|couldn't|cannot|can't) (?:go|travel) (?:above|over|faster than)")
-EXACT_SPEED = re.compile(r"\b(?:average|averaged|exactly|constant|steady|steadily|precisely)\b")
-DELAY = re.compile(r"\b(?:stopp?ed|stops|waited|paused|break|delay|delayed|detour|broke down|refuel)")
+DEPART = (r"(?:left|set off from|set out from|pulled out of|pulled out from|pulled away from|departed from|"
+          r"drove off from|drove out of)")
+GO = r"(?:went|drove|travelled|traveled|headed|sailed)"
+SPD = rf"{NUM_} km/h"
+MAXP = (r"(?:where (?:it|its speed) never went (?:above|over|faster than)|(?:it|its speed) never went (?:above|over|"
+        r"faster than)|never going (?:above|over|faster than)|without (?:ever )?going (?:above|over|faster than)|"
+        r"at never above|never exceeding)")
+LEAD = (r"(?:(?:and )?then |and )?(?:for |on |over |covering |first covering |it covered |it first covered |"
+        r"it then covered )?(?:the )?(?:first |next |following |remaining |last )?")
+LEG = rf"{LEAD}{NUM_} km(?: first)?,? {MAXP} {SPD}"
+LEGS = rf"{LEG}(?:,? {LEG})+"
+ONE_SPEED = rf"(?:its speed|its top speed|it) never went (?:above|over|faster than) {SPD}"
+ROUTE_TO = rf"{GO} (?:straight|directly) (?:along the {NUM_} km route )?to the (?P<dest>{NP})(?: along the {NUM_} km route)?"
+ROUTE_TAIL = rf"(?:(?:,? and|;|,) {ONE_SPEED}|,? never going (?:above|over|faster than) {SPD}|(?::|,|, and) {LEGS})"
+ROUTE_SENT = [
+    re.compile(rf"^(?:at (?P<ta>{TM_}),? )?(?:the|a|an) (?P<veh>{NP}) {DEPART} the (?P<orig>{NP})(?: at (?P<tb>{TM_}))?"
+               rf",? (?:and |and then |then )?{ROUTE_TO}(?:{ROUTE_TAIL})?\.?$"),
+    re.compile(rf"^(?:leaving|setting off from|departing from|pulling out of) the (?P<orig>{NP}) at (?P<ta>{TM_}),? "
+               rf"the (?P<veh>{NP}) {ROUTE_TO}(?:{ROUTE_TAIL})?\.?$")]
+SPEED_SENT = re.compile(rf"^(?:{ONE_SPEED}|the (?P<veh>{NP})'s speed never went (?:above|over|faster than) {SPD}|"
+                        rf"at no point did its speed go (?:above|over) {SPD}|it never exceeded {SPD}|{LEGS})\.?$")
 ARRIVE = (r"(?:reached|got to|arrived at|arrived in|made it to|pulled up at|pulled up to|pulled into|pulled in at|"
           r"pulled in to|came into|rolled into|rolled up at|drew up at|docked at|turned up at|showed up at)")
 ARRIVE_BASE = (r"(?:reach|get to|arrive at|arrive in|make it to|pull up at|pull into|pull in at|come into|roll into|"
@@ -220,10 +336,8 @@ ON_WAY = r"(?:on the way|on its way|en route|on the road|along the way|along the
 
 def route_legs(text):
     """Minimum travel minutes from 'N km' and 'N km/h' figures paired in order, or None when they do not pair."""
-    kms = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)\s*(?:km|kilometres|kilometers)\b(?!\s*/\s*h|\s*per hour"
-                                        r"|\s*an hour)", text)]
-    sps = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)\s*(?:km/h|kph|km per hour|km an hour|kilometres per hour"
-                                        r"|kilometers per hour)", text)]
+    kms = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)\s*km\b(?!\s*/\s*h)", text)]
+    sps = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)\s*km/h", text)]
     if not kms or not sps or min(sps) <= 0:
         return None
     if len(sps) == 1 and len(kms) == 1:
@@ -235,21 +349,6 @@ def route_legs(text):
     return None
 
 
-def route_head(s):
-    """(vehicle, origin, destination, departure minutes, sentence) for a departure sentence."""
-    m = ROUTE_A.match(s)
-    if m:
-        veh, orig, dest, t0s = m.group(2), m.group(3), m.group(5), [x for x in (m.group(1), m.group(4)) if x]
-    else:
-        m = ROUTE_B.match(s)
-        if not m:
-            return None
-        orig, veh, dest, t0s = m.group(1), m.group(3), m.group(4), [m.group(2)]
-    if len(t0s) != 1 or len(T.find_times(s)) != 1 or orig == dest:
-        return None
-    return veh, orig, dest, tm(t0s[0]), s
-
-
 @register
 class MoveRoute(Family):
     name = "move_route"
@@ -258,43 +357,43 @@ class MoveRoute(Family):
         sents = [low(s) for s in ctx.sentences]
         out = []
         for i, s in enumerate(sents):
-            r = route_head(s)
-            if not r:
+            m = next((m for m in (r.match(s) for r in ROUTE_SENT) if m), None)
+            if not m:
                 continue
-            veh, _orig, dest, t0, tail = r
-            v, d = esc(veh), esc(dest)
-            used, parts = [i], [tail]
-            head = (rf"(?:its|it|the {v}'s|the {v}|for the|on the|over the|the first|first|then|after that|"
-                    rf"at no point)\b")
-            for j in range(i + 1, len(sents)):
-                if "km" in sents[j] and re.match(head, sents[j]) and not re.search(DEPART, sents[j]):
-                    used.append(j)
-                    parts.append(sents[j])
-                else:
-                    break
-            text = " ".join(parts)
-            speed_info = re.search(r"km/h|per hour|an hour|mph|mile|kph", text) is not None
+            d = m.groupdict()
+            veh, orig, dest = d["veh"], d["orig"], d["dest"]
+            t0s = [x for x in (d.get("ta"), d.get("tb")) if x]
+            if len(t0s) != 1 or orig == dest:
+                continue
+            t0, used, text = tm(t0s[0]), [i], s
+            if "km/h" not in s and i + 1 < len(sents):
+                sm = SPEED_SENT.match(sents[i + 1])
+                if sm and sm.group("veh") in (None, veh):
+                    used.append(i + 1)
+                    text += " " + sents[i + 1]
             earliest = None
-            if speed_info and MAX_SPEED.search(text) and not EXACT_SPEED.search(text) and \
-                    not re.search(r"mph|mile|\bexcept\b|\bapart from\b|\bother than\b", text):
+            if "km/h" in text:
                 mins = route_legs(text)
-                earliest = None if mins is None else t0 + mins
-            if speed_info and earliest is None:
-                continue  # speeds we could not read: claims stay unjudged
+                if mins is None:
+                    continue  # speeds we could not pair: claims stay unjudged
+                earliest = t0 + mins
+            if tainted(ctx, used, {veh, orig, dest}):
+                continue
             for j in used:
                 ctx.consume(j)
+            v, dd = esc(veh), esc(dest)
             noun = esc(veh.split()[-1])
             out.append({
-                "veh": veh, "t0": t0, "earliest": earliest, "ok": not DELAY.search(text),
-                "arrive": [re.compile(rf"(?:the )?{v} {ARRIVE} the {d}"),
-                           re.compile(rf"i {SAW} the {v} {ARRIVE_BASE} the {d}"),
-                           re.compile(rf"i (?:saw|spotted|noticed) the {v} (?:at|in) the {d}"),
-                           re.compile(rf"the {v} was (?:at|in) the {d}")],
+                "veh": veh, "t0": t0, "earliest": earliest,
+                "arrive": [re.compile(rf"(?:the )?{v} {ARRIVE} the {dd}"),
+                           re.compile(rf"i {SAW} the {v} {ARRIVE_BASE} the {dd}"),
+                           re.compile(rf"i (?:saw|spotted|noticed) the {v} (?:at|in) the {dd}"),
+                           re.compile(rf"the {v} was (?:at|in) the {dd}")],
                 "way": [re.compile(rf"i (?:saw|spotted|noticed|passed|caught sight of|glimpsed|watched) the {v} "
-                                   rf"{ON_WAY}(?: to the {d})?"),
+                                   rf"{ON_WAY}(?: to the {dd})?"),
                         re.compile(rf"{ON_WAY} i (?:saw|spotted|noticed|passed) the {v}")],
                 "other": [re.compile(rf"(?:another|some other|a different|some different|one other|a second) "
-                                     rf"(?:vehicle|{noun}|[a-z]+ {noun}) {ARRIVE} the {d}")],
+                                     rf"(?:vehicle|{noun}|[a-z]+ {noun}) {ARRIVE} the {dd}")],
             })
         return out or None
 
@@ -310,7 +409,7 @@ class MoveRoute(Family):
             if e is not None and t < e - EPS:
                 return Verdict(LIE, self.name, f"the {f['veh']} left at {T.fmt_time(f['t0'])}; earliest arrival "
                                                f"{T.fmt_time(e)}")
-            if f["ok"] and t > f["t0"]:
+            if t > f["t0"]:
                 return Verdict(OK, self.name, "arrival after the earliest possible time")
             return None
         if any_full(f["way"], cl):
@@ -322,13 +421,20 @@ class MoveRoute(Family):
 
 # ---------------------------------------------------------------- move_away
 
-AWAY_HEAD = re.compile(rf"^(?:at {TM},? )?(?:the|a|an) ({NP}) {DEPART} the ({NP})(?: at {TM})?(?=[,.;]|$| and\b)")
-AWAY_RET = [re.compile(rf"(?:did not|didn't|was not|wasn't|could not be|couldn't be) (?:return|come back|get back|"
-                       rf"arrive back|back)(?: (?:at|to) the ({NP}))? (?:before|until) {TM}"),
-            re.compile(rf"(?:was|stayed) away(?: from the ({NP}))? (?:until|till) {TM}"),
-            re.compile(rf"(?:returned|came back|got back)(?: to the ({NP}))? at {TM}")]  # (stop, time)
-ROUND = re.compile(rf"round trip(?: of the ({NP}))? took at least ([^,;.]+)")
-ROUND_BACK = re.compile(rf"could not be back(?: at the ({NP}))? before then")
+AWAY_HEAD = rf"(?:at (?P<ta>{TM_}),? )?(?:the|a|an) (?P<veh>{NP}) {DEPART} the (?P<stop>{NP})(?: at (?P<tb>{TM_}))?"
+AWAY_RET = (rf"(?:,? and (?:it )?|, it )(?:(?:did not|didn't) (?:return|come back|get back)(?: to the (?P<rstop>{NP}))? "
+            rf"(?:before|until) (?P<t1>{TM_})|(?:was|stayed) away until (?P<t1b>{TM_}))")
+AWAY_ROUND = (rf",? and its round trip took at least (?P<dur>{DUR_}),? so it could not be back at the (?P<stop2>{NP}) "
+              rf"before then")
+AWAY_NOBODY = (rf",? and nobody could (?:get on|board) the (?P<nveh>{NP}) at the (?P<nstop>{NP}) unless (?:the "
+               rf"(?P<nveh2>{NP})|it) was at the (?P<nstop2>{NP})")
+AWAY_SENT = re.compile(rf"^{AWAY_HEAD}(?:{AWAY_RET}|{AWAY_ROUND})?(?:{AWAY_NOBODY})?\.?$")
+ROUND_SENT = re.compile(rf"^(?:its round trip|the round trip of the (?P<veh>{NP})) took at least (?P<dur>{DUR_}),? so "
+                        rf"it could not be back at the (?P<stop>{NP}) before then\.?$")
+RET_SENT = re.compile(rf"^it (?:did not|didn't) (?:return|come back|get back)(?: to the (?P<stop>{NP}))? (?:before|until) "
+                      rf"(?P<t1>{TM_})\.?$")
+NOBODY_SENT = re.compile(rf"^nobody could (?:get on|board) the (?P<veh>{NP}) at the (?P<stop>{NP}) unless (?:the "
+                         rf"(?P<veh2>{NP})|it) was at the (?P<stop2>{NP})\.?$")
 BOARD = (r"(?:got on|got onto|got on board|got aboard|got into|boarded|climbed onto|climbed on|climbed aboard|"
          r"climbed into|stepped onto|stepped on|stepped aboard|stepped into|hopped on|hopped onto|hopped aboard|"
          r"hopped into|went aboard|went on board|jumped on|jumped onto|jumped aboard|caught|embarked on|got off|"
@@ -348,43 +454,42 @@ class MoveAway(Family):
         sents = [low(s) for s in ctx.sentences]
         out = []
         for i, s in enumerate(sents):
-            m = AWAY_HEAD.match(s)
-            if not m or route_head(s):
+            m = AWAY_SENT.match(s)
+            if not m:
                 continue
-            veh, stop = m.group(2), m.group(3)
-            t0s = [x for x in (m.group(1), m.group(4)) if x]
+            d = m.groupdict()
+            veh, stop = d["veh"], d["stop"]
+            t0s = [x for x in (d["ta"], d["tb"]) if x]
             if len(t0s) != 1:
                 continue
-            t0 = tm(t0s[0])
-            used, t1 = [i], None
-            for j in (i, i + 1):
-                if j >= len(sents):
-                    break
-                sj = sents[j] if j > i else s[m.end():]
-                if j > i and not re.match(rf"(?:its|it|the round trip of the {esc(veh)}|the {esc(veh)})\b", sj):
-                    break
-                for rx in AWAY_RET:
-                    r = rx.search(sj)
-                    if r and r.group(1) in (None, stop) and t1 is None:
-                        t1 = tm(r.group(2))
-                r = ROUND.search(sj)
-                if r and r.group(1) in (None, veh):
-                    back = ROUND_BACK.search(sj)
-                    d = T.find_durations(r.group(2))
-                    if len(d) == 1 and back and back.group(1) in (None, stop):
-                        t1 = t0 + d[0][0]
+            if d["nveh"] and not (d["nveh"] == veh and d["nstop"] == d["nstop2"] == stop and d["nveh2"] in (None, veh)):
+                continue
+            t0, t1, used = tm(t0s[0]), None, [i]
+            if d["t1"] or d["t1b"]:
+                t1 = tm(d["t1"] or d["t1b"]) if d["rstop"] in (None, stop) else None
+            elif d["dur"]:
+                t1 = t0 + dur(d["dur"]) if d["stop2"] == stop and dur(d["dur"]) else None
+            elif i + 1 < len(sents):
+                r = ROUND_SENT.match(sents[i + 1])
+                if r and r.group("veh") in (None, veh) and r.group("stop") == stop and dur(r.group("dur")):
+                    t1 = t0 + dur(r.group("dur"))
+                r = RET_SENT.match(sents[i + 1])
+                if r and r.group("stop") in (None, stop):
+                    t1 = tm(r.group("t1"))
                 if t1 is not None:
-                    used.append(j)
-                    break
+                    used.append(i + 1)
             if t1 is None or t1 <= t0:
                 continue
-            for j in set(used):
+            for j, sj in enumerate(sents):
+                r = NOBODY_SENT.match(sj)
+                if r and r.group("veh") == veh and r.group("stop") == r.group("stop2") == stop and \
+                        r.group("veh2") in (None, veh):
+                    used.append(j)
+            if tainted(ctx, used, {veh, stop}):
+                continue
+            for j in used:
                 ctx.consume(j)
             v, st = esc(veh), esc(stop)
-            for j, sj in enumerate(sents):
-                if re.search(rf"(?:^|, and )nobody could (?:get on|board) the {v} at the {st} unless (?:the {v}|it) "
-                             rf"was at the {st}\.?$", sj):
-                    ctx.consume(j)
             board = rf"the {v} at the {st}"
             out.append({
                 "veh": veh, "stop": stop, "t0": t0, "t1": t1,
@@ -416,28 +521,14 @@ class MoveAway(Family):
 
 # ---------------------------------------------------------------- move_place
 
-PERSON_AT = re.compile(rf"^(?:at {TM},? )?([a-z]+) was at the ({NP})(?: at {TM})?(?=[,.;]|$| and\b)")
-ROUTE_MIN = [re.compile(rf"every (?:route|road|path|way) from the (?P<a>{NP}) to the (?P<b>{NP}) (?:also )?takes at "
-                        rf"least (?P<d>[^,;.]+)"),
-             re.compile(rf"(?:getting|going|travelling|traveling|walking|driving|the journey|the trip) from the "
-                        rf"(?P<a>{NP}) to the (?P<b>{NP}) (?:always )?takes at least (?P<d>[^,;.]+)"),
-             re.compile(rf"it takes at least (?P<d>[^,;.]+?) to (?:get|go|travel|walk|drive) from the (?P<a>{NP}) to the "
-                        rf"(?P<b>{NP})(?=[,.;]|$| and\b)")]
-ROUTE_VIA = re.compile(rf"every (?:route|road|path|way) from the ({NP}) to the ({NP}) (?:passes|goes|runs) "
-                       rf"through the ({NP})(?=[,.;]|$| and\b)")
-SEPARATE = re.compile(rf"the ({NP})(?:, which [^,]*,)?(?:, the ({NP}))?,? and the ({NP})(?:, which [^,]*,)? are "
-                      rf"(?:two )?separate (?:locations|places|sites|buildings|rooms|areas|spaces)")
-
-
-def separate_groups(sents):
-    return [{g for g in m.groups() if g} for s in sents for m in SEPARATE.finditer(s)]
-
-
-def consume_separate(ctx, sents, names):
-    for i, s in enumerate(sents):
-        m = SEPARATE.search(s)
-        if m and not re.search(r"\d", s) and names & {g for g in m.groups() if g}:
-            ctx.consume(i)
+PLACE_KINDS = [
+    ("at", clause(rf"(?:at (?P<ta>{TM_}),? )?(?P<p>[a-z]+) was at the (?P<l>{NP})(?: at (?P<tb>{TM_}))?")),
+    ("min", clause(rf"every route from the (?P<a>{NP}) to the (?P<b>{NP}) (?:also )?takes at least (?P<d>{DUR_})")),
+    ("min", clause(rf"it takes at least (?P<d>{DUR_}) to (?:get|go|travel) from the (?P<a>{NP}) to the (?P<b>{NP})")),
+    ("via", clause(rf"every route from the (?P<a>{NP}) to the (?P<b>{NP}) passes through the (?P<m>{NP})")),
+    ("sep", SEP_C),
+    ("decor", DECOR_C),
+]
 
 
 @register
@@ -446,43 +537,40 @@ class MovePlace(Family):
 
     def parse(self, ctx):
         sents = [low(s) for s in ctx.sentences]
-        edges, via, used = {}, {}, set()
+        edges, via, starts, used = {}, {}, [], set()
         for i, s in enumerate(sents):
-            for rx in ROUTE_MIN:
-                for r in rx.finditer(s):
-                    d = T.find_durations(r.group("d"))
-                    if len(d) == 1 and d[0][0] > 0:
-                        edges[(r.group("a"), r.group("b"))] = d[0][0]
-                        used.add(i)
-            for r in ROUTE_VIA.finditer(s):
-                via[(r.group(1), r.group(2))] = r.group(3)
-                used.add(i)
-        if not edges:
-            return None
+            parts = split_clauses(s, PLACE_KINDS)
+            for kind, m in parts or []:
+                if kind == "min" and dur(m.group("d")):
+                    edges[(m.group("a"), m.group("b"))] = dur(m.group("d"))
+                    used.add(i)
+                elif kind == "via":
+                    via[(m.group("a"), m.group("b"))] = m.group("m")
+                    used.add(i)
+                elif kind == "at":
+                    t0s = [x for x in m.group("ta", "tb") if x]
+                    if len(t0s) == 1 and is_person(m.group("p"), ctx.sentences[i]):
+                        starts.append((i, m.group("p"), m.group("l"), tm(t0s[0])))
         out = []
-        for i, s in enumerate(sents):
-            m = PERSON_AT.match(s)
-            if not m or not is_person(m.group(2), ctx.sentences[i]):
-                continue
-            person, start = m.group(2), m.group(3)
-            t0s = [x for x in (m.group(1), m.group(4)) if x]
-            if len(t0s) != 1:
-                continue
+        for i, person, start, t0 in starts:
             bounds = {b: d for (a, b), d in edges.items() if a == start and b != start}
             for (a, b), mid in via.items():
                 if a == start and (a, mid) in edges and (mid, b) in edges:
                     bounds[b] = max(bounds.get(b, 0), edges[(a, mid)] + edges[(mid, b)])
-            if not bounds:
+            places = list(bounds) + [start] + list(via.values())
+            if not bounds or tainted(ctx, used | {i}, set(places), {person}):
                 continue
             ctx.consume(i)
-            out.append({"person": person, "start": start, "t0": tm(t0s[0]), "bounds": bounds,
+            out.append({"person": person, "start": start, "t0": t0, "bounds": bounds,
                         "places": {pl: (other_presence(person, np_re(pl, sents)), self_presence(np_re(pl, sents)))
                                    for pl in list(bounds) + [start]}})
         if not out:
             return None
-        for i in used:
-            ctx.consume(i)
-        consume_separate(ctx, sents, {pl for f in out for pl in f["places"]})
+        names = {pl for f in out for pl in f["places"]}
+        for i, s in enumerate(sents):
+            parts = split_clauses(s, PLACE_KINDS)
+            if i in used or (parts and any(k == "sep" and names & set(m.group("s1", "s2", "s3")) for k, m in parts)):
+                ctx.consume(i)
         return out
 
     def judge(self, ctx, facts, msg):
@@ -513,18 +601,19 @@ class MovePlace(Family):
 
 # ---------------------------------------------------------------- move_room
 
-SPAN = r"from (?P<t1>\d{1,2}:\d{2} (?:am|pm)|noon) (?:to|until|till) (?P<t2>\d{1,2}:\d{2} (?:am|pm)|noon)"
-BETWEEN = r"between (?P<t1>\d{1,2}:\d{2} (?:am|pm)|noon) and (?P<t2>\d{1,2}:\d{2} (?:am|pm)|noon)"
-STAY_END = r"(?=[,.;]|$| and\b)"
+SPAN = rf"from (?P<t1>{TM_}) (?:to|until|till) (?P<t2>{TM_})"
+BETWEEN = rf"between (?P<t1>{TM_}) and (?P<t2>{TM_})"
 NOT_LEAVE = r"(?:did not|didn't|never) (?:leave|left)"
 WHOLE = r"(?:the whole time|the entire time|throughout)"
-STAYS = [  # a person who stayed in one room for a window, as (p, r, t1, t2) named groups
-    re.compile(rf"^(?P<p>[a-z]+) (?:stayed|remained) (?:in|inside) the (?P<r>{NP}) (?:{WHOLE} )?{SPAN}{STAY_END}"),
-    re.compile(rf"^(?P<p>[a-z]+) was (?:in|inside) the (?P<r>{NP}) {WHOLE} {SPAN}{STAY_END}"),
-    re.compile(rf"^{SPAN},? (?P<p>[a-z]+) (?:stayed|remained) (?:in|inside) the (?P<r>{NP}){STAY_END}"),
-    re.compile(rf"^(?P<p>[a-z]+) {NOT_LEAVE} the (?P<r>{NP}) (?:at any point )?{BETWEEN}{STAY_END}"),
-    re.compile(rf"^(?P<p>[a-z]+) {NOT_LEAVE} the (?P<r>{NP}) {SPAN}{STAY_END}"),
-    re.compile(rf"^{BETWEEN},? (?P<p>[a-z]+) {NOT_LEAVE} the (?P<r>{NP}){STAY_END}"),
+ROOM_KINDS = [  # a person who stayed in one room for a window
+    ("stay", clause(rf"(?P<p>[a-z]+) (?:stayed|remained) (?:in|inside) the (?P<r>{NP}) (?:{WHOLE} )?{SPAN}")),
+    ("stay", clause(rf"(?P<p>[a-z]+) was (?:in|inside) the (?P<r>{NP}) {WHOLE} {SPAN}")),
+    ("stay", clause(rf"{SPAN},? (?P<p>[a-z]+) (?:stayed|remained) (?:in|inside) the (?P<r>{NP})")),
+    ("stay", clause(rf"(?P<p>[a-z]+) {NOT_LEAVE} the (?P<r>{NP}) (?:at any point )?{BETWEEN}")),
+    ("stay", clause(rf"(?P<p>[a-z]+) {NOT_LEAVE} the (?P<r>{NP}) {SPAN}")),
+    ("stay", clause(rf"{BETWEEN},? (?P<p>[a-z]+) {NOT_LEAVE} the (?P<r>{NP})")),
+    ("sep", SEP_C),
+    ("decor", DECOR_C),
 ]
 LEAVE = r"(?:left|walked out of|came out of|stepped out of|went out of|exited)"
 LEAVE_BASE = r"(?:leave|walk out of|come out of|step out of|go out of|exit)"
@@ -540,26 +629,32 @@ class MoveRoom(Family):
         groups = separate_groups(sents)
         out = []
         for i, s in enumerate(sents):
-            m = next((m for m in (rx.match(s) for rx in STAYS) if m), None)
-            if not m:
-                continue
-            person, room, t1, t2 = m.group("p", "r", "t1", "t2")
-            if not is_person(person, ctx.sentences[i]) or tm(t2) <= tm(t1):
-                continue
-            others = set().union(*[g - {room} for g in groups if room in g]) if groups else set()
-            if not others:
-                continue
-            ctx.consume(i)
-            p, r = esc(person), esc(room)
-            out.append({"person": person, "room": room, "t1": tm(t1), "t2": tm(t2),
-                        "rooms": {x: (other_presence(person, np_re(x, sents)), self_presence(np_re(x, sents)))
-                                  for x in others | {room}},
-                        "leave": [re.compile(rf"{p} {LEAVE} the {r}{WITNESS_TAIL}"),
-                                  re.compile(rf"i {SAW} {p} (?:{LEAVE_BASE}|{LEAVE_ING}) the {r}")],
-                        "self_leave": [re.compile(rf"i {LEAVE} the {r}")]})
+            for kind, m in split_clauses(s, ROOM_KINDS) or []:
+                if kind != "stay":
+                    continue
+                person, room, t1, t2 = m.group("p", "r", "t1", "t2")
+                if not is_person(person, ctx.sentences[i]) or tm(t2) <= tm(t1):
+                    continue
+                others = set().union(*[g - {room} for g in groups if room in g]) if groups else set()
+                if not others or tainted(ctx, [i], others | {room}, {person}):
+                    continue
+                ctx.consume(i)
+                p, r = esc(person), esc(room)
+                out.append({"person": person, "room": room, "t1": tm(t1), "t2": tm(t2),
+                            "rooms": {x: (other_presence(person, np_re(x, sents)), self_presence(np_re(x, sents)))
+                                      for x in others | {room}},
+                            "leave": [re.compile(rf"{p} {LEAVE} the {r}{WITNESS_TAIL}"),
+                                      re.compile(rf"i {SAW} {p} (?:{LEAVE_BASE}|{LEAVE_ING}) the {r}")],
+                            "self_leave": [re.compile(rf"i {LEAVE} the {r}")]})
         if not out:
             return None
-        consume_separate(ctx, sents, {x for f in out for x in f["rooms"]})
+        names = {x for f in out for x in f["rooms"]}
+        for i, s in enumerate(sents):
+            parts = split_clauses(s, ROOM_KINDS)
+            if parts and all(k == "decor" or (k == "sep" and names & set(m.group("s1", "s2", "s3")))
+                             for k, m in parts if k != "stay"):
+                if any(k == "sep" for k, _ in parts):
+                    ctx.consume(i)
         return out
 
     def judge(self, ctx, facts, msg):
@@ -570,7 +665,7 @@ class MoveRoom(Family):
         return best(self.one(f, sender, *c) for f in facts)
 
     def one(self, f, sender, t, cl):
-        why = (f"{f['person']} stayed in the {f['room']} from {T.fmt_time(f['t1'])} to {T.fmt_time(f['t2'])}")
+        why = f"{f['person']} stayed in the {f['room']} from {T.fmt_time(f['t1'])} to {T.fmt_time(f['t2'])}"
         if any_full(f["leave"], cl) or (sender == f["person"] and any_full(f["self_leave"], cl)):
             return window_verdict(t, f["t1"], f["t2"], self.name, why)
         for r, (others, selfs) in f["rooms"].items():
@@ -585,13 +680,17 @@ class MoveRoom(Family):
 
 # ---------------------------------------------------------------- move_object
 
-OBJ_INTRO = re.compile(rf"^there was (?:one|a single|only one|exactly one) ({NP}){END}")
-STAY_VERB = r"(?:stayed|remained|was kept|was locked|was left)"
-OBJ_STAY = re.compile(rf"(?:^|, and |, which |; )(it|which|(?:the|that) {NP})? ?(?:{STAY_VERB}|was) in the ({NP})"
-                      rf"(?:, which [^,]*,)? from {TM} (?:to|until|till) {TM}(?=[,.;]|$| and\b)")
-OBJ_STAY_B = re.compile(rf"^from {TM} (?:to|until|till) {TM},? (it|(?:the|that) {NP}) {STAY_VERB} in the ({NP})"
-                        rf"(?=[,.;]|$)")
-STAYED_THERE = re.compile(r", and it (?:stayed|remained) there the whole time")
+OBJ_INTRO = rf"there was (?:one|a single) (?P<o>{NP})"
+INTRO_DECOR = rf"(?:, with an? {COLOUR} label|, (?:which|and it) has an? {COLOUR} label)"
+STAY_V = r"(?:stayed|remained|was kept|was locked|was left)"
+OBJ_SPAN = rf"from (?P<t1>{TM_}) (?:to|until|till) (?P<t2>{TM_})"
+PLACE_DECOR = rf"(?:, which has an? {COLOUR} door,)"
+OBJ_SENTS = [re.compile(p) for p in (
+    rf"^{OBJ_INTRO}{INTRO_DECOR}?\.?$",
+    rf"^{OBJ_INTRO}(?:, and it|, which) {STAY_V} in the (?P<pl>{NP}){PLACE_DECOR}? {OBJ_SPAN}\.?$",
+    rf"^{OBJ_INTRO}, and it was in the (?P<pl>{NP}) {OBJ_SPAN}, and it stayed there the whole time\.?$",
+    rf"^(?:it|the (?P<o2>{NP})) {STAY_V} in the (?P<pl>{NP}){PLACE_DECOR}? {OBJ_SPAN}\.?$",
+    rf"^{OBJ_SPAN},? (?:it|the (?P<o2>{NP})) {STAY_V} in the (?P<pl>{NP})\.?$")]
 HAVE_AT = r"(?:at|in|on|inside)"
 
 
@@ -602,35 +701,37 @@ class MoveObject(Family):
     def parse(self, ctx):
         sents = [low(s) for s in ctx.sentences]
         groups = separate_groups(sents)
-        out, last = [], None
+        out, last, last_i = [], None, None
         for i, s in enumerate(sents):
-            intro = OBJ_INTRO.match(s)
-            if intro:
-                last = intro.group(1)
-            m = OBJ_STAY.search(s)
-            if m:
-                subj, place, t1, t2 = m.groups()
-            else:
-                m = OBJ_STAY_B.match(s)
-                if not m:
-                    continue
-                t1, t2, subj, place = m.groups()
-            if " was in the " in m.group(0) and not STAYED_THERE.search(s):
-                continue  # 'was in the post room from ... to ...' alone does not say it never left
-            if subj and subj.split(" ", 1)[0] in ("the", "that"):
-                noun = subj.split(" ", 1)[1]
-                if last and re.fullmatch(rf"(?:{esc(noun)}\b.*|.*\b{esc(noun)})", last):
+            m = next((m for m in (r.match(s) for r in OBJ_SENTS) if m), None)
+            if not m:
+                continue
+            d = m.groupdict()
+            if d.get("o"):
+                last, last_i = d["o"], i
+            if not d.get("pl"):
+                continue
+            o2 = d.get("o2")
+            if o2:
+                if last and re.fullmatch(rf"(?:{esc(o2)}\b.*|.*\b{esc(o2)})", last):
                     obj = last  # 'The parcel stayed in ...' may shorten 'parcel marked X7'
-                elif subj.startswith("the ") and not is_person(noun, ctx.sentences[i]):
-                    obj = noun
+                elif not is_person(o2, ctx.sentences[i]):
+                    obj = o2
                 else:
                     continue
-            elif last and (subj or intro):
-                obj = last
+            elif d.get("o"):
+                obj = d["o"]
+            elif last and last_i == previous_fact(sents, i):
+                obj = last  # 'It stayed in ...' right after 'There was one blue case.'
             else:
                 continue
+            place = d["pl"]
             others = set().union(*[g - {place} for g in groups if place in g]) if groups else set()
-            ctx.consume(i)
+            used = [i] + ([last_i] if obj == last and last_i is not None else [])
+            if tainted(ctx, used, {obj, place} | others | ({o2} if o2 else set())):
+                continue
+            for j in used:
+                ctx.consume(j)
             o, pl = esc(obj), np_re(place, sents)
             bad = removal_res(o, pl)
             fine = [re.compile(rf"i (?:saw|spotted|noticed|checked) the {o} (?:sitting |lying |resting |still )?"
@@ -649,20 +750,14 @@ class MoveObject(Family):
                                rf"the {ot}"),
                     re.compile(rf"(?:i|{NAME}) (?:moved|carried|took|brought) the {o} (?:over )?to the {ot}")]
                 fine += self_presence(ot)
-            out.append({"obj": obj, "place": place, "t1": tm(t1), "t2": tm(t2), "bad": bad, "fine": fine})
+            out.append({"obj": obj, "place": place, "t1": tm(d["t1"]), "t2": tm(d["t2"]), "bad": bad, "fine": fine})
         if not out:
             return None
-        objs = {f["obj"] for f in out}
-        places = {f["place"] for f in out}
+        nouns = {f["obj"] for f in out} | {f["place"] for f in out}
         for i, s in enumerate(sents):
-            m = OBJ_INTRO.match(s)
-            if m and m.group(1) in objs and re.fullmatch(rf"there was (?:one|a single|only one|exactly one) "
-                                                         rf"{esc(m.group(1))}(?:, (?:with|which has|and it has) "
-                                                         rf"[a-z ]+)?\.?", s):
+            m = SEP_SENT.match(s)
+            if decor(s) in nouns or (m and nouns & set(m.group("s1", "s2", "s3"))):
                 ctx.consume(i)
-            if re.fullmatch(rf"the (?:{'|'.join(esc(x) for x in objs | places)}) (?:has|is|was) [a-z ]+\.?", s):
-                ctx.consume(i)  # decoration such as 'The red key has a white label.'
-        consume_separate(ctx, sents, places)
         return out
 
     def judge(self, ctx, facts, msg):
@@ -681,16 +776,16 @@ class MoveObject(Family):
 
 # ---------------------------------------------------------------- move_seal
 
-SEAL = re.compile(rf"(?:^|, and |; |, )(?:from {TM} (?:to|until|till) {TM},? )?(it|(?:the|that|this) {NP}) "
-                  rf"(?:stayed|remained) sealed(?: from {TM} (?:to|until|till) {TM})?")
-SEAL_ITEM = re.compile(rf"the ({NP}) could not be (?:removed|taken out|taken)(?: from it)? without breaking the seal")
-HELD_IN = [re.compile(rf"(?:^|, )(?:one|a single|a|the) ({NP})(?:, which [^,]*,)? held the ({NP}){END}"),
-           re.compile(rf"^the ({NP}) (?:was|were) (?:kept |held |stored |placed |sealed )?(?:in|inside) (?:one|a single|"
-                      rf"a) ({NP})(?=[,.;]|$| and\b| which\b| that\b)")]
-HELD_IN_ONLY = [re.compile(rf"(?:one|a single|a|the) {NP}(?:, which [^,]*,)? held the {NP}(?: and was kept on a shelf)?"
-                           rf"\.?"),
-                re.compile(rf"the {NP} (?:was|were) (?:kept |held |stored |placed )?(?:in|inside) (?:one|a single|a) "
-                           rf"{NP}(?:,? (?:which|that) was (?:kept on a shelf|labelled in [a-z]+ ink))?\.?")]
+CONT_DECOR = rf"(?:,? (?:which|that) was (?:kept on a shelf|labelled in {COLOUR} ink)| and was kept on a shelf)"
+HELD_SENTS = [re.compile(p) for p in (
+    rf"^(?:one|a single|the) (?P<c>{NP})(?:, which was kept on a shelf,)? held the (?P<i>{NP})(?: and was kept on a "
+    rf"shelf|, and it was (?:kept on a shelf|labelled in {COLOUR} ink))?\.?$",
+    rf"^the (?P<i>{NP}) (?:was|were) (?:kept |held |stored |placed )?(?:in|inside) (?:one|a single|a) (?P<c>{NP})"
+    rf"{CONT_DECOR}?\.?$")]
+SEAL_SENT = re.compile(
+    rf"^(?:the (?P<c0>{NP}) was kept on a shelf, and )?(?:from (?P<a1>{TM_}) (?:to|until|till) (?P<a2>{TM_}),? )?"
+    rf"(?P<subj>it|(?:the|that|this) {NP}) (?:stayed|remained) sealed(?: from (?P<b1>{TM_}) (?:to|until|till) "
+    rf"(?P<b2>{TM_}))?(?:, and |; )the (?P<i>{NP}) could not be removed without breaking the seal\.?$")
 OPEN = r"(?:opened|unsealed|broke open|tore open|cut open|ripped open|unwrapped)"
 
 
@@ -700,34 +795,41 @@ class MoveSeal(Family):
 
     def parse(self, ctx):
         sents = [low(s) for s in ctx.sentences]
-        known = []  # (container, item) from 'One evidence bag held the USB drive.'
+        known = []  # (container, item, sentence) from 'One evidence bag held the USB drive.'
         out = []
         for i, s in enumerate(sents):
-            for k, r in enumerate(HELD_IN):
-                m = r.search(s)
+            for r in HELD_SENTS:
+                m = r.match(s)
                 if m:
-                    known.append((m.group(1), m.group(2)) if k == 0 else (m.group(2), m.group(1)))
-                    if any_full(HELD_IN_ONLY, s):
-                        ctx.consume(i)
-            m = SEAL.search(s)
-            it = SEAL_ITEM.search(s)
-            if not m or not it:
+                    known.append((m.group("c"), m.group("i"), i))
+            m = SEAL_SENT.match(s)
+            if not m:
                 continue
-            times = [x for x in m.groups()[:2] + m.groups()[3:] if x]
+            d = m.groupdict()
+            times = [x for x in (d["a1"], d["a2"], d["b1"], d["b2"]) if x]
             if len(times) != 2:
                 continue
-            subj, item = m.group(3), it.group(1)
-            if subj == "it":
-                cont = known[-1][0] if known else None
+            subj, item, used = d["subj"], d["i"], [i]
+            if d["c0"]:
+                cont = d["c0"] if subj == "it" else None
+            elif subj == "it":
+                cont = known[-1][0] if known and known[-1][2] == previous_fact(sents, i) else None
             elif subj.startswith("the "):
                 cont = subj[4:]
             else:  # 'that bag', 'that envelope': the container named earlier
                 word = subj.split(" ", 1)[1]
-                cand = [c for c, _ in known if c == word or c.endswith(" " + word)]
+                cand = [c for c, _, _ in known if c == word or c.endswith(" " + word)]
                 cont = cand[-1] if cand else None
             if cont is None:
                 continue
-            ctx.consume(i)
+            held = [(c, it, j) for c, it, j in known if c == cont]
+            if held and not any(it == item for _, it, _ in held):
+                continue  # 'One bag held the drive' but 'the cash could not be removed': not the same thing
+            used += [j for _, _, j in held]
+            if tainted(ctx, used, {cont, item}):
+                continue
+            for j in used:
+                ctx.consume(j)
             c, itm = np_re(cont, sents), esc(item)
             opened = rf"the {c}"
             out.append({
@@ -750,7 +852,7 @@ class MoveSeal(Family):
             return None
         names = {f["cont"] for f in out} | {f["cont"].split()[-1] for f in out}
         for i, s in enumerate(sents):
-            if re.fullmatch(rf"the (?:{'|'.join(esc(x) for x in names)}) (?:was|is|has) [a-z ]+\.?", s):
+            if decor(s) in names:
                 ctx.consume(i)  # decoration such as 'The sealed envelope was labelled in black ink.'
         return out
 
@@ -772,6 +874,20 @@ class MoveSeal(Family):
 
 CHAIN_SPLIT = re.compile(r",? and then |, then |; |,? before |, who |, and |\. ")
 HOLD = r"(?:held|kept|had|holding|keeping)"
+HAND_CLAUSE = re.compile(r"(?:then )?(?:hand(?:ed|ing)|pass(?:ed|ing)|g(?:ave|iving)) it (?:over )?to ([a-z]+)")
+HOLD_CLAUSE = re.compile(rf"(?:from ({TM_})(?: (?:to|until) ({TM_}))?,? )?(?:([a-z]+) )?{HOLD} it(?: from ({TM_}))?"
+                         rf"(?: (?:to|until|till) ({TM_}))?(?:,? (?:and )?(?:kept|keeping|held|holding) it)?"
+                         rf"(?: for exactly ({DUR_}))?")
+CHAIN_INTRO = re.compile(rf"^there was (?:one|a single) (?P<o>{NP})(?:,? and (?P<ex>only one person held it at any "
+                         rf"moment))?\.?$")
+
+
+def chain_clauses(s):
+    """The clauses of a hand-over sentence when every clause is a holding or a hand-over, else None."""
+    cls = [c.strip(" ,.") for c in CHAIN_SPLIT.split(s.strip(" ."))]
+    cls = [c for c in cls if c]
+    ok = cls and all(HAND_CLAUSE.fullmatch(c) or HOLD_CLAUSE.fullmatch(c) for c in cls)
+    return cls if ok and any(HOLD_CLAUSE.fullmatch(c) for c in cls) else None
 
 
 def parse_chain(text):
@@ -779,22 +895,16 @@ def parse_chain(text):
     until 1:20 PM ...' and 'From 10:45 AM Fatima held it for exactly 1 hour, then handed it to Isla.'; None when a
     clause does not fit or the times do not join up."""
     segs, pending = [], None
-    for cl in CHAIN_SPLIT.split(text.strip(" .")):
-        cl = cl.strip(" ,.")
-        if not cl:
-            continue
-        m = re.fullmatch(r"(?:then )?(?:hand(?:ed|ing)|pass(?:ed|ing)|g(?:ave|iving)) it (?:over )?to ([a-z]+)", cl)
+    for cl in chain_clauses(text) or [None]:
+        if cl is None:
+            return None
+        m = HAND_CLAUSE.fullmatch(cl)
         if m:
             if pending is not None or not segs:
                 return None
             pending = m.group(1)
             continue
-        m = re.fullmatch(rf"(?:from {TM}(?: (?:to|until) {TM})?,? )?(?:([a-z]+) )?{HOLD} it(?: from {TM})?"
-                         rf"(?: (?:to|until|till) {TM})?(?:,? (?:and )?(?:kept|keeping|held|holding) it)?"
-                         rf"(?: for exactly ([^,]+))?", cl)
-        if not m:
-            return None
-        f1, t1, who, f2, t2, dur = m.groups()
+        f1, t1, who, f2, t2, dd = HOLD_CLAUSE.fullmatch(cl).groups()
         who = who or pending
         if who is None or who in PRONOUNS or (pending and who != pending):
             return None
@@ -806,17 +916,23 @@ def parse_chain(text):
         end = t1 or t2
         if end:
             end = tm(end)
-        elif dur:
-            d = T.find_durations(dur)
-            if len(d) != 1:
-                return None
-            end = start + d[0][0]
+        elif dd and dur(dd):
+            end = start + dur(dd)
         else:
             return None
         if end <= start:
             return None
         segs.append((who, start, end))
     return segs if segs and pending is None else None
+
+
+def chain_rest_kinds(o):
+    """'Nobody else held the X between T and T', 'only one person held the X at any moment' and their variants."""
+    it = rf"(?:the {o}|it)"
+    return [("window", clause(rf"nobody else held {it} between (?P<w1>{TM_}) and (?P<w2>{TM_})")),
+            ("window", clause(rf"between (?P<w1>{TM_}) and (?P<w2>{TM_}),? nobody else held {it}")),
+            ("only", clause(rf"only one person held {it} at any moment")),
+            ("only", clause(rf"at any moment,? only one person held {it}"))]
 
 
 @register
@@ -827,38 +943,37 @@ class MoveChain(Family):
         sents = [low(s) for s in ctx.sentences]
         out = []
         for i, s in enumerate(sents):
-            m = re.fullmatch(rf"there was (?:one|a single|only one|exactly one) ({NP})(?:,? and (only one person held "
-                             rf"it at any moment))?\.?", s)
+            m = CHAIN_INTRO.match(s)
             if not m:
                 continue
-            obj = m.group(1)
+            obj = m.group("o")
             o = esc(obj)
-            chain_idx, rest_idx, window, exclusive = [], [], None, bool(m.group(2))
+            kinds = chain_rest_kinds(o)
+            chain_idx, rest_idx, window, exclusive = [], [], None, bool(m.group("ex"))
             for j in range(i + 1, len(sents)):
-                sj = sents[j]
-                w = re.search(rf"(?:nobody else held (?:the {o}|it) between {TM} and {TM}|between {TM} and {TM},? "
-                              rf"nobody else held (?:the {o}|it))", sj)
-                ex = re.search(rf"only one person held (?:the {o}|it) at any moment|at any moment,? only one person "
-                               rf"held (?:the {o}|it)", sj)
-                if w or ex:
-                    if w:
-                        g = [x for x in w.groups() if x]
-                        window = (tm(g[0]), tm(g[1]))
-                    exclusive = exclusive or bool(ex)
+                parts = split_clauses(sents[j], kinds)
+                if parts:
+                    for kind, r in parts:
+                        if kind == "window":
+                            window = (tm(r.group("w1")), tm(r.group("w2")))
+                        exclusive = exclusive or kind == "only"
                     rest_idx.append(j)
                     continue
-                if re.search(rf"\b{HOLD} it\b|hand(?:ed|ing) it", sj):
+                if chain_clauses(sents[j]):
                     chain_idx.append(j)
                     continue
                 break
             if not chain_idx:
                 continue
-            segs = parse_chain(" ".join(sents[j] for j in chain_idx))
+            segs = parse_chain(" ".join(sents[j].rstrip(".") + "." for j in chain_idx))
             if not segs or not (exclusive or window):
                 continue
             if window and (abs(window[0] - segs[0][1]) > EPS or abs(window[1] - segs[-1][2]) > EPS):
                 continue
-            for j in [i] + chain_idx + rest_idx:
+            used = [i] + chain_idx + rest_idx
+            if tainted(ctx, used, {obj}, {h for h, _, _ in segs}):
+                continue
+            for j in used:
                 ctx.consume(j)
             out.append({
                 "obj": obj, "segs": segs, "exclusive": exclusive, "nobody_else": window is not None,
@@ -932,14 +1047,15 @@ class MoveChain(Family):
 
 # ---------------------------------------------------------------- move_count
 
-T_A = r"(?P<a1>\d{1,2}:\d{2} (?:am|pm)|noon) (?:to|until|till) (?P<a2>\d{1,2}:\d{2} (?:am|pm)|noon)"
-T_B = T_A.replace("<a1>", "<b1>").replace("<a2>", "<b2>")
-COUNTS = [  # a container that held exactly N items for a window, as named groups
-    re.compile(rf"^(?:from {T_A},? )?(?:the (?P<c>{NP})(?:, which [^,]*,)?|it) (?:held|contained) exactly "
-               rf"(?P<n>[a-z0-9]+) (?P<items>{NP})(?: from {T_B})?(?=[,.;]|$| and\b)"),
-    re.compile(rf"^(?:from {T_A},? )?there were exactly (?P<n>[a-z0-9]+) (?P<items>{NP}) in the (?P<c>{NP})"
-               rf"(?: from {T_B})?(?=[,.;]|$| and\b)")]
-NO_CHANGE = re.compile(rf"no ({NP}) (?:was|were) added (?:to it |to the {NP} )?or removed(?: from it)? during that time")
+T_A = rf"(?P<a1>{TM_}) (?:to|until|till) (?P<a2>{TM_})"
+T_B = rf"(?P<b1>{TM_}) (?:to|until|till) (?P<b2>{TM_})"
+NO_CHANGE_C = rf"no (?P<item>{NP}) was added or removed during that time"
+COUNT_SENTS = [re.compile(p) for p in (  # a container that held exactly N items for a window
+    rf"^(?:from {T_A},? )?(?:the (?P<c>{NP})(?:, which is {COLOUR},)?|it) (?:held|contained) exactly (?P<n>[a-z0-9]+) "
+    rf"(?P<items>{NP})(?: from {T_B})?(?:, and {NO_CHANGE_C})?\.?$",
+    rf"^(?:from {T_A},? )?there were exactly (?P<n>[a-z0-9]+) (?P<items>{NP}) in the (?P<c>{NP})(?: from {T_B})?"
+    rf"(?:, and {NO_CHANGE_C})?\.?$")]
+NO_CHANGE_SENT = re.compile(rf"^{NO_CHANGE_C}\.?$")
 NUM_WORD = r"(\d+|no|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"
 
 
@@ -949,30 +1065,34 @@ class MoveCount(Family):
 
     def parse(self, ctx):
         sents = [low(s) for s in ctx.sentences]
-        out, last_subject = [], None
+        out = []
         for i, s in enumerate(sents):
-            m = next((m for m in (rx.match(s) for rx in COUNTS) if m), None)
+            m = next((m for m in (rx.match(s) for rx in COUNT_SENTS) if m), None)
             if not m:
-                sm = re.match(rf"^the ({NP}) (?:stands|stood|sits|sat|is|was) ", s)
-                last_subject = sm.group(1) if sm else last_subject
                 continue
-            cont = m.group("c") or last_subject
+            used = [i]
+            cont = m.group("c")
+            if cont is None:  # 'It held exactly ...' after 'The display case stands by the window.'
+                cont = decor(sents[i - 1]) if i else None
+                if cont is None:
+                    continue
+                used.append(i - 1)
             times = [x for x in m.group("a1", "a2", "b1", "b2") if x]
             n = T.word_num(m.group("n"))
             items = m.group("items")
-            if cont is None or len(times) != 2 or n is None or not items.endswith("s"):
+            if len(times) != 2 or n is None or not items.endswith("s"):
                 continue
-            nc, nc_idx = NO_CHANGE.search(s), None
-            if not nc and i + 1 < len(sents):
-                nc = NO_CHANGE.search(sents[i + 1])
-                nc_idx = i + 1 if nc else None
-            item = nc.group(1) if nc else None
+            item = m.group("item")
+            if item is None and i + 1 < len(sents) and NO_CHANGE_SENT.match(sents[i + 1]):
+                item = NO_CHANGE_SENT.match(sents[i + 1]).group("item")
+                used.append(i + 1)
             if item is not None and not items.startswith(item[:-1] if item.endswith("y") else item):
                 continue
-            ctx.consume(i)
-            if nc_idx is not None:
-                ctx.consume(nc_idx)
             one = item or (items[:-3] + "y" if items.endswith("ies") else items[:-1])
+            if tainted(ctx, used, {cont, items, one}):
+                continue
+            for j in used:
+                ctx.consume(j)
             it, ones, c = esc(items), esc(one), np_re(cont, sents)
             things = rf"(?:{it}|{ones})"
             some = rf"(?:one of the {it}|{NUM_WORD} of the {it}|one {ones}|an? {ones}|a single {ones})"
@@ -1003,7 +1123,7 @@ class MoveCount(Family):
             return None
         conts = {f["cont"] for f in out}
         for i, s in enumerate(sents):
-            if re.fullmatch(rf"the (?:{'|'.join(esc(x) for x in conts)}) (?:is|was|stands|sits|has) [a-z ]+\.?", s):
+            if decor(s) in conts:
                 ctx.consume(i)
         return out
 
@@ -1039,6 +1159,19 @@ class MoveCount(Family):
         return None
 
 
+def reads(s):
+    """True when one of this module's grammars reads the whole lower-case sentence."""
+    return bool(
+        any(r.match(s) for r in ROUTE_SENT) or SPEED_SENT.match(s)
+        or AWAY_SENT.match(s) or ROUND_SENT.match(s) or RET_SENT.match(s) or NOBODY_SENT.match(s)
+        or split_clauses(s, PLACE_KINDS) is not None or split_clauses(s, ROOM_KINDS) is not None
+        or any(r.match(s) for r in OBJ_SENTS) or decor(s) or SEP_SENT.match(s)
+        or any(r.match(s) for r in HELD_SENTS) or SEAL_SENT.match(s)
+        or CHAIN_INTRO.match(s) or chain_clauses(s) is not None
+        or split_clauses(s, chain_rest_kinds(NP)) is not None
+        or any(r.match(s) for r in COUNT_SENTS) or NO_CHANGE_SENT.match(s))
+
+
 if __name__ == "__main__":  # self-check: python -m lc.rules.fam_movement
     assert claim("Honestly, I took the red key out of the sealed cabinet at 3:30 PM.") == (
         930, "i took the red key out of the sealed cabinet")
@@ -1054,4 +1187,13 @@ if __name__ == "__main__":  # self-check: python -m lc.rules.fam_movement
                        "exactly 1 hour, then handed it to sami, who kept it for exactly 2 hours") == [
         ("fatima", 645, 705), ("isla", 705, 765), ("sami", 765, 885)]
     assert window_verdict(600, 600, 660, "x", "") is None and window_verdict(630, 600, 660, "x", "").status == LIE
+    # whole-sentence reading: an extra clause leaves the sentence unread
+    assert reads("the shuttle bus left the hotel stop at 2:15 pm and did not return before 3:45 pm.")
+    assert not reads("the shuttle bus left the hotel stop at 2:15 pm and did not return before 3:45 pm, except on "
+                     "weekdays.")
+    assert reads("the warehouse and the shop are separate locations, and every route from the warehouse to the shop "
+                 "takes at least 30 minutes.")
+    assert not reads("every route from the warehouse to the shop takes at least 30 minutes unless the bridge is open.")
+    assert reads("the delivery van left the warehouse at 2:45 pm and went straight to the farm: first 12 km where it "
+                 "never went above 36 km/h, then 30 km where it never went above 60 km/h.")
     print("ok")
