@@ -28,8 +28,8 @@ from . import text as T
 # a noun phrase after "the": lazy, so the following words decide where it ends, and never a clause word, so
 # 'the white packet held the signed form and was kept on a shelf' cannot be read as one long noun
 NP_WORD = (r"(?!(?:and|or|but|was|were|is|are|be|been|held|stayed|remained|left|had|has|have|could|would|did|does|"
-           r"not|never|from|to|until|till|between|at|which|that|who|whom|then|so|its|it|when|while|unless|except|if|"
-           r"only)\b)[a-z0-9][a-z0-9'-]*")
+           r"not|never|from|to|until|till|between|at|on|in|during|for|with|without|after|before|which|that|who|whom|"
+           r"then|so|its|it|when|while|unless|except|if|only|every|each|daily|weekdays|weekends)\b)[a-z0-9][a-z0-9'-]*")
 NP = rf"(?:{NP_WORD}(?: {NP_WORD})*?)"
 NAME = (r"(?!(?:nobody|no one|noone|none|someone|somebody|anyone|anybody|everyone|everybody|nothing|not|never|who|"
         r"whom|whoever|what|which)\b)[a-z]+")
