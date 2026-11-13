@@ -14,6 +14,8 @@ import os
 # slug: (owner, Hugging Face repo, revision, judge.py environment)
 KERNELS = {
     "bake-qwen3-8b-awq": ("paradox73", "Qwen/Qwen3-8B-AWQ", "4da05a8edb55c6046cce958586c33b61da07bb79", {"LC_SLOTS": "48"}),
+    "bake-qwen35-4b-awq-dp": ("paradox73", "cyankiwi/Qwen3.5-4B-AWQ-4bit", "d3e78b50c727b1f34802f440ca84b25781625352",
+                              {"LC_DATA_PARALLEL": "1", "LC_SLOTS": "48", "LC_MAX_LEN": "18432", "LC_PRESENCE_PENALTY": "1.5"}),
     "bake-qwen35-9b-awq": ("paradox73", "cyankiwi/Qwen3.5-9B-AWQ-4bit", "e4d2d39cede8c5d1716d824cd843e2889c648083",
                            {"LC_SLOTS": "40", "LC_PRESENCE_PENALTY": "1.5"}),
     "bake-r1-0528-qwen3-8b": ("nirbhaysharma504", "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B", "6e8885a6ff5c1dc5201574c8fd700323f23c25fa",
