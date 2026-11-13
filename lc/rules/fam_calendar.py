@@ -161,9 +161,10 @@ CLOSE_RE = re.compile(rf"^(?i:{NOBODY}) could use (?:it|the (?P<noun>{NP})) whil
 NOT_USE_RE = re.compile(
     r"\b(?:near|nearby|past|passed|front|across|opposite|behind|next|beside|phoned|called|rang|emailed|messaged|"
     r"texted|wrote|looked|saw|seen|watched|noticed|website|online|closed|shut|locked|unlocked|booked|reserved|by|"
-    r"arrived|drove|walked|cycled|headed|reached|travelled|traveled|left|ticket|tickets|photo|photos|photographed|"
-    r"picture|pictures|cleaned|cleaning|repaired|fixed|inspected|checked|delivered|painted|guarded|patrolled|"
-    r"maintained|worked|working|staff|security|volunteered)\b", re.I)
+    r"arrived|drove|walked|cycled|headed|reached|travelled|traveled|left|got|came|turned|showed|parked|parking|"
+    r"dropped|returned|posted|ticket|tickets|photo|photos|photographed|picture|pictures|cleaned|cleaning|repaired|"
+    r"fixed|inspected|checked|delivered|painted|guarded|patrolled|maintained|worked|working|staff|security|"
+    r"volunteered)\b", re.I)
 
 
 @register
@@ -447,6 +448,10 @@ SESSION_RES = [re.compile(rf"^{s} {t}{SESSION_EXTRA}\.$") for s in SESSION_SUBJE
 # 'The field was cleaned before the training session, which was the only one that day.' 'It began at ...'
 SESSION_FIRST_RE = re.compile(rf"^(?i:the) {NP} was cleaned before the (?P<noun>{NP}), which was the only one that day\.$")
 SESSION_IT_RES = [re.compile(rf"^It {t}\.$") for t in SESSION_TIMING]
+# booking, asking or talking about a session can happen at any time ('I signed up for a place on the tour at 11 AM')
+SESSION_NOT_RE = re.compile(r"\b(?:sign|signed|signing|registered|booked|book|bought|paid|reserved|ticket|tickets|"
+                            r"place|spot|seat|queued|waited|waiting|asked|read|talked|emailed|phoned|called|posted|"
+                            r"photo|photos|video|plan|planned)\b", re.I)
 
 
 def session_support(noun):
@@ -504,7 +509,7 @@ class OnlySession(Family):
 
     def judge(self, ctx, f, msg):
         t = plain_claim(msg.text, names_ok=True)  # nobody, not just the speaker, could take part at another time
-        if not t or not f["rel"].search(t):
+        if not t or not f["rel"].search(t) or SESSION_NOT_RE.search(t):
             return None
         times = T.find_times(t)
         if len(times) != 1 or T.find_dates(t):
