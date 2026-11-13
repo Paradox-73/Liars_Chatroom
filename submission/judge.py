@@ -84,6 +84,7 @@ def main():
     tp = a.tp or min(gpus, 2)
     max_len, think_slots, quick_slots, step_tokens = ENGINE[tp]
     think_slots = int(os.environ.get("LC_SLOTS", think_slots))  # per model: fewer when the weights leave little room
+    max_len = int(os.environ.get("LC_MAX_LEN", max_len))  # per model: a small one has room for continuations on one card
     presence = float(os.environ.get("LC_PRESENCE_PENALTY", 0))  # per model: the Qwen3.5 models use 1.5
     util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered only to test on a shared card
     with open(os.path.join(a.model, "config.json")) as f:

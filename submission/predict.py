@@ -132,56 +132,94 @@ def stop(child):
     child.wait()
 
 
+def gpu_ids():
+    """The cards judge.py may use: CUDA_VISIBLE_DEVICES when it is set, else every card nvidia-smi lists."""
+    if os.environ.get("CUDA_VISIBLE_DEVICES") is not None:
+        return [d.strip() for d in os.environ["CUDA_VISIBLE_DEVICES"].split(",") if d.strip()]
+    try:
+        out = subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True, timeout=60).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return [str(i) for i in range(out.count("GPU "))]
+
+
 def run_model(a, cases, cands, write, stop_new, hard):
-    """Runs judge.py until it finishes or time is up, restarting it after a failure; returns the records."""
+    """Runs judge.py until it finishes or time is up, restarting it after a failure; returns the records. With
+    LC_DATA_PARALLEL=1 and two or more cards, one judge.py per card takes every n-th case on its own."""
     work = a.workdir or tempfile.mkdtemp(prefix="liars_")
     os.makedirs(work, exist_ok=True)
-    cases_path, out_path, hb = (os.path.join(work, x) for x in ("cases.jsonl", "answers.jsonl", "heartbeat"))
-    with open(cases_path, "w", encoding="utf-8") as f:
-        for cid, c in cases.items():
-            f.write(json.dumps({"id": cid, "scenario": c.scenario, "speakers": c.speakers, "evidence": c.evidence,
-                                "messages": [[m.num, m.label, m.text] for m in c.messages], "cands": cands[cid]}) + "\n")
+    gpus = gpu_ids() if os.environ.get("LC_DATA_PARALLEL") == "1" else []
+    parts = len(gpus) if len(gpus) >= 2 else 1
     py = next((p for p in (os.environ.get("LC_PYTHON"), os.path.join(HERE, ".venv", "bin", "python")) if p and os.path.exists(p)),
               sys.executable)
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}  # a PYTHONPATH made for another Python must not leak in
     env.update(PYTHONPATH=ROOT, HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", VLLM_NO_USAGE_STATS="1", DO_NOT_TRACK="1")
-    log(f"model answers go to {out_path}")
-    recs, pos, child = {}, 0, None
+    workers = []
+    for i in range(parts):
+        w = {x: os.path.join(work, f"{x}{i}") for x in ("cases", "answers", "heartbeat")}
+        with open(w["cases"], "w", encoding="utf-8") as f:
+            for cid in list(cases)[i::parts]:
+                c = cases[cid]
+                f.write(json.dumps({"id": cid, "scenario": c.scenario, "speakers": c.speakers, "evidence": c.evidence,
+                                    "messages": [[m.num, m.label, m.text] for m in c.messages], "cands": cands[cid]}) + "\n")
+        w.update(n=i, attempt=0, child=None, pos=0, env=dict(env, CUDA_VISIBLE_DEVICES=gpus[i]) if parts > 1 else env)
+        workers.append(w)
+    log(f"model answers go to {work}; {parts} model process(es)")
+
+    def launch(w):
+        extra, attempt_env = ATTEMPTS[w["attempt"]]
+        if os.path.exists(w["heartbeat"]):
+            os.remove(w["heartbeat"])
+        if os.path.exists(w["answers"]):  # cut a line a killed process left half-written, before the next one appends
+            with open(w["answers"], "rb+") as f:
+                f.truncate(f.read().rfind(b"\n") + 1)
+        cmd = [py, os.path.join(HERE, "judge.py"), "--cases", w["cases"], "--out", w["answers"], "--model", a.model,
+               "--stop-new", f"{stop_new:.0f}", "--hard-stop", f"{hard:.0f}", "--heartbeat", w["heartbeat"], *extra,
+               *(["--tp", "1"] if parts > 1 else [])]
+        log(f"$ {' '.join(cmd)} {attempt_env or ''}")
+        w.update(child=subprocess.Popen(cmd, env=dict(w["env"], **attempt_env), start_new_session=os.name == "posix"),
+                 started=time.time())
+
+    recs, last_write = {}, time.time()
     try:
-        for n, (extra, attempt_env) in enumerate(ATTEMPTS, 1):
-            if os.path.exists(hb):
-                os.remove(hb)
-            if os.path.exists(out_path):  # cut a line a killed process left half-written, before the next one appends
-                with open(out_path, "rb+") as f:
-                    f.truncate(f.read().rfind(b"\n") + 1)
-            cmd = [py, os.path.join(HERE, "judge.py"), "--cases", cases_path, "--out", out_path, "--model", a.model,
-                   "--stop-new", f"{stop_new:.0f}", "--hard-stop", f"{hard:.0f}", "--heartbeat", hb, *extra]
-            log(f"$ {' '.join(cmd)} {attempt_env or ''}")
-            child = subprocess.Popen(cmd, env=dict(env, **attempt_env), start_new_session=os.name == "posix")
-            started = last_write = time.time()
-            while child.poll() is None:
-                time.sleep(5)
-                new_pos = merge(out_path, pos, recs)
-                if new_pos != pos and time.time() - last_write > 30:
-                    write(recs)
-                    last_write = time.time()
-                pos, now = new_pos, time.time()
-                beat = os.path.getmtime(hb) if os.path.exists(hb) else None
+        for w in workers:
+            launch(w)
+        while any(w["child"] for w in workers):
+            time.sleep(5)
+            new = False
+            for w in workers:
+                if not w["child"]:
+                    continue
+                pos = merge(w["answers"], w["pos"], recs)
+                new, w["pos"] = new or pos != w["pos"], pos
+                now = time.time()
+                beat = os.path.getmtime(w["heartbeat"]) if os.path.exists(w["heartbeat"]) else None
                 why = ("time is up" if now > hard + 60 else
-                       "the engine did not start" if beat is None and now - started > START_LIMIT else
+                       "the engine did not start" if beat is None and now - w["started"] > START_LIMIT else
                        "no progress" if beat is not None and now - beat > STALL_LIMIT else None)
+                if w["child"].poll() is None and not why:
+                    continue
                 if why:
-                    log(f"stopping the model process: {why}")
-                    break
-            stop(child)
-            pos = merge(out_path, pos, recs)
-            log(f"model process exited with code {child.returncode}; {len(recs)} answers so far")
-            if child.returncode == 0 or child.returncode in NO_RETRY or time.time() > stop_new - 10 * 60:
-                break
-            log("MODEL PROCESS FAILED" + ("; restarting it with safer settings" if n < len(ATTEMPTS) else " on every attempt"))
+                    log(f"stopping model process {w['n']}: {why}")
+                stop(w["child"])
+                w["pos"] = merge(w["answers"], w["pos"], recs)
+                rc, w["child"] = w["child"].returncode, None
+                log(f"model process {w['n']} exited with code {rc}; {len(recs)} answers so far")
+                if rc == 0 or rc in NO_RETRY or time.time() > stop_new - 10 * 60:
+                    continue
+                if w["attempt"] + 1 < len(ATTEMPTS):
+                    log(f"MODEL PROCESS {w['n']} FAILED; restarting it with safer settings")
+                    w["attempt"] += 1
+                    launch(w)
+                else:
+                    log(f"MODEL PROCESS {w['n']} FAILED on every attempt")
+            if new and time.time() - last_write > 30:
+                write(recs)
+                last_write = time.time()
     finally:
-        if child is not None and child.poll() is None:
-            stop(child)
+        for w in workers:
+            if w["child"] is not None and w["child"].poll() is None:
+                stop(w["child"])
         if not a.workdir:
             shutil.rmtree(work, ignore_errors=True)
     return recs
