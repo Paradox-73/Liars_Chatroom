@@ -194,9 +194,10 @@ def place_re(p):
 
 
 def match_pieces(sentence, pats):
-    """Match patterns against a sentence and its clauses. A sentence is cut at '; ', ', while ' and ', and ' into
-    clauses; every run of adjacent clauses is tried, longest first, and runs overlapping an earlier match are
-    skipped. Returns [(pattern index, match)] in sentence order."""
+    """Match anchored patterns against a whole sentence or its clauses. A sentence is cut at '; ', ', while ' and
+    ', and ' into clauses; every run of adjacent clauses is tried, longest first, and runs overlapping an earlier
+    match are skipped. Returns [(pattern index, match)] in sentence order, or [] unless the matches cover every
+    clause: a sentence with any part we do not model is not read at all."""
     parts = re.split(r"(;\s+|,\s+while\s+|,\s+and\s+)", sentence.strip().rstrip("."))
     cls, seps = parts[0::2], parts[1::2]
     runs = [(i, j) for i in range(len(cls)) for j in range(i, len(cls))]
@@ -212,7 +213,30 @@ def match_pieces(sentence, pats):
                 taken.update(range(i, j + 1))
                 found.append((i, n, m))
                 break
+    if len(taken) != len(cls):
+        return []
     return [(n, m) for _, n, m in sorted(found, key=lambda f: f[0])]
+
+
+DATE_LINE = re.compile(r"^All times in this case refer to \d{1,2} [A-Z][a-z]+ \d{4}\.?$")
+
+
+class Unread:
+    """The evidence sentences a family did not read. A family stays silent about any place, object or person that one
+    of them mentions, since that sentence might change what the family's own evidence means."""
+
+    def __init__(self, ctx, seen):
+        self.sents = [s for i, s in enumerate(ctx.sentences) if i not in seen and not DATE_LINE.match(s)]
+        self.low = [s.lower() for s in self.sents]
+
+    def noun(self, *phrases):
+        """A lowercase phrase (or its plural) appears in an unread sentence."""
+        pats = [rf"\b{re.escape(p)}(?:s|es)?\b" for p in phrases if p]
+        return any(re.search(p, s) for p in pats for s in self.low)
+
+    def person(self, *names):
+        pats = [rf"\b{re.escape(n)}\b" for n in names if n]
+        return any(re.search(p, s) for p in pats for s in self.sents)
 
 
 def verdict(fam, ok, why):
@@ -266,11 +290,12 @@ class AccessWindow(Family):
                    re.I),
     ]
     FLAVOUR = re.compile(r"^(?:the )?(?P<p>[a-z ]+?)(?:'s)? (?:door )?(?:has a \w+ door|door is (?:painted )?\w+|"
-                         r"is painted \w+|holds \w+ shelves|was repainted in \d{4})$|^in \d{4} the (?P<q>[a-z ]+?) "
-                         r"(?:was repainted|got a fresh coat of paint)$", re.I)
+                         r"is painted \w+|holds \w+ shelves|has \w+ shelves|was repainted in \d{4}|(?:was given|got) a "
+                         r"fresh coat of paint in \d{4})$|^in \d{4} the (?P<q>[a-z ]+?) (?:was repainted|got a fresh "
+                         r"coat of paint)$|^\w+ shelves stand inside (?:the )?(?P<r>[a-z ]+?)$", re.I)
 
     def parse(self, ctx):
-        wins = []
+        wins, seen = [], set()
         for i, s in enumerate(ctx.sentences):
             body = s.rstrip(".")
             for pat in self.PATS:
@@ -286,25 +311,29 @@ class AccessWindow(Family):
                 t1 = tm(m.group("a") or m.group("c"))
                 t2 = tm(m.group("b") or m.group("d"))
                 wins.append((p, kind, t1, t2, between))
-                ctx.consume(i)
+                seen.add(i)
                 break
         if not wins:
             return None
         places = {w[0] for w in wins}
         for i, s in enumerate(ctx.sentences):
             m = self.FLAVOUR.match(s.rstrip("."))
-            if m and clean_np(m.group("p") or m.group("q")) in places:
-                ctx.consume(i)
-        return wins
+            if m and clean_np(m.group("p") or m.group("q") or m.group("r")) in places:
+                seen.add(i)
+        for i in seen:
+            ctx.consume(i)
+        return {"wins": wins, "unread": Unread(ctx, seen)}
 
     def judge(self, ctx, facts, msg):
         c = claim(ctx, msg)
         if c is None or c.actor is None:
             return None
-        for p, kind, t1, t2, between in facts:
+        for p, kind, t1, t2, between in facts["wins"]:
             pr = place_re(p)
             if not re.search(pr, c.text):
                 continue
+            if facts["unread"].noun(p):
+                return None
             hit = re.search(entry_re(p), c.text) and kind in ("enter", "in")
             if kind == "in" and re.search(rf"@ (?:was|were|stayed|remained|sat|worked|waited) (?:still )?"
                                           rf"(?:in|inside) {pr}", c.text):
@@ -391,47 +420,57 @@ class AccessSupply(Family):
     NO_ROUTE = re.compile(rf"^there was no other remote route(?: to (?:the )?(?P<s>{NP}))?$", re.I)
 
     def parse(self, ctx):
-        deps, outs, remote = [], [], []
+        deps, outs, remote, seen = [], [], [], set()
         pats = [self.NO_ROUTE] + self.DEP + self.REMOTE + self.OFF
         kinds = ["route"] + ["dep"] * len(self.DEP) + ["remote"] * len(self.REMOTE) + ["off"] * len(self.OFF)
         server = None  # "There was no other remote route to the archive server, and every remote sign-in to it ..."
         for i, s in enumerate(ctx.sentences):
             found = match_pieces(s, pats)
+            d, o, r = [], [], []
             for n, m in found:
                 if kinds[n] == "route" and m.group("s"):
                     server = clean_np(m.group("s"))
                 elif kinds[n] == "dep":
-                    deps.append((clean_np(m.group("a")), m.group("v").lower(), clean_np(m.group("b"))))
+                    d.append((clean_np(m.group("a")), m.group("v").lower(), clean_np(m.group("b"))))
                 elif kinds[n] == "remote":
-                    s_name = clean_np(m.group("s"))
-                    if s_name == "it":
-                        if server is None:
-                            continue
-                        s_name = server
-                    remote.append((s_name, clean_np(m.group("b"))))
+                    r.append((server if clean_np(m.group("s")) == "it" else clean_np(m.group("s")),
+                              clean_np(m.group("b"))))
                 elif kinds[n] == "off":
                     a, b = m.group("t1") or m.group("t3"), m.group("t2") or m.group("t4")
-                    outs.append((clean_np(m.group("b")), tm(a), tm(b), m.group("t3") is not None))
-            if found:
-                ctx.consume(i)
+                    o.append((clean_np(m.group("b")), tm(a), tm(b), m.group("t3") is not None))
+            if found and all(x[0] for x in r):  # "it" with no server named before it: not read
+                deps += d
+                outs += o
+                remote += r
+                seen.add(i)
         if not outs or not (deps or remote):
             return None
 
         def same(x, y):  # "the VPN" and "the VPN service" name the same thing
             return x == y or bool(re.search(rf"\b{re.escape(x)}\b", y) or re.search(rf"\b{re.escape(y)}\b", x))
 
-        def windows(thing, seen=()):
+        def windows(thing, path=()):
             w = [(t1, t2, btw) for b, t1, t2, btw in outs if same(b, thing)]
             for a, _, b in deps:
-                if a == thing and b not in seen:
-                    w += windows(b, seen + (thing,))
+                if a == thing and b not in path:
+                    w += windows(b, path + (thing,))
             return w
 
-        machines = [(a, v, windows(a)) for a, v, _ in deps if windows(a)]
-        servers = [(s, windows(b)) for s, b in remote if windows(b)]
+        def chain(thing, path=()):  # the thing, what it needs, and the names its outages use
+            names = {thing} | {b for b, _, _, _ in outs if same(b, thing)}
+            for a, _, b in deps:
+                if a == thing and b not in path:
+                    names |= chain(b, path + (thing,))
+            return names
+
+        machines = [(a, v, windows(a), chain(a)) for a, v, _ in deps if windows(a)]
+        servers = [(s, windows(b), chain(b) | {s}) for s, b in remote if windows(b)]
         if not machines and not servers:
             return None
-        return {"machines": machines, "servers": servers, "heads": [a.split()[-1] for a, _, _ in machines]}
+        for i in seen:
+            ctx.consume(i)
+        return {"machines": machines, "servers": servers, "heads": [m[0].split()[-1] for m in machines],
+                "unread": Unread(ctx, seen)}
 
     def uses(self, c, a, v, heads):
         """True when the claim says machine a did its job v (or was in its working state)."""
@@ -469,15 +508,17 @@ class AccessSupply(Family):
         c = claim(ctx, msg)
         if c is None:
             return None
-        for a, v, wins in facts["machines"]:
+        for a, v, wins, names in facts["machines"]:
             if self.uses(c, a, v, facts["heads"]):
                 t = event_time(c)
-                if negated(c) or t is None:
+                if negated(c) or t is None or facts["unread"].noun(*names):
                     return None
                 return self.check(wins, t, f"{a} could not {v}")
-        for s, wins in facts["servers"]:
+        for s, wins, names in facts["servers"]:
             if not re.search(rf"(?:the )?{re.escape(s)}\b", c.text):
                 continue
+            if facts["unread"].noun(*names):
+                return None
             if not re.search(r"\b(?:sign(?:ed|s|ing)? (?:in|on|into)|sign-in|log(?:ged|s|ging)? (?:in|on|into)|"
                              r"log-in|login)\b", c.text):
                 continue
@@ -530,37 +571,46 @@ class AccessCode(Family):
                    rf"(?:by|with) code (?P<c>\d+)$", re.I),
     ]
     FLAVOUR = re.compile(r"^(?:the )?codes? (?:are|is|were|was) changed every \w+$|^(?:the )?[a-z ]+ (?:has|had) a "
-                         r"keypad(?: with a \w+ light)?$", re.I)
+                         r"keypad(?: with a \w+ light)?$|^the keypad on (?:the )?[a-z ]+ (?:has|had) a \w+ light$|"
+                         r"^(?:the )?[a-z ]+'s keypad (?:has|had) a \w+ light$", re.I)
 
     def parse(self, ctx):
         rules = {}  # door -> [(start, end, code, end_is_unclear)]
         last_door = None
-        flavour = []
+        flavour, seen = [], set()
         pats = self.BEFORE + self.AFTER + [self.FLAVOUR]
         for i, s in enumerate(ctx.sentences):
             used = False
-            for n, m in match_pieces(s, pats):
+            found, new = match_pieces(s, pats), []
+            for n, m in found:
                 if n >= len(self.BEFORE) + len(self.AFTER):
-                    flavour.append(i)
                     continue
                 d = clean_np(m.group("d")) if m.group("d") else "it"
                 d = last_door if d == "it" else d  # "... only code 8932 could unlock it."
                 if d is None:
-                    continue
+                    break
                 last_door = d
                 if n < len(self.BEFORE):
-                    rule = (0, tm(m.group("t")), m.group("c"), m.group("r").lower() == "until")
+                    new.append((d, (0, tm(m.group("t")), m.group("c"), m.group("r").lower() == "until")))
                 else:
-                    rule = (tm(m.group("t")), DAY_END, m.group("c"), False)
-                rules.setdefault(d, []).append(rule)
+                    new.append((d, (tm(m.group("t")), DAY_END, m.group("c"), False)))
+            else:
+                if not found:
+                    continue
+                if not new:
+                    flavour.append(i)
+                    continue
+                for d, rule in new:
+                    rules.setdefault(d, []).append(rule)
                 used = True
             if used:
-                ctx.consume(i)
+                seen.add(i)
         if not rules:
             return None
-        for i in flavour:
+        seen.update(flavour)
+        for i in seen:
             ctx.consume(i)
-        return rules
+        return {"rules": rules, "unread": Unread(ctx, seen)}
 
     UNLOCK = re.compile(r"\b(?:unlock|unlocked|unlocks|unlocking|opened|open|opens)\b")
     ATTEMPT = re.compile(r"\b(?:tried|try|tries|trying|attempt\w*|failed|wouldn't|couldn't|didn't|refused|wrong)\b")
@@ -575,12 +625,12 @@ class AccessCode(Family):
         if negated(c) or self.ATTEMPT.search(c.text):
             return None
         code = codes[0]
-        for d, rules in facts.items():
+        for d, rules in facts["rules"].items():
             short = re.sub(r" (?:door|gate)$", "", d)
             if not re.search(rf"(?:the )?(?:{re.escape(d)}|{re.escape(short)})\b", c.text):
                 continue
             t = event_time(c)
-            if t is None:
+            if t is None or facts["unread"].noun(d, *(f"code {r[2]}" for r in rules), f"code {code}"):
                 return None
             for start, end, good, until in rules:
                 if until and t == end:
@@ -627,29 +677,36 @@ class AccessList(Family):
     EXCLUDES = re.compile(rf"^(?:nobody|no one) (?:on|in) (?P<r>{NP}) is (?P<g>{NP})$", re.I)
 
     def parse(self, ctx):
-        doors, pos, neg, excl = [], [], [], []
-        used = set()
+        doors, read = [], {}  # read: sentence index -> [(kind, data)]
         pats = self.DOORS + [self.NOT_MEMBER, self.NOT_MEMBER2, self.EXCLUDES, self.MEMBERS]
         nd = len(self.DOORS)
         for i, s in enumerate(ctx.sentences):
             for n, m in match_pieces(s, pats):
-                used.add(i)
                 if n < nd:
                     doors.append((clean_np(m.group("door")), clean_np(m.group("p")), group_key(m.group("g")),
                                   tm(m.group("t")), m.group("r").lower() == "until"))
+                    read.setdefault(i, []).append(("door", None))
                 elif n in (nd, nd + 1):
-                    neg.append((m.group("n"), group_key(m.group("g"))))
+                    read.setdefault(i, []).append(("neg", (m.group("n"), group_key(m.group("g")))))
                 elif n == nd + 2:
-                    excl.append((group_key(m.group("r")), group_key(m.group("g"))))
+                    read.setdefault(i, []).append(("excl", (group_key(m.group("r")), group_key(m.group("g")))))
                 else:
                     for name in re.findall(NAME, m.group("n")):
-                        pos.append((name, group_key(m.group("g"))))
+                        read.setdefault(i, []).append(("pos", (name, group_key(m.group("g")))))
         if not doors:
             return None
+        # A membership sentence counts as read only if it is about a door's group, or about a group that an
+        # exclusion ties to one ("Nobody on the volunteer rota is on the safety-trained list").
+        groups = {d[2] for d in doors}
+        excl = [x for parts in read.values() for k, x in parts if k == "excl" and x[1] in groups]
+        groups |= {r for r, _ in excl}
+        seen = {i for i, parts in read.items()
+                if all(k == "door" or (k == "excl" and x in excl) or (k in ("pos", "neg") and x[1] in groups)
+                       for k, x in parts)}
         member = {}  # (name, group) -> True/False
-        for n, g in pos:
+        for k, (n, g) in ((k, x) for i in seen for k, x in read[i] if k == "pos"):
             member[(n, g)] = True
-        for n, g in neg:
+        for k, (n, g) in ((k, x) for i in seen for k, x in read[i] if k == "neg"):
             if member.get((n, g)) is True:
                 return None  # the evidence contradicts itself as read; stay out
             member[(n, g)] = False
@@ -659,9 +716,9 @@ class AccessList(Family):
                     if member.get((n, g)) is True:
                         return None
                     member[(n, g)] = False
-        for i in used:
+        for i in seen:
             ctx.consume(i)
-        return {"doors": doors, "member": member}
+        return {"doors": doors, "member": member, "unread": Unread(ctx, seen)}
 
     def judge(self, ctx, facts, msg):
         c = claim(ctx, msg)
@@ -671,6 +728,8 @@ class AccessList(Family):
             if re.search(entry_any_door_re(p), c.text):
                 t = event_time(c)
                 if negated(c) or t is None:
+                    return None
+                if facts["unread"].noun(door, p, g) or facts["unread"].person(c.actor):
                     return None
                 if t > t0 or (t == t0 and not until):
                     return verdict(self, True, f"after {T.fmt_time(t0)} the {door} rule no longer applies")
@@ -721,37 +780,56 @@ class AccessBadge(Family):
     ]
     ACTIVE = {"active": True, "valid": True, "switched on": True, "inactive": False, "deactivated": False,
               "disabled": False, "invalid": False, "switched off": False}
-    FLAVOUR = re.compile(rf"^(?:each|every) {NP} (?:is printed with a number|has a number printed on it|carries a "
-                         rf"printed number)$|^a number is printed on (?:each|every) {NP}$|^(?:the )?{NP} opened at "
-                         rf"{TIME}$|^at {TIME},? (?:the )?{NP} opened$", re.I)
+    NUMBERED = re.compile(rf"^(?:each|every) {NP} (?:is printed with a number|has a number printed on it|carries a "
+                          rf"printed number)$|^a number is printed on (?:each|every) {NP}$", re.I)
+    OPENED = re.compile(rf"^(?:the )?(?P<p>{NP}) opened at (?P<t>{TIME})$|^at (?P<t2>{TIME}),? (?:the )?(?P<p2>{NP}) "
+                        rf"opened$", re.I)
 
     def parse(self, ctx):
-        places, cards, flavour = [], {}, []
+        places, cards, opened, seen = [], {}, {}, set()
         nr, nt = len(self.RULES), len(self.TWO)
         for i, s in enumerate(ctx.sentences):
-            for n, m in match_pieces(s, self.RULES + self.TWO + [self.FLAVOUR]):
+            found, ok, new = match_pieces(s, self.RULES + self.TWO + [self.NUMBERED, self.OPENED]), True, []
+            for n, m in found:
                 if n < nr:
-                    places.append(clean_np(m.group("p")))
-                    ctx.consume(i)
-                    continue
-                if n >= nr + nt:
-                    flavour.append(i)
-                    continue
-                s1, s2 = self.ACTIVE.get(m.group("s1").lower()), self.ACTIVE.get(m.group("s2").lower())
-                r1, r2 = m.group("r1").lower(), m.group("r2").lower()
-                t1, t2 = tm(m.group("t1")), tm(m.group("t2"))
-                if s1 is None or s2 is None or s1 == s2 or r1 not in ("before", "until") or t1 != t2:
-                    continue
-                if r2 not in ("from", "since", "after"):
-                    continue
-                # (start, end, active, end_is_unclear): before T -> [0, T); from T -> [T, end of day)
-                cards[m.group("n")] = [(0, t1, s1, r1 == "until"), (t2, DAY_END, s2, r2 == "after")]
-                ctx.consume(i)
+                    new.append(("place", (clean_np(m.group("p")), clean_np(m.group("card")))))
+                elif n == nr + nt:
+                    pass  # "Each wristband is printed with a number."
+                elif n > nr + nt:
+                    new.append(("open", (clean_np(m.group("p") or m.group("p2")), tm(m.group("t") or m.group("t2")))))
+                else:
+                    s1, s2 = self.ACTIVE.get(m.group("s1").lower()), self.ACTIVE.get(m.group("s2").lower())
+                    r1, r2 = m.group("r1").lower(), m.group("r2").lower()
+                    t1, t2 = tm(m.group("t1")), tm(m.group("t2"))
+                    if (s1 is None or s2 is None or s1 == s2 or r1 not in ("before", "until") or t1 != t2
+                            or r2 not in ("from", "since", "after") or m.group("n") in cards):
+                        ok = False
+                        break
+                    # (start, end, active, end_is_unclear): before T -> [0, T); from T -> [T, end of day)
+                    new.append(("card", (m.group("n"), [(0, t1, s1, r1 == "until"), (t2, DAY_END, s2, r2 == "after")],
+                                         clean_np(m.group("card")), i)))
+            if not found or not ok:
+                continue
+            for k, x in new:
+                if k == "place":
+                    places.append(x)
+                elif k == "open":
+                    opened[x[0]] = x[1]
+                else:
+                    cards[x[0]] = x[1:]
+            seen.add(i)
         if not places:
             return None
-        for i in flavour:
+        rule_cards = {card for _, card in places}
+        for n, (spans, card, i) in list(cards.items()):
+            if card not in rule_cards:  # a different kind of card than the one the door needs: not read
+                del cards[n]
+                seen.discard(i)
+        cards = {n: v[0] for n, v in cards.items()}
+        places = [p for p, _ in places]
+        for i in seen:
             ctx.consume(i)
-        return {"places": places, "cards": cards}
+        return {"places": places, "cards": cards, "opened": opened, "unread": Unread(ctx, seen)}
 
     def judge(self, ctx, facts, msg):
         c = claim(ctx, msg)
@@ -761,7 +839,7 @@ class AccessBadge(Family):
             if not re.search(entry_re(p), c.text):
                 continue
             t = event_time(c)
-            if negated(c) or t is None:
+            if negated(c) or t is None or facts["unread"].noun(p) or facts["unread"].person(c.actor):
                 return None
             spans = facts["cards"].get(c.actor)
             if spans is None:
@@ -770,6 +848,8 @@ class AccessBadge(Family):
                 if unclear and t in (start, end):
                     return None
                 if start <= t < end:
+                    if active and t < facts["opened"].get(p, 0):
+                        return None  # an active card, but before the place opened
                     return verdict(self, active, f"{c.actor}'s card was {'active' if active else 'inactive'} at "
                                                  f"{T.fmt_time(t)}")
             return None
@@ -804,40 +884,42 @@ class AccessLog(Family):
     still be true (from the day before), so it is left alone."""
 
     name = "access_log"
-    EVERY = re.compile(rf"\baccurately records every (?:(?P<e>entry to|entry into|time someone entered|time someone "
-                       rf"went into)|(?P<x>exit from|time someone left|time someone exited|departure from)) "
-                       rf"(?:the )?(?P<p>{NP})(?= that day|,|$| and)", re.I)
-    ITEMS = re.compile(rf"\bexactly (?P<k>\w+) (?P<kind>entries|entry|exits|exit)\b[^:]*: (?P<items>.+?)\.?$", re.I)
-    FLAVOUR = re.compile(rf"^(?:the )?(?P<p>{NP}) has (?:a single|one|only one) door$|^(?:someone checks )?(?:the )?"
-                         rf"(?:{NP} )?log is checked every evening$|^every evening (?:the )?{NP} log is checked$|"
-                         rf"^someone checks the {NP} log every evening$", re.I)
+    LIST = r"exactly (?P<k>\w+) (?P<kind>entries|entry|exits|exit)"
+    PATS = [
+        re.compile(rf"^(?:that day,? )?(?:the )?{NP} accurately records every (?:(?P<e>entry to|entry into|time someone "
+                   rf"entered|time someone went into)|(?P<x>exit from|time someone left|time someone exited|departure "
+                   rf"from)) (?:the )?(?P<p>{NP})(?: that day)?(?: and (?:is checked every evening|(?:shows|lists) "
+                   rf"{LIST}: (?P<items>.+)))?$", re.I),
+        re.compile(rf"^(?:it |the (?:{NP} )?log )?(?:shows|lists|contains) {LIST}: (?P<items>.+)$", re.I),
+        re.compile(rf"^{LIST} appears? (?:in|on) it: (?P<items>.+)$", re.I),
+        re.compile(rf"^(?:the )?{NP} has (?:a single|one|only one) door$|^(?:the )?{NP} is checked every evening$|"
+                   rf"^every evening (?:the )?{NP} is checked$|^someone checks (?:the )?{NP} every evening$", re.I),
+    ]
 
     def parse(self, ctx):
-        logs = []  # [kind, place, entries or None]
-        flavour = []
+        logs, seen = [], set()  # logs: [kind, place, entries or None]
         for i, s in enumerate(ctx.sentences):
-            body = s.rstrip(".")
-            m = self.EVERY.search(body)
-            if m:
-                logs.append(["exit" if m.group("x") else "entry", clean_np(m.group("p")), None])
-                ctx.consume(i)
-            m = self.ITEMS.search(body)
-            if m and logs and logs[-1][2] is None:
-                kind = "exit" if m.group("kind").lower().startswith("exit") else "entry"
-                items = name_times(m.group("items"))
-                k = NUMBER_WORDS.get(m.group("k").lower()) or (int(m.group("k")) if m.group("k").isdigit() else None)
-                if kind == logs[-1][0] and items is not None and k == len(items):
+            found, ok = match_pieces(s, self.PATS), True
+            for n, m in found:
+                if n == 0:
+                    logs.append(["exit" if m.group("x") else "entry", clean_np(m.group("p")), None])
+                if n in (0, 1, 2) and m.group("items"):
+                    kind = "exit" if m.group("kind").lower().startswith("exit") else "entry"
+                    items = name_times(m.group("items"))
+                    k = NUMBER_WORDS.get(m.group("k").lower()) or (int(m.group("k")) if m.group("k").isdigit()
+                                                                   else None)
+                    if not logs or logs[-1][2] is not None or kind != logs[-1][0] or items is None or k != len(items):
+                        ok = False
+                        break
                     logs[-1][2] = items
-                    ctx.consume(i)
-            for cl in [c for c in re.split(r",\s+and\s+|;\s+", body)]:
-                if self.FLAVOUR.match(cl):
-                    flavour.append(i)
+            if found and ok:
+                seen.add(i)
         logs = [tuple(lg) for lg in logs if lg[2] is not None]
         if not logs:
             return None
-        for i in flavour:
+        for i in seen:
             ctx.consume(i)
-        return logs
+        return {"logs": logs, "unread": Unread(ctx, seen)}
 
     NEVER = r"(?:at all|that day|all day)"
 
@@ -845,11 +927,13 @@ class AccessLog(Family):
         c = claim(ctx, msg)
         if c is None or c.actor is None:
             return None
-        for kind, p, items in facts:
+        for kind, p, items in facts["logs"]:
             mine = [t for n, t in items if n == c.actor]
             pr = place_re(p)
             if not re.search(pr, c.text):
                 continue
+            if facts["unread"].noun(p) or facts["unread"].person(c.actor):
+                return None
             if kind == "entry":
                 return self.judge_entry(c, p, pr, mine)
             return self.judge_exit(c, p, pr, mine)
@@ -914,11 +998,12 @@ class AccessArrival(Family):
     person in'. Only the listed people are known, so being the earliest of them never proves anything."""
 
     name = "access_arrival"
-    LOG = re.compile(rf"\brecords (?:when|the time) each of these (?:\w+ )?people first arrived at (?:the )?(?P<p>{NP})"
-                     rf"(?: that day)?(?:: (?P<items>.+))?$", re.I)
-    LOG2 = re.compile(rf"\brecords when they first arrived at (?:the )?(?P<p>{NP})(?: that day)?: (?P<items>.+)$", re.I)
+    LOG = re.compile(rf"^(?:that day,? )?(?:the )?{NP} accurately records (?:when|the time) each of these "
+                     rf"(?:\w+ )?people first arrived at (?:the )?(?P<p>{NP})(?: that day)?(?:: (?P<items>.+))?$", re.I)
+    LOG2 = re.compile(rf"^for each of these (?:\w+ )?people,? (?:the )?{NP} accurately records when they first arrived "
+                      rf"at (?:the )?(?P<p>{NP})(?: that day)?: (?P<items>.+)$", re.I)
     LOG3 = re.compile(rf"^(?P<items>.+?) are the times when each of these (?:\w+ )?people first arrived at (?:the )?"
-                      rf"(?P<p>{NP})(?: that day)?,? and the door log accurately records them$", re.I)
+                      rf"(?P<p>{NP})(?: that day)?,? and the {NP} accurately records them$", re.I)
     ITEMS = re.compile(rf"^(?P<items>{NAME} (?:was logged|was recorded|came|arrived|first arrived|got there) at .+)$")
     ABS = [  # found anywhere in a sentence, between commas: "Elena first arrived at the workshop at 8:35 AM, ..."
         re.compile(rf"(?:^|, (?:and )?)(?P<n>{NAME}) first arrived at (?:the )?(?P<p>{NP}) at (?P<t>{TIME})(?=,|$)"),
@@ -935,44 +1020,52 @@ class AccessArrival(Family):
     ]
 
     def parse(self, ctx):
-        place, known, rels, logged = None, {}, [], False
+        place, known, rels, logged, seen = None, {}, [], False, set()
         for i, s in enumerate(ctx.sentences):
             body = s.rstrip(".")
-            m = self.LOG.search(body) or self.LOG2.search(body) or self.LOG3.match(body)
+            m = self.LOG.match(body) or self.LOG2.match(body) or self.LOG3.match(body)
             if m:
                 place = clean_np(m.group("p"))
                 logged = True
-                ctx.consume(i)
                 if m.group("items"):
                     items = name_times(m.group("items"))
                     if items is None:
                         return None
                     known.update(items)
+                seen.add(i)
                 continue
             m = self.ITEMS.match(body)
             if m and logged and not known:
                 items = name_times(m.group("items"))
                 if items:
                     known.update(items)
-                    ctx.consume(i)
+                    seen.add(i)
                 continue
-            used = False
-            for mm in (mm for pat in self.ABS for mm in pat.finditer(body)):
-                p = clean_np(mm.group("p"))
-                if place not in (None, p):
-                    return None
-                place = p
-                known[mm.group("n")] = tm(mm.group("t"))
-                used = True
-            for pat in self.REL:
-                for mm in pat.finditer(body):
+            # chain clauses ("X first arrived exactly 15 minutes after Y, and ...") must tile the whole sentence
+            hits = sorted(((mm.start(), mm.end(), kind, mm) for kind, pats in (("abs", self.ABS), ("rel", self.REL))
+                           for pat in pats for mm in pat.finditer(body)), key=lambda h: h[0])
+            pos = 0
+            for start, end, _, _ in hits:
+                if start != pos:
+                    break
+                pos = end
+            if not hits or pos != len(body):
+                continue
+            for _, _, kind, mm in hits:
+                if kind == "abs":
+                    p = clean_np(mm.group("p"))
+                    if place not in (None, p):
+                        return None
+                    place = p
+                    known[mm.group("n")] = tm(mm.group("t"))
+                else:
                     k = int(mm.group("k")) * (1 if mm.group("d") == "after" else -1)
                     rels.append((mm.group("n"), mm.group("m"), k))
-                    used = True
-            if used:
-                ctx.consume(i)
+            seen.add(i)
         if place is None or not known:
             return None
+        for i in seen:
+            ctx.consume(i)
         changed = True
         while changed:  # n first arrived k minutes after m
             changed = False
@@ -985,7 +1078,7 @@ class AccessArrival(Family):
                     changed = True
                 elif n in known and m in known and known[n] != known[m] + k:
                     return None  # misread evidence; stay out
-        return {"place": place, "first": known}
+        return {"place": place, "first": known, "unread": Unread(ctx, seen)}
 
     ARRIVE = (r"(?:arrived at|arrive at|got to|get to|reached|reach|showed up at|show up at|made it to|make it to|"
               r"came to|come to|turned up at|turn up at|got in to|got into|walked into|came into|entered)")
@@ -1002,6 +1095,9 @@ class AccessArrival(Family):
             return None
         me = first.get(c.actor)
         if me is None:
+            return None
+        named = [n for w, n in c.names.items() if re.search(rf"\b{re.escape(w)}\b", c.text)]
+        if facts["unread"].noun(p) or facts["unread"].person(c.actor, *named):
             return None
         if re.search(rf"@ was the (?:very )?first (?:person|one|to arrive|to get there)?\s*(?:in|into|at|to arrive at|"
                      rf"to get to|to reach)? {pr}", c.text) or re.search(rf"@ (?:got to|reached|arrived at) {pr} first\b",
@@ -1052,28 +1148,29 @@ class AccessPresence(Family):
         re.compile(rf"^{WIN},? only (?P<n>{NAMES}) (?:was|were) at (?:the )?(?P<p>{NP})$", re.I),
         re.compile(rf"^only (?P<n>{NAMES}) (?:was|were) at (?:the )?(?P<p>{NP}) {WIN}$", re.I),
     ]
-    ELSE = re.compile(rf"^(?:and )?{NOBODY} else was (?:at (?:the )?(?P<p>{NP})|there) (?:during that time|then)$", re.I)
+    ELSE = re.compile(rf"^(?:and )?{NOBODY} else was (?:at (?:the )?(?P<p>{NP})|there) (?:during|in|at|throughout) "
+                      rf"(?:that|this|the same) (?:time|period)$|^(?:and )?{NOBODY} else was (?:at (?:the )?{NP}|there) "
+                      rf"then$", re.I)
     ROLE = re.compile(rf"^(?P<n>{NAME}) was the only (?P<r>[a-z -]+?) on duty(?: that day)?$")
 
     def parse(self, ctx):
-        wins, roles, extra = [], {}, []
+        wins, roles, seen = [], {}, set()
         for i, s in enumerate(ctx.sentences):
-            for n, m in match_pieces(s, self.PATS + [self.ELSE, self.ROLE]):
+            found = match_pieces(s, self.PATS + [self.ELSE, self.ROLE])
+            for n, m in found:
                 if n < len(self.PATS):
                     names = set(re.findall(NAME, m.group("n")))
                     t1, t2 = tm(m.group("a") or m.group("c")), tm(m.group("b") or m.group("d"))
                     wins.append((clean_np(m.group("p")), names, t1, t2, m.group("c") is not None))
-                    ctx.consume(i)
-                elif n == len(self.PATS):
-                    extra.append(i)
-                else:
+                elif n > len(self.PATS):
                     roles[m.group("r").lower()] = m.group("n")
-                    extra.append(i)
+            if found:
+                seen.add(i)
         if not wins:
             return None
-        for i in extra:
+        for i in seen:
             ctx.consume(i)
-        return {"wins": wins, "roles": roles}
+        return {"wins": wins, "roles": roles, "unread": Unread(ctx, seen)}
 
     def judge(self, ctx, facts, msg):
         c = claim(ctx, msg)
@@ -1098,6 +1195,8 @@ class AccessPresence(Family):
                 continue
             t = event_time(c)
             if t is None or (actor not in names and not between and t in (t1, t2)):
+                return None
+            if facts["unread"].noun(p) or facts["unread"].person(actor):
                 return None
             inside = t1 <= t <= t2
             ok = actor in names or not inside
@@ -1128,53 +1227,64 @@ class AccessBooking(Family):
         re.compile(rf"^(?:from|starting at|starting from) (?P<s>{TIME}),? (?:the )?{ROOM} was (?:booked|reserved) "
                    rf"without gaps(?::|,) (?P<l>.+)$", re.I),
     ]
-    ONLY = re.compile(r"\bonly (?:that|the booked|the booking) team was in the room\b", re.I)
-    UNTIL = re.compile(r"(?:the )?(?P<team>[a-z]+) team(?: had it| holding it| had the room)? until (?P<t>"
-                       + TIME + r")", re.I)
-    LAST = re.compile(r"(?:then|next)(?: by)? (?:the )?(?P<team>[a-z]+) team$", re.I)
-    FOR = re.compile(r"(?:the )?(?P<team>[a-z]+) team for (?P<d>[^,]+?)(?=,|$)", re.I)
+    ONLY = re.compile(r"^(?:(?:during|throughout) each booking|while each booking lasted|whenever a team had the "
+                      r"booking),? only (?:that|the booked) team was in the room$|^only (?:that|the booked) team was in "
+                      r"the room (?:during|throughout) each booking$", re.I)
+    STEP = r"(?:first |then |next |and then |and )?(?:by |with )?(?:the )?(?P<team>[a-z]+) team"
+    UNTIL = re.compile(rf"{STEP}(?: had it| holding it| had the room)? until (?P<t>{TIME})", re.I)
+    LAST = re.compile(r"(?:and )?(?:then|next|finally)(?: by)? (?:the )?(?P<team>[a-z]+) team", re.I)
+    FOR = re.compile(rf"{STEP} for (?P<d>.+)", re.I)
+
+    def slots_until(self, start, end, items):
+        """'the sales team until 1:05 PM, the finance team until 2:35 PM, and then the research team' -> slots."""
+        parts = re.split(r",\s+", items)
+        slots, t0 = [], start
+        for k, part in enumerate(parts):
+            m = self.UNTIL.fullmatch(part)
+            if m and k < len(parts) - 1:
+                t = tm(m.group("t"))
+                slots.append((t0, t, m.group("team").lower()))
+                t0 = t
+                continue
+            m = self.LAST.fullmatch(part)
+            if not m or k != len(parts) - 1:
+                return None
+            slots.append((t0, end, m.group("team").lower()))
+        return slots if len(slots) >= 2 and all(a < b for a, b, _ in slots) else None
+
+    def slots_for(self, start, items):
+        """'the finance team for 1 hour 30 minutes, then the sales team for 45 minutes, ...' -> slots."""
+        slots, t0 = [], start
+        for part in re.split(r",\s+", items):
+            m = self.FOR.fullmatch(part)
+            d = T.find_durations(m.group("d")) if m else []
+            if len(d) != 1 or d[0][1].group(0) != m.group("d"):
+                return None
+            slots.append((t0, t0 + d[0][0], m.group("team").lower()))
+            t0 += d[0][0]
+        return slots if len(slots) >= 2 else None
 
     def parse(self, ctx):
-        rooms, exclusive = [], False
+        rooms, exclusive, seen = [], False, set()
         for i, s in enumerate(ctx.sentences):
             body = s.rstrip(".")
-            if self.ONLY.search(body):
+            if self.ONLY.match(body):
                 exclusive = True
-                ctx.consume(i)
+                seen.add(i)
                 continue
             m = next((m for m in (p.match(body) for p in self.SPAN) if m), None)
-            if m:
-                start, end = tm(m.group("s")), tm(m.group("e"))
-                cuts = [(x.group("team").lower(), tm(x.group("t"))) for x in self.UNTIL.finditer(m.group("l"))]
-                last = self.LAST.search(m.group("l"))
-                if not cuts or not last:
-                    continue
-                slots, t0 = [], start
-                for team, t in cuts:
-                    slots.append((t0, t, team))
-                    t0 = t
-                slots.append((t0, end, last.group("team").lower()))
-                if any(a >= b for a, b, _ in slots):
-                    continue
+            slots = self.slots_until(tm(m.group("s")), tm(m.group("e")), m.group("l")) if m else None
+            if not m:
+                m = next((m for m in (p.match(body) for p in self.GAPLESS) if m), None)
+                slots = self.slots_for(tm(m.group("s")), m.group("l")) if m else None
+            if slots:
                 rooms.append((m.group("room").lower(), slots))
-                ctx.consume(i)
-                continue
-            m = next((m for m in (p.match(body) for p in self.GAPLESS) if m), None)
-            if m:
-                t0, slots = tm(m.group("s")), []
-                for x in self.FOR.finditer(m.group("l")):
-                    d = T.find_durations(x.group("d"))
-                    if len(d) != 1:
-                        slots = []
-                        break
-                    slots.append((t0, t0 + d[0][0], x.group("team").lower()))
-                    t0 += d[0][0]
-                if len(slots) >= 2:
-                    rooms.append((m.group("room").lower(), slots))
-                    ctx.consume(i)
+                seen.add(i)
         if not rooms or not exclusive:
             return None
-        return rooms
+        for i in seen:
+            ctx.consume(i)
+        return {"rooms": rooms, "unread": Unread(ctx, seen)}
 
     PV = (r"(?:was|were|met|met up|had|held|sat|gathered|convened|got together|was meeting|were meeting|was sitting|"
           r"were sitting|was present|were present|was having|was holding|was working|were working)")
@@ -1209,13 +1319,13 @@ class AccessBooking(Family):
         c = claim(ctx, msg)
         if c is None or negated(c):
             return None
-        for room, slots in facts:
+        for room, slots in facts["rooms"]:
             rr = rf"(?:the )?{re.escape(room)}\b(?!'s)"
             team = self.team_in(c.text, rr)
             if team is None:
                 continue
             t = event_time(c)
-            if t is None:
+            if t is None or facts["unread"].noun(room, f"{team} team", *(f"{o} team" for _, _, o in slots)):
                 return None
             first, last = slots[0][0], slots[-1][1]
             if t < first or t > last:
@@ -1304,6 +1414,22 @@ _CHECKS = [  # (evidence, sender, message, expected status or None)
     ("The lab was booked from 9:00 AM to 12:00 PM: the biology team until 10:00 AM, the chemistry team until 11:00 AM, "
      "then the physics team. During each booking, only that team was in the room.", "D",
      "The physics team met in the lab at 1:00 PM.", OK),
+    # Sentences with a part we do not model are not read, and anything an unread sentence mentions is left alone.
+    ("Nobody could enter the vault between 9:00 AM and 11:00 AM except staff with a pass.", "A",
+     "I entered the vault at 10:00 AM.", None),
+    ("Nobody could enter the vault between 9:00 AM and 11:00 AM and between 2:00 PM and 3:00 PM.", "A",
+     "I entered the vault at 10:00 AM.", None),
+    ("Nobody could enter the vault between 9:00 AM and 11:00 AM. The manager could open the vault at any time.", "A",
+     "I entered the vault at 10:00 AM.", None),
+    ("The lift could run only while the main power was on, and the main power was off from 1:00 PM to 2:00 PM on "
+     "weekdays.", "B", "I rode the lift at 1:30 PM.", None),
+    ("Only code 1111 could unlock the shed gate before 10:00 AM, unless the alarm was off.", "A",
+     "I unlocked the shed gate with code 2222 at 9:00 AM.", None),
+    ("Only Ana and Ben were at the kiosk from 1:00 PM to 3:00 PM. Cleo covered the kiosk during lunch.", "C",
+     "I was at the kiosk at 2:00 PM.", None),
+    ("Nobody could enter the darkroom except by scanning their own active pass. Ana's pass was inactive before 9:00 AM "
+     "and active from 9:00 AM onward. Ana borrowed a spare pass at 8:00 AM.", "B",
+     "I saw Ana walk into the darkroom at 8:30 AM.", None),
 ]
 
 
