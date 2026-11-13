@@ -57,6 +57,17 @@ def read_answer(out):
     return found[-1], None
 
 
+def complete_lines(path):
+    """Lines of a JSONL file, after cutting off a half-written last line that a killed run can leave."""
+    if not os.path.exists(path):
+        return []
+    with open(path, "rb+") as f:
+        data = f.read()
+        data = data[:data.rfind(b"\n") + 1]
+        f.truncate(len(data))
+    return [line for line in data.decode().splitlines() if line.strip()]
+
+
 def vote(samples):
     counts = Counter(s["letter"] for s in samples if s["letter"])
     if not counts:
@@ -90,10 +101,9 @@ def main():
             order = dict.fromkeys(f.read().split())
         by_id = {c.id: c for c in cases}
         cases = [by_id[i] for i in order]  # file order: vLLM serves requests first come, first served
-    done = set()
-    if os.path.exists(args.out):
-        with open(args.out) as f:
-            done = {json.loads(line)["id"] for line in f if line.strip()}
+    texts_path = args.out[:-len(".jsonl")] + ".texts.jsonl" if args.out.endswith(".jsonl") else args.out + ".texts"
+    done = {json.loads(line)["id"] for line in complete_lines(args.out)}
+    complete_lines(texts_path)
     todo = [c for c in cases if c.id not in done]
     print(f"{len(cases)} cases, {len(done)} already in {args.out}, {len(todo)} to run", flush=True)
     if not todo:
@@ -123,7 +133,6 @@ def main():
 
     pending, waiting, prompt_tokens = {}, Counter(), {}
     t0, n_written, tokens_written = time.time(), 0, 0
-    texts_path = args.out[:-len(".jsonl")] + ".texts.jsonl" if args.out.endswith(".jsonl") else args.out + ".texts"
     with open(args.out, "a") as fout, open(texts_path, "a") as ftxt:
         while eng.has_unfinished_requests():
             for o in eng.step():
