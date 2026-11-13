@@ -1,0 +1,19 @@
+{
+  "team_name": "Claude Laggye",
+  "kaggle_team_url": "https://www.kaggle.com/competitions/the-liars-chatroom",
+  "members": ["Kanav Bhardwaj", "Nirbhay Sharma", "Bhavya Jain", "Aaryan Antala"],
+  "contact_email": "",
+  "models_used": [
+    {
+      "name": "Qwen/Qwen3-14B-AWQ, revision 31c69efc29464b6bb0aee1398b5a7b50a99340c3 (the Qwen team's 4-bit AWQ quantisation of Qwen/Qwen3-14B)",
+      "source_url": "https://huggingface.co/Qwen/Qwen3-14B-AWQ",
+      "parameters_billions_total": 14.8,
+      "license": "Apache-2.0",
+      "weights_location_in_zip_or_download_script": "not in the zip; setup.sh downloads it from Hugging Face to models/qwen3-14b-awq"
+    }
+  ],
+  "hardware_assumed": "2x NVIDIA T4 16GB (tensor parallel over both cards); also runs on 1x T4 with fewer parallel cases",
+  "approx_runtime_minutes_for_450_cases": 80,
+  "uses_pseudo_labelling": false,
+  "statement": "I confirm that: (1) no closed or hosted model API is called by the solution or was used to label data or produce training data; (2) no test labels were created by hand or by a person; (3) test.csv was not read to design family-specific rules; (4) predict.py reproduces the Final Submission when run on test.csv."
+}
