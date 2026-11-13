@@ -184,12 +184,26 @@ def place_re(p):
     return rf"(?:the )?{re.escape(p)}(?![a-z])(?! door| gate| keypad)"
 
 
-def clauses(sentence):
-    """Split a sentence into clauses at '; ', ': ' (not before a list), ', and ' and ', while '."""
-    s = sentence.strip().rstrip(".")
-    parts = re.split(r";\s+|,\s+while\s+|,\s+and\s+(?=(?:the |from |before |only |nobody |it |every |there |"
-                     r"[A-Z]))", s)
-    return [p.strip() for p in parts if p.strip()]
+def match_pieces(sentence, pats):
+    """Match patterns against a sentence and its clauses. A sentence is cut at '; ', ', while ' and ', and ' into
+    clauses; every run of adjacent clauses is tried, longest first, and runs overlapping an earlier match are
+    skipped. Returns [(pattern index, match)] in sentence order."""
+    parts = re.split(r"(;\s+|,\s+while\s+|,\s+and\s+)", sentence.strip().rstrip("."))
+    cls, seps = parts[0::2], parts[1::2]
+    runs = [(i, j) for i in range(len(cls)) for j in range(i, len(cls))]
+    runs.sort(key=lambda r: r[0] - r[1])  # longest first; stable, so equal lengths stay in sentence order
+    taken, found = set(), []
+    for i, j in runs:
+        if taken & set(range(i, j + 1)):
+            continue
+        text = "".join(cls[k] + (seps[k] if k < j else "") for k in range(i, j + 1))
+        for n, p in enumerate(pats):
+            m = p.match(text)
+            if m:
+                taken.update(range(i, j + 1))
+                found.append((i, n, m))
+                break
+    return [(n, m) for _, n, m in sorted(found, key=lambda f: f[0])]
 
 
 def verdict(fam, ok, why):
@@ -363,28 +377,19 @@ class AccessSupply(Family):
 
     def parse(self, ctx):
         deps, outs, remote = [], [], []
+        pats = [self.NO_ROUTE] + self.DEP + self.REMOTE + self.OFF
+        kinds = ["route"] + ["dep"] * len(self.DEP) + ["remote"] * len(self.REMOTE) + ["off"] * len(self.OFF)
         for i, s in enumerate(ctx.sentences):
-            used = False
-            for cl in clauses(s):
-                if self.NO_ROUTE.match(cl):
-                    used = True
-                    continue
-                m = next((m for m in (p.match(cl) for p in self.DEP) if m), None)
-                if m:
+            found = match_pieces(s, pats)
+            for n, m in found:
+                if kinds[n] == "dep":
                     deps.append((clean_np(m.group("a")), m.group("v").lower(), clean_np(m.group("b"))))
-                    used = True
-                    continue
-                m = next((m for m in (p.match(cl) for p in self.REMOTE) if m), None)
-                if m:
+                elif kinds[n] == "remote":
                     remote.append((clean_np(m.group("s")), clean_np(m.group("b"))))
-                    used = True
-                    continue
-                m = next((m for m in (p.match(cl) for p in self.OFF) if m), None)
-                if m:
+                elif kinds[n] == "off":
                     a, b = m.group("t1") or m.group("t3"), m.group("t2") or m.group("t4")
                     outs.append((clean_np(m.group("b")), tm(a), tm(b), m.group("t3") is not None))
-                    used = True
-            if used:
+            if found:
                 ctx.consume(i)
         if not outs or not (deps or remote):
             return None
@@ -499,28 +504,25 @@ class AccessCode(Family):
                          r"keypad(?: with a \w+ light)?$", re.I)
 
     def parse(self, ctx):
-        rules = {}  # door -> [(start, end, code, start_open)]
+        rules = {}  # door -> [(start, end, code, end_is_unclear)]
         last_door = None
         flavour = []
+        pats = self.BEFORE + self.AFTER + [self.FLAVOUR]
         for i, s in enumerate(ctx.sentences):
             used = False
-            for cl in clauses(s):
-                m = next((m for m in (p.match(cl) for p in self.BEFORE) if m), None)
-                if m:
+            for n, m in match_pieces(s, pats):
+                if n < len(self.BEFORE):
                     last_door = clean_np(m.group("d"))
                     t = tm(m.group("t"))
                     rules.setdefault(last_door, []).append((0, t, m.group("c"), m.group("r").lower() == "until"))
                     used = True
-                    continue
-                m = next((m for m in (p.match(cl) for p in self.AFTER) if m), None)
-                if m:
+                elif n < len(self.BEFORE) + len(self.AFTER):
                     d = clean_np(m.group("d")) if m.group("d") else last_door
                     if d is None:
                         continue
                     rules.setdefault(d, []).append((tm(m.group("t")), DAY_END, m.group("c"), False))
                     used = True
-                    continue
-                if self.FLAVOUR.match(cl):
+                else:
                     flavour.append(i)
             if used:
                 ctx.consume(i)
@@ -597,29 +599,21 @@ class AccessList(Family):
     def parse(self, ctx):
         doors, pos, neg, excl = [], [], [], []
         used = set()
+        pats = self.DOORS + [self.NOT_MEMBER, self.NOT_MEMBER2, self.EXCLUDES, self.MEMBERS]
+        nd = len(self.DOORS)
         for i, s in enumerate(ctx.sentences):
-            m = next((m for m in (p.match(s.rstrip(".")) for p in self.DOORS) if m), None)
-            if m:
-                doors.append((clean_np(m.group("door")), clean_np(m.group("p")), group_key(m.group("g")),
-                              tm(m.group("t")), m.group("r").lower() == "until"))
+            for n, m in match_pieces(s, pats):
                 used.add(i)
-                continue
-            for cl in clauses(s):
-                m = self.NOT_MEMBER.match(cl) or self.NOT_MEMBER2.match(cl)
-                if m:
+                if n < nd:
+                    doors.append((clean_np(m.group("door")), clean_np(m.group("p")), group_key(m.group("g")),
+                                  tm(m.group("t")), m.group("r").lower() == "until"))
+                elif n in (nd, nd + 1):
                     neg.append((m.group("n"), group_key(m.group("g"))))
-                    used.add(i)
-                    continue
-                m = self.EXCLUDES.match(cl)
-                if m:
+                elif n == nd + 2:
                     excl.append((group_key(m.group("r")), group_key(m.group("g"))))
-                    used.add(i)
-                    continue
-                m = self.MEMBERS.match(cl)
-                if m:
-                    for n in re.findall(NAME, m.group("n")):
-                        pos.append((n, group_key(m.group("g"))))
-                    used.add(i)
+                else:
+                    for name in re.findall(NAME, m.group("n")):
+                        pos.append((name, group_key(m.group("g"))))
         if not doors:
             return None
         member = {}  # (name, group) -> True/False
@@ -660,4 +654,93 @@ class AccessList(Family):
             if re.search(rf"@ (?:was )?(?:\w+ )?(?:by|beside|near|next to|outside) (?:the )?{re.escape(door)}\b",
                          c.text):
                 return verdict(self, True, f"by the {door}, not inside")
+        return None
+
+
+# ---------------------------------------------------------------------------------------------------------------
+@register
+class AccessBadge(Family):
+    """'Nobody could enter the staff floor except by scanning their own active badge.' plus 'Femi's badge was
+    inactive before 12:40 PM and active from 12:40 PM onward.' Femi entering before 12:40 PM is a lie; people whose
+    card times are not given cannot be checked. Scanning an inactive card is possible, so that is never a lie."""
+
+    name = "access_badge"
+    RULES = [
+        re.compile(rf"^{NOBODY} could (?:enter|get into|go into) (?:the )?(?P<p>{NP}) (?:except|other than|unless) "
+                   rf"(?:by )?(?:scanning|they scanned|swiping|using) (?:their|his or her|his|her) own active "
+                   rf"(?P<card>{NP})$", re.I),
+        re.compile(rf"^the only way (?:anybody|anyone|a person|someone|people) could (?:enter|get into) (?:the )?"
+                   rf"(?P<p>{NP}) was by (?:scanning|swiping|using) (?:their|his or her|his|her) own active "
+                   rf"(?P<card>{NP})$", re.I),
+        re.compile(rf"^(?:the )?(?P<p>{NP}) opened at {TIME},? and {NOBODY} could (?:enter|get into) it (?:except|other "
+                   rf"than) by (?:scanning|swiping|using) (?:their|his or her|his|her) own active (?P<card>{NP})$",
+                   re.I),
+    ]
+    ST = r"(?P<s{k}>inactive|active|deactivated|disabled|valid|invalid|switched off|switched on)"
+    REL = r"(?P<r{k}>before|until|from|after|since)"
+    TWO = [  # "X's badge was inactive before T and active from T onward", "Before T X's badge was inactive; ..."
+        re.compile(rf"^(?P<n>{NAME})'s (?P<card>{NP}) was {ST.format(k=1)} {REL.format(k=1)} (?P<t1>{TIME}),? "
+                   rf"(?:and |then |, then |and then )?(?:it )?(?:was |became |turned )?{ST.format(k=2)} "
+                   rf"{REL.format(k=2)} (?P<t2>{TIME})(?: onwards?)?$"),
+        re.compile(rf"^{REL.format(k=1)} (?P<t1>{TIME}),? (?P<n>{NAME})'s (?P<card>{NP}) was {ST.format(k=1)}[;,]? "
+                   rf"(?:and |then )?{REL.format(k=2)} (?P<t2>{TIME})(?: onwards?)?,? it (?:was|became) "
+                   rf"{ST.format(k=2)}$", re.I),
+        re.compile(rf"^(?P<n>{NAME})'s (?P<card>{NP}) was {ST.format(k=1)} {REL.format(k=1)} (?P<t1>{TIME})[;,]? "
+                   rf"(?:and |then )?{REL.format(k=2)} (?P<t2>{TIME})(?: onwards?)?,? it (?:was|became) "
+                   rf"{ST.format(k=2)}$"),
+    ]
+    ACTIVE = {"active": True, "valid": True, "switched on": True, "inactive": False, "deactivated": False,
+              "disabled": False, "invalid": False, "switched off": False}
+    FLAVOUR = re.compile(rf"^(?:each|every) {NP} (?:is printed with a number|has a number printed on it|carries a "
+                         rf"printed number)$|^a number is printed on (?:each|every) {NP}$|^(?:the )?{NP} opened at "
+                         rf"{TIME}$|^at {TIME},? (?:the )?{NP} opened$", re.I)
+
+    def parse(self, ctx):
+        places, cards, flavour = [], {}, []
+        nr, nt = len(self.RULES), len(self.TWO)
+        for i, s in enumerate(ctx.sentences):
+            for n, m in match_pieces(s, self.RULES + self.TWO + [self.FLAVOUR]):
+                if n < nr:
+                    places.append(clean_np(m.group("p")))
+                    ctx.consume(i)
+                    continue
+                if n >= nr + nt:
+                    flavour.append(i)
+                    continue
+                s1, s2 = self.ACTIVE.get(m.group("s1").lower()), self.ACTIVE.get(m.group("s2").lower())
+                r1, r2 = m.group("r1").lower(), m.group("r2").lower()
+                t1, t2 = tm(m.group("t1")), tm(m.group("t2"))
+                if s1 is None or s2 is None or s1 == s2 or r1 not in ("before", "until") or t1 != t2:
+                    continue
+                if r2 not in ("from", "since", "after"):
+                    continue
+                # (start, end, active, end_is_unclear): before T -> [0, T); from T -> [T, end of day)
+                cards[m.group("n")] = [(0, t1, s1, r1 == "until"), (t2, DAY_END, s2, r2 == "after")]
+                ctx.consume(i)
+        if not places:
+            return None
+        for i in flavour:
+            ctx.consume(i)
+        return {"places": places, "cards": cards}
+
+    def judge(self, ctx, facts, msg):
+        c = claim(ctx, msg)
+        if c is None or c.actor is None:
+            return None
+        for p in facts["places"]:
+            if not re.search(entry_re(p), c.text):
+                continue
+            t = event_time(c)
+            if negated(c) or t is None:
+                return None
+            spans = facts["cards"].get(c.actor)
+            if spans is None:
+                return None
+            for start, end, active, unclear in spans:
+                if unclear and t in (start, end):
+                    return None
+                if start <= t < end:
+                    return verdict(self, active, f"{c.actor}'s card was {'active' if active else 'inactive'} at "
+                                                 f"{T.fmt_time(t)}")
+            return None
         return None
