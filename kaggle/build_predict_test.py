@@ -53,6 +53,7 @@ if (sh(f"unshare -rn /tmp/offline.sh {loopback}", check=False) == 0
 else:
     offline = "HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 "
     log("WARNING: the network cannot be cut here; the runs below only have HF_HUB_OFFLINE=1 and a dead proxy")
+offline = "LC_ENGINE_STATS=1 " + offline  # vLLM's throughput and cache lines in the log; no other effect
 
 if FULL:
     t = time.time()
