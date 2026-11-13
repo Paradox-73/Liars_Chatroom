@@ -77,6 +77,16 @@ def is_person(name, original):
     return name not in PRONOUNS and re.search(rf"\b{esc(name.capitalize())}\b", original) is not None
 
 
+def named_person(name, ctx):
+    """A speaker, or a word the evidence or the chat capitalises mid-sentence: 'Staff stayed in ...' is no person."""
+    if name in PRONOUNS:
+        return False
+    if name in {v.lower() for v in ctx.speakers.values()}:
+        return True
+    texts = list(ctx.sentences) + [m.text for m in ctx.case.messages]
+    return any(re.search(rf"(?<!^)(?<![.!?] )\b{esc(name.capitalize())}\b", s) for s in texts)
+
+
 # ---------------------------------------------------------------- claims
 
 FILLER_PRE = re.compile(
@@ -555,7 +565,7 @@ class MovePlace(Family):
                     used.add(i)
                 elif kind == "at":
                     t0s = [x for x in m.group("ta", "tb") if x]
-                    if len(t0s) == 1 and is_person(m.group("p"), ctx.sentences[i]):
+                    if len(t0s) == 1 and is_person(m.group("p"), ctx.sentences[i]) and named_person(m.group("p"), ctx):
                         starts.append((i, m.group("p"), m.group("l"), tm(t0s[0])))
         out = []
         for i, person, start, t0 in starts:
@@ -639,7 +649,7 @@ class MoveRoom(Family):
                 if kind != "stay":
                     continue
                 person, room, t1, t2 = m.group("p", "r", "t1", "t2")
-                if not is_person(person, ctx.sentences[i]) or tm(t2) <= tm(t1):
+                if not (is_person(person, ctx.sentences[i]) and named_person(person, ctx)) or tm(t2) <= tm(t1):
                     continue
                 others = set().union(*[g - {room} for g in groups if room in g]) if groups else set()
                 if not others or tainted(ctx, [i], others | {room}, {person}):
@@ -972,7 +982,7 @@ class MoveChain(Family):
             if not chain_idx:
                 continue
             segs = parse_chain(" ".join(sents[j].rstrip(".") + "." for j in chain_idx))
-            if not segs or not (exclusive or window):
+            if not segs or not (exclusive or window) or not all(named_person(h, ctx) for h, _, _ in segs):
                 continue
             if window and (abs(window[0] - segs[0][1]) > EPS or abs(window[1] - segs[-1][2]) > EPS):
                 continue
