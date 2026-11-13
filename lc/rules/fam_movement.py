@@ -24,8 +24,8 @@ from . import text as T
 TM = r"(\d{1,2}:\d{2} (?:am|pm)|noon|midday|midnight)"  # evidence and claims are matched in lower case
 NP = r"[a-z][a-z0-9' -]*?"  # a noun phrase after "the"; lazy, so the following words decide where it ends
 END = r"(?=[,.;:]|$| and\b| which\b| with\b)"
-NAME = (r"(?!(?:nobody|no one|noone|none|someone|somebody|anyone|anybody|everyone|everybody|nothing|not|never)\b)"
-        r"[a-z]+")
+NAME = (r"(?!(?:nobody|no one|noone|none|someone|somebody|anyone|anybody|everyone|everybody|nothing|not|never|who|"
+        r"whom|whoever|what|which)\b)[a-z]+")
 PRONOUNS = {"i", "me", "you", "he", "him", "she", "her", "they", "them", "we", "us", "it", "this", "that", "there",
             "who", "one", "the", "nobody", "everyone", "someone"}
 EPS = 1e-6
@@ -67,8 +67,9 @@ def is_person(name, original):
 # ---------------------------------------------------------------- claims
 
 FILLER_PRE = re.compile(
-    r"^(?:(?:honestly|for the record|okay so|ok so|okay|so|well|to be honest|to be clear|frankly|actually|"
-    r"as it happens|by my count|i can tell you(?: that)?|i say(?: that)?|i can confirm(?: that)?)\s+)+")
+    r"^(?:(?:honestly|for the record|okay so|ok so|okay|so|well|to be honest|to be clear|to be fair|frankly|actually|"
+    r"as it happens|by my count|i can tell you(?: that)?|i say(?: that)?|i can confirm(?: that)?|look|listen|anyway|"
+    r"just so you know|for what it's worth)\s+)+")
 FILLER_SUF = re.compile(r"(?:\s+(?:for the record|honestly|as it happens|to be honest|to be clear|by the way))+$")
 OTHER_DAY = re.compile(r"\b(?:yesterday|tomorrow|day before|next day|previous day|following day|other day|"
                        r"last week|next week|last night)\b")
@@ -275,7 +276,7 @@ class MoveRoute(Family):
             speed_info = re.search(r"km/h|per hour|an hour|mph|mile|kph", text) is not None
             earliest = None
             if speed_info and MAX_SPEED.search(text) and not EXACT_SPEED.search(text) and \
-                    not re.search(r"mph|mile", text):
+                    not re.search(r"mph|mile|\bexcept\b|\bapart from\b|\bother than\b", text):
                 mins = route_legs(text)
                 earliest = None if mins is None else t0 + mins
             if speed_info and earliest is None:
@@ -989,6 +990,8 @@ class MoveCount(Family):
                                      rf"{NUM_WORD} {things}"),
                           re.compile(rf"i (?:took|got) (?:photos|pictures|a photo|a picture) of all {NUM_WORD} "
                                      rf"{things} (?:in|inside) the {c}")],
+                "saw": [re.compile(rf"i (?:saw|spotted|noticed) {NUM_WORD} {things} (?:in|inside) the {c}"),
+                        re.compile(rf"(?:in|inside) the {c} i (?:saw|spotted|noticed) {NUM_WORD} {things}")],
                 "change": event_res(rf"{TAKE_PAST} (?:out )?{some} {OUT_OF} the {c}",
                                     rf"{TAKE_BASE} (?:out )?{some} {OUT_OF} the {c}",
                                     rf"{TAKE_ING} (?:out )?{some} {OUT_OF} the {c}") + [
@@ -1009,20 +1012,22 @@ class MoveCount(Family):
         return best(self.one(f, *c) for f in facts) if c else None
 
     def one(self, f, t, cl):
-        for r in f["count"]:
-            m = r.fullmatch(cl)
-            if m:
-                k = T.word_num(m.group(1))
-                if k is None:
-                    return None
-                inside = f["t1"] + EPS < t < f["t2"] - EPS
-                edge = abs(t - f["t1"]) < EPS or abs(t - f["t2"]) < EPS
-                if inside and k != f["n"]:
-                    return Verdict(LIE, self.name, f"the {f['cont']} held exactly {f['n']} from "
-                                                   f"{T.fmt_time(f['t1'])} to {T.fmt_time(f['t2'])}")
-                if edge and k != f["n"]:
-                    return None
-                return Verdict(OK, self.name, "count consistent with the evidence")
+        for total, res in ((True, f["count"]), (False, f["saw"])):
+            m = next((m for m in (r.fullmatch(cl) for r in res) if m), None)
+            if not m:
+                continue
+            k = T.word_num(m.group(1))
+            if k is None:
+                return None
+            inside = f["t1"] + EPS < t < f["t2"] - EPS
+            edge = abs(t - f["t1"]) < EPS or abs(t - f["t2"]) < EPS
+            wrong = k != f["n"] if total else k > f["n"]  # seeing five of nine is possible, seeing nine of five not
+            if inside and wrong:
+                return Verdict(LIE, self.name, f"the {f['cont']} held exactly {f['n']} from "
+                                               f"{T.fmt_time(f['t1'])} to {T.fmt_time(f['t2'])}")
+            if (inside or edge) and k != f["n"]:
+                return None
+            return Verdict(OK, self.name, "count consistent with the evidence")
         if any_full(f["change"], cl):
             if not f["no_change"]:
                 return None
