@@ -163,6 +163,9 @@ LEADING_TIME = re.compile(r"^(?:at @T|" + SPAN + r"|until @T|from then (?:to|unt
 SPLIT = re.compile(r"\s*;\s*|,\s*(?:and |then |while )?|\s+and\s+(?=(?:then |it |drained|filled|emptied|leaked|exactly"
                    r"|nothing|no |from |until |at @T))")
 ASIDE = re.compile(r", (?:which|that) (?:is|was) " + COLOUR + ",")  # "the cabinet, which is grey, held ..."
+CHANGE_WORD = re.compile(r"\b(?:added|removed|poured|drained|filled|refilled|emptied|leaked|topped up|taken out|"
+                         r"tipped|scooped|pumped|delivered|used up)\b")
+NUMBER_WORD = re.compile(r"\d|\b(?:" + "|".join(WORDNUM) + r")\b")
 
 
 def clauses(masked, times):
@@ -296,7 +299,7 @@ AMOUNT = [re.compile(r"^(?:at @T,? )?(?:" + f.format(Q=CQ, C=C) + r")(?: at @T)?
     r"there (?:were|was) {Q} in {C}",
     r"{C} (?:held|had|contained|still held|still had|was holding) {Q}(?: in it)?",
     r"{Q} (?:were|was) in {C}",
-    r"i (?:counted|make it|measured|recorded|noted|found|photographed all|counted all|saw all"
+    r"i (?:counted|make it|measured|recorded|noted|photographed all|counted all|saw all"
     r"|(?:got|took) (?:photos|pictures|a photo|a picture) of all) {Q} in {C}",
     r"in {C}(?: at @T)? there (?:were|was) {Q}")]
 TOOK = re.compile(r"^(?:at @T,? )?i (?:took|drew|scooped|removed|pulled|lifted|grabbed|got|fetched|helped myself to) (?:some|a little|a bit|a few|one|a|an)"
@@ -326,30 +329,37 @@ class Level(Family):
                 st.bad = True
             return st
 
-        unparsed = []
+        unparsed, mine = [], set()  # mine: sentences read here, so "it" in the next one is a store
         for i, sent in enumerate(ctx.sentences):
             low, times = mask_times(ASIDE.sub("", sent.lower().rstrip(". ")))
+            if i - 1 not in mine:
+                cur = None
             m = SUBJECT.match(low)
             if m:
                 subjects.append((i, m["c"]))
+                mine.add(i)
                 continue
+            fresh = [name for j, name in subjects if j == i - 1]
             parts = clauses(low, times)
             done, touched = [], []
             for p, ts in parts:
-                ok = self.apply(p, ts, stores, store_for, cur, subjects, touched)
+                ok = self.apply(p, ts, stores, store_for, cur, fresh, touched)
                 if not ok:
                     break
                 done.append(p)
                 cur = touched[-1] if touched else cur
             if len(done) == len(parts) and done:
                 used.append(i)
+                mine.add(i)
                 continue
             for st in touched:  # half-understood sentence about a store: its model may be incomplete
                 st.bad = True
             if not low.startswith("all times in this case refer to"):
                 unparsed.append(low)
+        changed = any(CHANGE_WORD.search(low) and NUMBER_WORD.search(low) for low in unparsed)
         for st in stores:
-            # any other sentence about the container, its items, or amounts in its unit may change what it held
+            # any other sentence about the container, its items, amounts in its unit, or a numbered addition or
+            # removal of anything may change what it held
             words = {head(st.name).split()[-1]} | ({st.unit[0][6:].split()[-1]} if st.unit[0].startswith("count:")
                                                    else set())
             for low in unparsed:
@@ -357,6 +367,7 @@ class Level(Family):
                         sing(w) in UNITS and UNITS[sing(w)][0] == st.unit[0]
                         for w in re.findall(r"\d+(?:\.\d+)? ([a-z]+)", low)):
                     st.bad = True
+            st.bad |= changed
             st.finish()
         good = [s for s in stores if not s.bad]
         if not good:
@@ -368,12 +379,13 @@ class Level(Family):
                 ctx.consume(i)
         return good
 
-    def apply(self, p, ts, stores, store_for, cur, subjects, touched):
-        """Add one clause to the stores; False when the clause is not understood."""
+    def apply(self, p, ts, stores, store_for, cur, fresh, touched):
+        """Add one clause to the stores; False when the clause is not understood. fresh: containers described in
+        the sentence just before, which "it" may name."""
         m = next((m for m in (rx.match(p) for rx in STATES) if m), None)
         if m and bool(m["pre"]) != bool(m["post"]):
             phrase = m["pre"] or m["post"]
-            st = self.subject(m, stores, store_for, cur, subjects, m["u"])
+            st = self.subject(m, stores, store_for, cur, fresh, m["u"])
             if st is None:
                 return False
             touched.append(st)
@@ -393,7 +405,7 @@ class Level(Family):
             return True
         m = RATE.match(p)
         if m and bool(m["pre"]) != bool(m["post"]):
-            st = self.subject(m, stores, store_for, cur, subjects, m["u"], need_store=True)
+            st = self.subject(m, stores, store_for, cur, fresh, m["u"], need_store=True)
             if st is None:
                 return False
             touched.append(st)
@@ -433,7 +445,7 @@ class Level(Family):
         return False
 
     @staticmethod
-    def subject(m, stores, store_for, cur, subjects, u, need_store=False):
+    def subject(m, stores, store_for, cur, fresh, u, need_store=False):
         if m["c"]:
             if need_store:
                 return pick(stores, m["c"])
@@ -441,8 +453,8 @@ class Level(Family):
         if m["it"] or need_store:
             if cur is not None:
                 return cur
-            if m["it"] and subjects and not need_store:
-                return store_for(subjects[-1][1], unit_of(u))
+            if m["it"] and len(fresh) == 1 and not need_store:
+                return store_for(fresh[0], unit_of(u))
         return None
 
     def judge(self, ctx, stores, msg):
