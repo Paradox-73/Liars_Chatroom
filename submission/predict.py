@@ -41,6 +41,8 @@ ATTEMPTS = [  # (judge.py arguments, environment), tried in order until one exit
     (["--eager"], {"VLLM_USE_TRITON_AWQ": "1", "VLLM_ATTENTION_BACKEND": "TRITON_ATTN"}),
     (["--eager", "--tp", "1"], {}),
 ]
+# How the judge model that setup.sh downloads runs; the environment can override each value.
+MODEL_ENV = {}
 START_LIMIT, STALL_LIMIT = 20 * 60, 5 * 60  # seconds without a heartbeat from judge.py before it counts as hung
 NO_RETRY = (3, 4)  # judge.py exit codes: no GPU, no vLLM
 
@@ -148,12 +150,13 @@ def run_model(a, cases, cands, write, stop_new, hard):
     LC_DATA_PARALLEL=1 and two or more cards, one judge.py per card takes every n-th case on its own."""
     work = a.workdir or tempfile.mkdtemp(prefix="liars_")
     os.makedirs(work, exist_ok=True)
-    gpus = gpu_ids() if os.environ.get("LC_DATA_PARALLEL") == "1" else []
+    settings = dict(MODEL_ENV, **{k: v for k, v in os.environ.items() if k in MODEL_ENV})
+    gpus = gpu_ids() if os.environ.get("LC_DATA_PARALLEL", settings.get("LC_DATA_PARALLEL")) == "1" else []
     parts = len(gpus) if len(gpus) >= 2 else 1
     py = next((p for p in (os.environ.get("LC_PYTHON"), os.path.join(HERE, ".venv", "bin", "python")) if p and os.path.exists(p)),
               sys.executable)
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}  # a PYTHONPATH made for another Python must not leak in
-    env.update(PYTHONPATH=ROOT, HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", VLLM_NO_USAGE_STATS="1", DO_NOT_TRACK="1")
+    env.update(settings, PYTHONPATH=ROOT, HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", VLLM_NO_USAGE_STATS="1", DO_NOT_TRACK="1")
     workers = []
     for i in range(parts):
         w = {x: os.path.join(work, f"{x}{i}") for x in ("cases", "answers", "heartbeat")}
