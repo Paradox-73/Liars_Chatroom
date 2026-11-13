@@ -96,7 +96,11 @@ def main():
               disable_custom_all_reduce=True, enforce_eager=a.eager, **({"language_model_only": True} if multimodal else {}))
     eng, tok = llm.llm_engine, llm.get_tokenizer()
     t_ready = time.time()
-    log(f"engine ready after {(t_ready - T0) / 60:.1f} min")
+    cache = eng.vllm_config.cache_config
+    kv_tokens = (cache.num_gpu_blocks or 0) * cache.block_size
+    if kv_tokens:  # more cases in flight than the cache holds makes vLLM evict and recompute them over and over
+        think_slots = min(think_slots, max(4, kv_tokens // 2500))
+    log(f"engine ready after {(t_ready - T0) / 60:.1f} min; cache {kv_tokens} tokens, {think_slots} thinking slots")
 
     final = RequestOutputKind.FINAL_ONLY
     one_token = SamplingParams(max_tokens=1, temperature=0.0, logprobs=NUM_LOGPROBS, output_kind=final)
@@ -131,7 +135,7 @@ def main():
     flight = {}  # request id -> (kind, case id, k, text so far, tokens so far, kind of the sample it answers for)
     queued_cont, quick, dead = deque(), deque(), set()  # dead: cases whose request could not start
     counts = dict.fromkeys(("main", "cont", "extra", "force", "nothink", "main_capped", "cont_finished", "not_started"), 0)
-    tokens_out = n_req = 0
+    tokens_out = n_req = seq_tokens = seq_n = 0
 
     def record(cid, k, src, letter, p, forced, tokens):
         r = {"id": cid, "k": k, "stage": int(src == "cont"), "kind": src, "pred": letter, "p_mean": p, "forced": [forced],
@@ -205,9 +209,18 @@ def main():
         with open(a.heartbeat, "w") as f:
             f.write(str(time.time()))
 
+    def abort(kinds):
+        """Stops the running requests of these kinds, so that their cache goes to the one-token answers."""
+        rids = [rid for rid, v in flight.items() if v[0] in kinds]
+        if rids:
+            eng.abort_request(rids)
+            for rid in rids:
+                flight.pop(rid)
+        return len(rids)
+
     beat()
     last_beat = last_log = time.time()
-    late = False
+    late = cut = False
     while True:
         now = time.time()
         if now >= a.hard_stop:
@@ -216,7 +229,9 @@ def main():
         if now >= a.stop_new and not late:
             late = True
             need = [i for i in order if not any(k >= 0 for k in samples.get(i, {})) and -1 not in samples.get(i, {})]
-            log(f"stop time: {len(main_q)} first samples and {len(queued_cont)} continuations dropped; "
+            # continuations and extra samples only improve cases that already have an answer
+            log(f"stop time: {len(main_q)} first samples and {len(queued_cont)} continuations dropped, "
+                f"{abort(('cont', 'extra'))} running continuations and extra samples stopped; "
                 f"{len(need)} cases get an answer without thinking")
             main_q.clear()
             queued_cont.clear()
@@ -225,7 +240,12 @@ def main():
                     quick.append(("nothink", cid, -1, no_think(cid)))
                 except Exception as e:
                     log(f"case {cid}: no prompt: {e!r}")
-        while not late and running(True) < think_slots:
+        if late and not cut and now >= a.hard_stop - 90 and (quick or running(False)):
+            cut = True  # the one-token answers still wait for cache: the unfinished first samples give way
+            log(f"{abort(THINKING)} first samples stopped for {len(quick) + running(False)} one-token answers")
+        # once 10 samples are done, keep the cases in flight within the cache at their mean length
+        slots = think_slots if seq_n < 10 or not kv_tokens else min(think_slots, max(4, int(kv_tokens * seq_n / seq_tokens)))
+        while not late and running(True) < slots:
             w = next_work(now)
             if not w:
                 break
@@ -246,6 +266,7 @@ def main():
                 continue
             text, tokens = text + out.text, tokens + len(out.token_ids)
             tokens_out += len(out.token_ids)
+            seq_tokens, seq_n = seq_tokens + plen(cid) + tokens, seq_n + 1
             letter, p = read_answer(out)
             if letter:
                 record(cid, k, kind, letter, p, False, tokens)
@@ -264,7 +285,7 @@ def main():
             mins = (time.time() - t_ready) / 60
             log(f"{counts['main']}/{len(order)} first samples, {counts['main_capped']} capped, {counts['cont']} continued "
                 f"({counts['cont_finished']} finished), {counts['extra']} extra; {tokens_out / mins / 60:.0f} output tokens/s; "
-                f"{len(main_q)} waiting, {running(True)} thinking")
+                f"{len(main_q)} waiting, {running(True)} of {slots} slots thinking")
             last_log = time.time()
     fout.close()
     log(f"done: {counts}, {tokens_out} output tokens")
