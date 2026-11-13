@@ -56,6 +56,18 @@ SAW_IT_RE = re.compile(r",?\s*(?:and )?I (?:saw|watched|noticed|spotted|witnesse
                        r"(?: happen)?(?: myself)?\s*$")
 WITNESS_RE = re.compile(r"\bI (?:saw|watched|noticed|spotted|witnessed|observed)(?: that)? (you|" + NAME + r")\b")
 FIRST_PERSON = re.compile(r"\b(?:I|[Mm]e|[Mm]y|[Mm]yself|[Mm]ine)\b")
+# Messages these match are not plain claims about that day: another day, someone's report or belief, a hedge.
+OTHER_DAY_RE = re.compile(r"\b(?:yesterday|tomorrow|last (?:week|month|year|night)|next (?:week|month|year|day)|the day "
+                          r"before|the previous day|the following day|the next day|Monday|Tuesday|Wednesday|Thursday|"
+                          r"Friday|Saturday|Sunday|January|February|March|April|May|June|July|August|September|October|"
+                          r"November|December)\b", re.I)
+REPORT_RE = re.compile(r"\b(?:thinks?|thought|said|says|claims?|claimed|believes?|believed|reckons?|suspects?|"
+                       r"suspected|assumed?|assumes|told|tells|heard|hears|guess(?:ed|es)?|wondered|asked|asks|accused|"
+                       r"accuses|if|unless|whether|would|might|maybe|perhaps|probably|possibly|supposedly|apparently|"
+                       r"allegedly|should|must have|could have)\b", re.I)
+# Two joined actions ("@ left the office at 9:40 am and went into the vault"): the time may belong to either one.
+JOINED_RE = re.compile(r"\b(?:and|then|but|before|after|while) (?:then )?(?:@ )?([a-z]+ed|went|got|came|made|took|left|"
+                       r"ran|saw|rode|sat|met|had|was|were|stayed|did|go|get|come)\b")
 NEG_RE = re.compile(r"\b(?:not|never|n't|didnt|no point|nobody|no one|nowhere|neither|nor|cannot|without|almost|"
                     r"nearly|tried to|try to|wanted to|meant to|planned to|hoped to|was going to|were going to)\b|n't\b")
 TIMES_WORD_RE = re.compile(r"(\w+)\W*$")
@@ -103,7 +115,7 @@ def find_clock(s):
 def claim(ctx, msg):
     """Rewrite one chat message as a Claim, or None when it is a question or the actor is unclear."""
     t = msg.text.strip().replace("’", "'")
-    if t.endswith("?"):
+    if t.endswith("?") or OTHER_DAY_RE.search(t) or REPORT_RE.search(t) or T.find_dates(t):
         return None
     t = t.rstrip(" .!")
     t = LEAD_RE.sub("", t)
@@ -151,13 +163,16 @@ def claim(ctx, msg):
             actor = None  # a statement about things, not people ("The stage lamps were lit at 2:00 PM")
     times = find_clock(t)
     low = re.sub(r"\s+", " ", t.replace(",", " ").lower()).strip()
-    low = low.replace("@'s", "@'s")
     return Claim(actor, low, times, {n.lower(): n for n in names})
 
 
-def event_time(c):
-    """The single clock time of the claim when it is given as 'at T', else None."""
+def event_time(c, same_event=()):
+    """The single clock time of the claim when it is given as 'at T' and the claim names one action, else None.
+    same_event lists verbs that may be joined on without changing the event ('punched in code 1311 and unlocked')."""
     if len(c.times) != 1:
+        return None
+    m = JOINED_RE.search(c.text)
+    if m and m.group(1) not in same_event:
         return None
     v, prev = c.times[0]
     return v if prev == "at" else None
@@ -188,9 +203,16 @@ def clean_np(s):
     return s
 
 
+# What may follow a place or machine name in a claim: the end, or a word that cannot extend the noun phrase. This keeps
+# "the vault" from matching inside "the vault corridor" or "the lift key".
+NP_END = (r"(?=$| @| (?:at|to|up|down|in|into|on|onto|with|without|through|via|by|from|for|and|before|after|around|"
+          r"when|while|until|so|because|but|then|again|first|alone|together|today|that|this|just|once|too|as|using|"
+          r"is|was|were|had|has|came|went|got|sat|unlocked|opened)\b)")
+
+
 def place_re(p):
-    """Regex for a place noun phrase as it appears in a claim, with an optional article, not followed by door/gate."""
-    return rf"(?:the )?{re.escape(p)}(?![a-z])(?! door| gate| keypad)"
+    """Regex for a place noun phrase as it appears in a claim, with an optional article and nothing more after it."""
+    return rf"(?:the )?{re.escape(p)}{NP_END}"
 
 
 def match_pieces(sentence, pats):
@@ -342,7 +364,9 @@ class AccessWindow(Family):
                 hit = True
             if hit:
                 if negated(c):
-                    return verdict(self, True, f"denies entering {p}")
+                    plain = (re.search(rf"@ (?:didn't|did not|never) (?:{ENTER}|set foot in) {pr}", c.text)
+                             and not re.search(r"\bwithout\b", c.text))
+                    return verdict(self, True, f"denies entering {p}") if plain else None
                 t = event_time(c)
                 if t is None:
                     return None
@@ -446,8 +470,9 @@ class AccessSupply(Family):
         if not outs or not (deps or remote):
             return None
 
-        def same(x, y):  # "the VPN" and "the VPN service" name the same thing
-            return x == y or bool(re.search(rf"\b{re.escape(x)}\b", y) or re.search(rf"\b{re.escape(y)}\b", x))
+        def same(x, y):  # "the VPN" and "the VPN service" name the same thing; "the lift lobby lights" is not the lift
+            tail = r" (?:service|supply|system|network|connection|line|feed|circuit)$"
+            return re.sub(tail, "", x) == re.sub(tail, "", y)
 
         def windows(thing, path=()):
             w = [(t1, t2, btw) for b, t1, t2, btw in outs if same(b, thing)]
@@ -475,9 +500,11 @@ class AccessSupply(Family):
     def uses(self, c, a, v, heads):
         """True when the claim says machine a did its job v (or was in its working state)."""
         head = a.split()[-1]
-        objs = [re.escape(a)] + ([re.escape(head)] if heads.count(head) == 1 and head != a else [])
-        obj = rf"(?:the )?(?:{'|'.join(objs)})\b"
-        if not re.search(obj, c.text):
+        # the full name, or "the" + its last word when no other machine shares it ("the machine", "the lamps"),
+        # never inside a longer name ("the reading lamps", "the lift key")
+        obj = (rf"(?:\bthe (?:{re.escape(a)}|{re.escape(head)})|\b{re.escape(a)})"
+               if heads.count(head) == 1 and head != a else rf"\b(?:the )?{re.escape(a)}")
+        if not re.search(rf"{obj}\b", c.text):
             return False
         words = v.split()
         end = r"(?= at | by | around | when |$)"  # "were on at 2:35 pm", not "were on the floor"
@@ -485,13 +512,14 @@ class AccessSupply(Family):
             states = LIT_WORDS if words[1] in ("lit", "on", "illuminated") else re.escape(" ".join(words[1:]))
             return bool(re.search(rf"{obj} (?:was|were) (?:still |already )?{states}{end}", c.text)
                         or re.search(rf"@ saw {obj} {states}{end}", c.text))
+        obj_end = obj + NP_END
         if words in (["run"], ["operate"], ["work"]):
             if head in CONVEYANCE or a in CONVEYANCE:
-                if re.search(rf"@ {AUX}(?:rode|ride|riding|took|take|taking|used|use|using|caught|catch) {obj}",
+                if re.search(rf"@ {AUX}(?:rode|ride|riding|took|take|taking|used|use|using|caught|catch) {obj_end}",
                              c.text):
                     return True
-                if re.search(rf"@ {AUX}(?:went|came|got|travelled|traveled|rode) (?:up|down) (?:\S+ ){{0,4}}?in {obj}",
-                             c.text):
+                if re.search(rf"@ {AUX}(?:went|came|got|travelled|traveled|rode) (?:up|down) (?:\S+ ){{0,4}}?in "
+                             rf"{obj_end}", c.text):
                     return True
             return bool(re.search(rf"{obj} (?:was|were) (?:still |already )?{RUN_WORDS}{end}", c.text))
         # an action, maybe with an object: "make coffee" -> "made a coffee with the machine", "with the machine I
@@ -499,7 +527,7 @@ class AccessSupply(Family):
         forms = "|".join(sorted(verb_forms(words[0]), key=len, reverse=True))
         rest = "".join(rf" (?:\S+ ){{0,3}}?{re.escape(w)}" for w in words[1:])
         act = rf"(?:{forms}){rest}\b"
-        tool = rf"(?:with|using|on|from|in) {obj}"
+        tool = rf"(?:with|using|on|from|in) {obj_end}"
         return bool(re.search(rf"@ {AUX}{act} (?:\S+ ){{0,3}}?{tool}", c.text)
                     or re.search(rf"\b{tool} @ {AUX}{act}", c.text)
                     or re.search(rf"@ {AUX}(?:used|use|using) {obj} to {act}", c.text))
@@ -515,7 +543,7 @@ class AccessSupply(Family):
                     return None
                 return self.check(wins, t, f"{a} could not {v}")
         for s, wins, names in facts["servers"]:
-            if not re.search(rf"(?:the )?{re.escape(s)}\b", c.text):
+            if not re.search(rf"(?:the )?{re.escape(s)}{NP_END}", c.text):
                 continue
             if facts["unread"].noun(*names):
                 return None
@@ -612,7 +640,15 @@ class AccessCode(Family):
             ctx.consume(i)
         return {"rules": rules, "unread": Unread(ctx, seen)}
 
-    UNLOCK = re.compile(r"\b(?:unlock|unlocked|unlocks|unlocking|opened|open|opens)\b")
+    UNLOCKED = r"(?:unlock|unlocked|unlocks|unlocking|open|opened|opens)"
+    USE = [  # the code must be the one the unlocking was done with
+        re.compile(rf"\b{UNLOCKED}\b[^@]*? (?:with|using|by entering|by typing|by keying in) code (\d+)\b"),
+        re.compile(rf"\b(?:used|use|using|entered|typed|punched in|keyed in|tapped in) code (\d+) (?:to|and) "
+                   rf"{UNLOCKED}\b"),
+        re.compile(rf"\bcode (\d+) {UNLOCKED}\b"),
+        re.compile(rf"\b(?:with|using) code (\d+) @ {UNLOCKED}\b"),
+        re.compile(rf"\bcode (\d+) (?:was|is) what @ used to {UNLOCKED}\b"),
+    ]
     ATTEMPT = re.compile(r"\b(?:tried|try|tries|trying|attempt\w*|failed|wouldn't|couldn't|didn't|refused|wrong)\b")
 
     def judge(self, ctx, facts, msg):
@@ -620,16 +656,17 @@ class AccessCode(Family):
         if c is None:
             return None
         codes = re.findall(r"\bcode (\d+)\b", c.text)
-        if len(set(codes)) != 1 or not self.UNLOCK.search(c.text):
+        used = {m.group(1) for p in self.USE for m in p.finditer(c.text)}
+        if len(set(codes)) != 1 or used != set(codes):
             return None
         if negated(c) or self.ATTEMPT.search(c.text):
             return None
         code = codes[0]
         for d, rules in facts["rules"].items():
-            short = re.sub(r" (?:door|gate)$", "", d)
-            if not re.search(rf"(?:the )?(?:{re.escape(d)}|{re.escape(short)})\b", c.text):
+            names = [re.escape(d)] + ([re.escape(d[:-5])] if d.endswith(" door") else [])  # "the storeroom"
+            if not re.search(rf"(?:the )?(?:{'|'.join(names)}){NP_END}", c.text):
                 continue
-            t = event_time(c)
+            t = event_time(c, same_event=("unlocked", "opened"))
             if t is None or facts["unread"].noun(d, *(f"code {r[2]}" for r in rules), f"code {code}"):
                 return None
             for start, end, good, until in rules:
@@ -921,7 +958,8 @@ class AccessLog(Family):
             ctx.consume(i)
         return {"logs": logs, "unread": Unread(ctx, seen)}
 
-    NEVER = r"(?:at all|that day|all day)"
+    NEVER = r"(?: at all| that day| all day| today)?$"  # the whole denial, nothing after the place
+    EXCEPT = re.compile(r"\b(?:except|apart from|other than|besides|but|only|briefly|unless|save for|aside from)\b")
 
     def judge(self, ctx, facts, msg):
         c = claim(ctx, msg)
@@ -942,11 +980,13 @@ class AccessLog(Family):
     def judge_entry(self, c, p, pr, mine):
         went = re.search(entry_re(p), c.text) or re.search(rf"@ {AUX}set foot in {pr}", c.text)
         if went and negated(c):
+            if self.EXCEPT.search(c.text):
+                return None
             sp = span(c)
             if sp:
                 inside = [t for t in mine if sp[0] <= t <= sp[1]]
                 return verdict(self, not inside, f"log entries for {c.actor}: {[T.fmt_time(t) for t in mine]}")
-            if re.search(rf"\b{self.NEVER}$|@ never ", c.text) and not c.times:
+            if not c.times and re.search(rf"@ {AUX}(?:{ENTER}|set foot in) {pr}{self.NEVER}", c.text):
                 return verdict(self, not mine, f"log entries for {c.actor}: {[T.fmt_time(t) for t in mine]}")
             return None
         if went:
@@ -964,18 +1004,22 @@ class AccessLog(Family):
                 return verdict(self, True, f"{c.actor} entered at {self.fmt(mine)}")
         return None
 
+    LEAVE = (r"(?:leave|left|leaving|exit|exited|exiting|step out of|stepped out of|go out of|went out of|walk out of|"
+             r"walked out of)")
+
     def judge_exit(self, c, p, pr, mine):
-        left = re.search(rf"@ {AUX}(?:leave|left|leaving|exit|exited|exiting|step out of|stepped out of|go out of|"
-                         rf"went out of|walk out of|walked out of) {pr}", c.text) or \
+        left = re.search(rf"@ {AUX}{self.LEAVE} {pr}", c.text) or \
             re.search(rf"\bdid @ (?:leave|exit|step out of|go out of|walk out of) {pr}", c.text)
         if not left:
             return None
         if negated(c):
+            if self.EXCEPT.search(c.text):
+                return None
             sp = span(c)
             if sp:
                 inside = [t for t in mine if sp[0] <= t <= sp[1]]
                 return verdict(self, not inside, f"exit log for {c.actor}: {self.fmt(mine)}")
-            if re.search(rf"\b{self.NEVER}$", c.text) and not c.times:
+            if not c.times and re.search(rf"@ {AUX}{self.LEAVE} {pr}{self.NEVER}", c.text):
                 return verdict(self, not mine, f"exit log for {c.actor}: {self.fmt(mine)}")
             return None
         t = event_time(c)
@@ -1081,9 +1125,11 @@ class AccessArrival(Family):
         return {"place": place, "first": known, "unread": Unread(ctx, seen)}
 
     ARRIVE = (r"(?:arrived at|arrive at|got to|get to|reached|reach|showed up at|show up at|made it to|make it to|"
-              r"came to|come to|turned up at|turn up at|got in to|got into|walked into|came into|entered)")
+              r"came to|come to|turned up at|turn up at)")
+    ENTERED = r"(?:got in to|got into|walked into|came into|entered)"  # an arrival only with "first"
     BEFORE = r"(?:before|ahead of|earlier than|sooner than)"
     AFTER = r"(?:after|later than|behind)"
+    TAIL = r"(?:'s(?: first arrival)?)?(?: did| had| arrived| got there| first arrived| did so)?$"
 
     def judge(self, ctx, facts, msg):
         c = claim(ctx, msg)
@@ -1100,8 +1146,8 @@ class AccessArrival(Family):
         if facts["unread"].noun(p) or facts["unread"].person(c.actor, *named):
             return None
         if re.search(rf"@ was the (?:very )?first (?:person|one|to arrive|to get there)?\s*(?:in|into|at|to arrive at|"
-                     rf"to get to|to reach)? {pr}", c.text) or re.search(rf"@ (?:got to|reached|arrived at) {pr} first\b",
-                                                                        c.text):
+                     rf"to get to|to reach)? {pr}(?: that day| today| this morning)?$", c.text) \
+                or re.search(rf"@ (?:got to|reached|arrived at) {pr} first$", c.text):
             others = [t for n, t in first.items() if n != c.actor]
             if any(t < me for t in others):
                 return verdict(self, False, f"{c.actor} first arrived at {T.fmt_time(me)}, someone listed was earlier")
@@ -1109,12 +1155,16 @@ class AccessArrival(Family):
                 return verdict(self, True, f"{c.actor} is the earliest of the listed people")
             return None
         arrival = (re.search(rf"@ {AUX}(?:first )?{self.ARRIVE} {pr}", c.text)
+                   or re.search(rf"@ {AUX}first {self.ENTERED} {pr}", c.text)
                    or re.search(rf"@'s first arrival at {pr}", c.text)
                    or re.search(rf"\bfirst time @ {AUX}{self.ARRIVE} {pr}", c.text))
         if not arrival:
             return None
         is_first = bool(re.search(r"\bfirst\b", c.text))
-        m = re.search(rf"\b(?P<rel>{self.BEFORE}|{self.AFTER}) (?P<who>[a-z]+)(?:'s)?(?: did| had| arrived)?\b", c.text)
+        m = (re.search(rf"\b(?P<rel>{self.BEFORE}|{self.AFTER}) (?P<who>[a-z]+){self.TAIL}", c.text)
+             or re.search(rf"^(?P<rel>{self.BEFORE}|{self.AFTER}) (?P<who>[a-z]+)(?: is when)? @ ", c.text))
+        if not m and re.search(rf"\b(?:{self.BEFORE}|{self.AFTER})\b", c.text):
+            return None  # an order against something we do not model ("after Mira left")
         if m and m.group("who") in c.names:
             other = first.get(c.names[m.group("who")])
             if other is None or c.times:
@@ -1125,7 +1175,7 @@ class AccessArrival(Family):
                                      f"{T.fmt_time(other)}")
         if m:
             return None
-        if len(c.times) != 1 or c.times[0][1] not in ("at", "was"):
+        if len(c.times) != 1 or c.times[0][1] not in ("at", "was") or JOINED_RE.search(c.text):
             return None
         t = c.times[0][0]
         # Without "first" ("I got to the office at 9:55 AM") train always means the first arrival: innocents give
@@ -1320,7 +1370,7 @@ class AccessBooking(Family):
         if c is None or negated(c):
             return None
         for room, slots in facts["rooms"]:
-            rr = rf"(?:the )?{re.escape(room)}\b(?!'s)"
+            rr = rf"(?:the )?{re.escape(room)}(?:{NP_END}|(?= (?:hosted|saw)\b))"
             team = self.team_in(c.text, rr)
             if team is None:
                 continue
@@ -1414,6 +1464,9 @@ _CHECKS = [  # (evidence, sender, message, expected status or None)
     ("The lab was booked from 9:00 AM to 12:00 PM: the biology team until 10:00 AM, the chemistry team until 11:00 AM, "
      "then the physics team. During each booking, only that team was in the room.", "D",
      "The physics team met in the lab at 1:00 PM.", OK),
+    ("The lab was booked from 9:00 AM to 12:00 PM: the biology team until 10:00 AM, the chemistry team until 11:00 AM, "
+     "then the physics team. During each booking, only that team was in the room.", "D",
+     "The physics team was in the lab corridor at 9:30 AM.", None),
     # Sentences with a part we do not model are not read, and anything an unread sentence mentions is left alone.
     ("Nobody could enter the vault between 9:00 AM and 11:00 AM except staff with a pass.", "A",
      "I entered the vault at 10:00 AM.", None),
@@ -1430,6 +1483,39 @@ _CHECKS = [  # (evidence, sender, message, expected status or None)
     ("Nobody could enter the darkroom except by scanning their own active pass. Ana's pass was inactive before 9:00 AM "
      "and active from 9:00 AM onward. Ana borrowed a spare pass at 8:00 AM.", "B",
      "I saw Ana walk into the darkroom at 8:30 AM.", None),
+    # Wordings that look like a match but are about something else, another day, or a report.
+    ("Nobody could enter the vault between 9:00 AM and 11:00 AM.", "A", "I went into the vault corridor at 10:00 AM.",
+     None),
+    ("Nobody could enter the vault between 9:00 AM and 11:00 AM.", "A", "Yesterday I went into the vault at 10:00 AM.",
+     None),
+    ("Nobody could enter the vault between 9:00 AM and 11:00 AM.", "A", "Ben thinks I went into the vault at 10:00 AM.",
+     None),
+    ("Nobody could enter the vault between 9:00 AM and 11:00 AM.", "A",
+     "I left the office at 9:40 AM and went into the vault.", None),
+    ("The lift could run only while the main power was on. The main power was off from 1:00 PM to 2:00 PM.", "B",
+     "I took the lift key to the office at 1:30 PM.", None),
+    ("The lift could run only while the main power was on. The lift lobby lights were off from 1:00 PM to 2:00 PM.",
+     "B", "I rode the lift at 1:30 PM.", None),
+    ("The stage lamps could be lit only while the generator was running. The generator was stopped from 2:00 PM to "
+     "3:00 PM.", "C", "The reading lamps were on at 2:30 PM.", None),
+    ("The coffee machine could make coffee only while the water supply was on. The water supply was shut off from "
+     "11:15 AM to 11:45 AM.", "C", "I made a coffee in the machine room at 11:30 AM.", None),
+    ("Before 10:40 AM, only code 9230 could unlock the back gate.", "A",
+     "I went back and unlocked the storeroom door with code 1311 at 10:00 AM.", None),
+    ("Before 10:40 AM, only code 9230 could unlock the storeroom door.", "A",
+     "I unlocked the storeroom door at 10:00 AM after Ben used code 1311.", None),
+    ("The vault access log accurately records every entry to the vault that day. It shows exactly one entry: Ana at "
+     "2:00 PM.", "A", "I never went into the vault before noon.", None),
+    ("The clinic exit log accurately records every time someone left the clinic that day. It shows exactly one exit: "
+     "Ana at 12:30 PM.", "A", "I didn't leave the clinic between 10:00 AM and 2:00 PM except for lunch.", None),
+    ("The gate log accurately records when each of these four people first arrived at the depot that day: Ana at "
+     "8:00 AM, Ben at 8:10 AM, Cleo at 8:20 AM and Dan at 8:30 AM.", "B",
+     "I was the first person in the depot to make coffee.", None),
+    ("The gate log accurately records when each of these four people first arrived at the depot that day: Ana at "
+     "8:00 AM, Ben at 8:10 AM, Cleo at 8:20 AM and Dan at 8:30 AM.", "B", "I walked into the depot at 2:00 PM.", None),
+    ("The gate log accurately records when each of these four people first arrived at the depot that day: Ana at "
+     "8:00 AM, Ben at 8:10 AM, Cleo at 8:20 AM and Dan at 8:30 AM.", "A",
+     "I first arrived at the depot after Ben left.", None),
 ]
 
 
