@@ -14,6 +14,10 @@ Each family reads one kind of evidence about who could get into, use or be at so
 Chat messages are first rewritten by `claim()` so that the person the message is about becomes "@": "I saw Joel go
 into the vault at 9:40 AM" -> actor Joel, text "@ go into the vault at 9:40 am". Families then match short patterns
 against that text. A family says LIE only when the message clearly refers to its evidence and cannot be true with it.
+
+Evidence patterns must cover a whole sentence (every clause of it); a sentence with any part we do not model is left
+unread. A family then says nothing about a place, object or person that an unread sentence mentions, because that
+sentence might change what the family's own evidence means.
 """
 import re
 from dataclasses import dataclass
@@ -1038,8 +1042,8 @@ class AccessArrival(Family):
     """First arrivals, either logged ('The door log accurately records when each of these four people first arrived
     at the depot that day: Emeka at 9:50 AM, ...') or chained ('Wei first arrived at the workshop at 8:15 AM.
     Exactly 15 minutes after Wei, Sara first arrived.'). Checks 'my first arrival was at T', 'I first got there
-    before/after X', 'I got there at T' (a lie only if T is earlier than the first arrival) and 'I was the first
-    person in'. Only the listed people are known, so being the earliest of them never proves anything."""
+    before/after X', 'I got there at T' (read as the first arrival, as train always does) and 'I was the first person
+    in'. Only the listed people are known, so being the earliest of them never proves anything."""
 
     name = "access_arrival"
     LOG = re.compile(rf"^(?:that day,? )?(?:the )?{NP} accurately records (?:when|the time) each of these "
