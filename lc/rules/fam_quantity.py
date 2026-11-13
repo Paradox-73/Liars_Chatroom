@@ -896,3 +896,47 @@ class Attendance(Family):
             return Verdict(OK, self.name, "somewhere the evidence never mentions")
         return None
 
+
+
+def _selfcheck():
+    """python -m lc.rules.fam_quantity: made-up cases (not train rows) for each family, including abstentions."""
+    from lc.data import Case, Message
+    from .core import Ctx
+
+    speakers = {"A": "Nina", "B": "Ade", "C": "Taro", "D": "Lena"}
+    checks = [
+        (Level, "The tank held 400 litres at 9:00 AM. Exactly 30 litres were removed at 10:00 AM. Nothing else was "
+                "added or removed before 2:00 PM.",
+         [("At 11:00 AM the tank held 370 litres.", OK), ("At 11:00 AM the tank held 400 litres.", LIE),
+          ("At 10:00 AM the tank held 400 litres.", OK), ("I took some from the tank at 11:00 AM.", LIE),
+          ("At 3:00 PM the tank held 10 litres.", None)]),
+        (Level, "The pool held 150 litres at 9:00 AM and drained at a steady 30 litres per hour until 12:00 PM, with "
+                "nothing added.", [("At 10:30 AM there were 105 litres in the pool.", OK),
+                                   ("The pool had 120 litres in it at 10:30 AM.", LIE)]),
+        (Level, "The tank held 400 litres at 9:00 AM, except on weekdays. Nothing else was added or removed before "
+                "2:00 PM.", [("At 11:00 AM the tank held 300 litres.", None)]),
+        (Tickets, "Exactly 50 passes were sold for the museum tour, and exactly 20% of them were sold before noon. "
+                  "Exactly half of the morning passes were sold online.",
+         [("Before noon, 10 passes were sold.", OK), ("After noon, 30 passes were sold.", LIE),
+          ("5 of the morning passes were sold at the box office.", OK), ("At least 10 passes were sold.", None)]),
+        (Pieces, "The rope was exactly 3 metres long. It was cut into three pieces with nothing left over: one long "
+                 "piece twice as long as each of the two short pieces, which were equal.",
+         [("The long piece measured 150 centimetres.", OK), ("My piece measured 100 centimetres.", LIE),
+          ("Together, the two short pieces made 150 centimetres.", OK), ("The rope I got was 75 centimetres.", None)]),
+        (Attendance, "The sign-in register for the 9:00 AM safety briefing lists exactly two people: Nina and Ade. "
+                     "Everyone on the list attended, and everyone who attended is on it.",
+         [("I skipped the 9:00 AM safety briefing.", LIE), ("Ade attended the safety briefing.", OK),
+          ("I skipped the 4:00 PM safety briefing.", None)]),
+    ]
+    for fam_cls, evidence, msgs in checks:
+        case = Case("check", "", speakers, evidence, [Message(i + 1, "A", t) for i, (t, _) in enumerate(msgs)])
+        fam, ctx = fam_cls(), Ctx(case)
+        facts = fam.parse(ctx)
+        for m, (_, want) in zip(case.messages, msgs):
+            v = fam.judge(ctx, facts, m) if facts is not None else None
+            assert (v.status if v else None) == want, (fam.name, m.text, want, v)
+    print("quantity self-check passed")
+
+
+if __name__ == "__main__":
+    _selfcheck()
