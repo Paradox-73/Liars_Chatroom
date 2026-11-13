@@ -536,6 +536,96 @@ class BirthAge(Family):
         return Verdict(OK, self.name, "matches the birth date")
 
 
+# ----------------------------------------------------------------------------------------------- room bookings
+
+TEAM_RE = re.compile(r"\b[Tt]he ([A-Za-z]+) team\b")
+ROOM_RE = re.compile(r"\b(Room \d+|[Tt]he [a-z][a-z ]*?)(?= was booked\b| was reserved\b)"
+                     r"|\bbooking for (Room \d+|the [a-z][a-z ]*?) ran\b")
+ONLY_TEAM_RE = re.compile(r"\bonly (?:that|the booked) team was in the room\b", re.I)
+GAPLESS_RE = re.compile(r"\bwithout gaps\b|\b[Ss]tarting at\b")
+
+
+def booking_blocks(s):
+    """'The studio was booked from 8:20 AM to 11:20 AM: the design team until 9:20 AM, the research team until
+    10:35 AM, then the finance team.' (or '... booked without gaps from 8:20 AM: the design team for 1 hour, then
+    ...') -> (room, [(start, end, team)]); None when the sentence does not fit either shape exactly."""
+    rm = ROOM_RE.search(s)
+    teams = list(TEAM_RE.finditer(s))
+    if not rm or not teams:
+        return None
+    room = rm.group(1) or rm.group(2)
+    head, segs = s[:teams[0].start()], []
+    for k, m in enumerate(teams):
+        seg = s[m.end():teams[k + 1].start() if k + 1 < len(teams) else len(s)]
+        segs.append((m.group(1).lower(), [t for t, _ in T.find_times(seg)], [d for d, _ in T.find_durations(seg)]))
+    times = [t for t, _ in T.find_times(head)]
+    if re.search(r"\b(?:half|quarter)\b", s):
+        return None
+    blocks = []
+    if GAPLESS_RE.search(head) and len(times) == 1 and all(len(d) == 1 and not t for _, t, d in segs):
+        at = times[0]
+        for team, _, (dur,) in segs:
+            blocks.append((at, at + dur, team))
+            at += dur
+    elif len(times) == 2 and all(len(t) == 1 and not d for _, t, d in segs[:-1]) and segs[-1][1:] == ([], []):
+        bounds = [times[0]] + [t[0] for _, t, _ in segs[:-1]] + [times[1]]
+        blocks = [(bounds[k], bounds[k + 1], team) for k, (team, _, _) in enumerate(segs)]
+    else:
+        return None
+    if any(a >= b for a, b, _ in blocks) or blocks[-1][1] >= 24 * 60 or len({b[2] for b in blocks}) != len(blocks):
+        return None
+    return room, blocks
+
+
+@register
+class RoomBooking(Family):
+    """A room booked back to back by teams, with 'During each booking, only that team was in the room.' A claim that
+    a team was in (or had) the room at a time inside another team's booking is a lie; times outside the bookings,
+    other places, and a team inside its own booking are fine. Endpoints belong to both neighbouring bookings."""
+
+    name = "cal_booking"
+
+    def parse(self, ctx):
+        only = [i for i, s in enumerate(ctx.sentences) if ONLY_TEAM_RE.search(s)]
+        found = [(i, booking_blocks(s)) for i, s in enumerate(ctx.sentences)
+                 if re.search(r"\b(?:booked|reserved|booking)\b", s) and i not in only]
+        if len(only) != 1 or len(found) != 1 or found[0][1] is None:
+            return None
+        i, (room, blocks) = found[0]
+        ctx.consume(i)
+        ctx.consume(only[0])
+        if room.lower().startswith("the "):  # 'the main hall'
+            room_re, head = the_noun(room[4:].lower())[2:], room.split()[-1].lower()
+        else:  # 'Room 4'
+            room_re, head = re.escape(room) + r"\b(?!\s*\d)", "room"
+        return {"room": room, "blocks": blocks, "head": head,
+                "in_room": re.compile(rf"\b(?:in|inside|had) {room_re}", re.I),
+                "past": re.compile(rf"^(?:At \S+ [AP]M,? )?I (?:walked|went|passed|cycled|ran) (?:past|by) {room_re}",
+                                   re.I),
+                "elsewhere": re.compile(rf"\b(?:in|inside) the (?!{re.escape(head)}\b)([a-z]+){AFTER_NOUN}", re.I)}
+
+    def judge(self, ctx, f, msg):
+        t = plain_claim(msg.text, names_ok=True)  # the subject is a team, not the speaker
+        if not t:
+            return None
+        teams, times = TEAM_RE.findall(t), T.find_times(t)
+        if not teams and f["past"].search(t):
+            return Verdict(OK, self.name, "walking past the room")
+        if len(teams) != 1 or len(times) != 1 or T.find_dates(t):
+            return None
+        team, tm = teams[0].lower(), times[0][0]
+        if not f["in_room"].search(t):
+            if f["elsewhere"].search(t) and not re.search(rf"\b{re.escape(f['head'])}\b", t, re.I):
+                return Verdict(OK, self.name, "another place")
+            return None
+        holders = {b[2] for b in f["blocks"] if b[0] <= tm <= b[1]}
+        if not holders:
+            return Verdict(OK, self.name, "outside the booked hours")
+        if team in holders:
+            return Verdict(OK, self.name, "the team's own booking")
+        return Verdict(LIE, self.name, f"the {'/'.join(sorted(holders))} team had {f['room']} at {T.fmt_time(tm)}")
+
+
 if __name__ == "__main__":  # self-check of the calendar arithmetic
     assert weekday_span("Wednesday", "Sunday") == {2, 3, 4, 5, 6} and weekday_span("Friday", "Monday") == {4, 5, 6, 0}
     assert weekday(dt.date(2026, 4, 14), (dt.date(2026, 4, 1), 2)) == 1
