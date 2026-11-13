@@ -51,7 +51,8 @@ TAIL_RE = re.compile(
 SAW_IT_RE = re.compile(r",?\s*(?:and )?I (?:saw|watched|noticed|spotted|witnessed) (?:it|this|that|them|him|her)"
                        r"(?: happen)?(?: myself)?\s*$")
 WITNESS_RE = re.compile(r"\bI (?:saw|watched|noticed|spotted|witnessed|observed)(?: that)? (you|" + NAME + r")\b")
-NEG_RE = re.compile(r"\b(?:not|never|n't|didnt|no point|nobody|no one|nowhere|neither|nor|cannot|without)\b|n't\b")
+NEG_RE = re.compile(r"\b(?:not|never|n't|didnt|no point|nobody|no one|nowhere|neither|nor|cannot|without|almost|"
+                    r"nearly|tried to|try to|wanted to|meant to|planned to|hoped to|was going to|were going to)\b|n't\b")
 TIMES_WORD_RE = re.compile(r"(\w+)\W*$")
 
 
@@ -221,8 +222,13 @@ ENTER = (r"(?:entered|enters|enter|entering|went into|go into|goes into|going in
          r"(?:came|come|walked|walk|went|go|got|get|stepped|step|headed|head|slipped|slip) in to)")
 
 
+# Helper words allowed between the actor and the verb ("@ didn't go into", "@ then walked into").
+AUX = (r"(?:(?:did|didn't|did not|do not|don't|never|also|then|just|finally|quickly|eventually|actually|definitely|"
+       r"really|only|briefly|later|once|certainly) ){0,2}")
+
+
 def entry_re(p):
-    return rf"@ (?:\w+ )?{ENTER} {place_re(p)}"
+    return rf"@ {AUX}{ENTER} {place_re(p)}"
 
 
 def entry_any_door_re(p):
@@ -744,3 +750,130 @@ class AccessBadge(Family):
                                                  f"{T.fmt_time(t)}")
             return None
         return None
+
+
+# ---------------------------------------------------------------------------------------------------------------
+NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
+                "ten": 10}
+
+
+def name_times(items):
+    """'Ivan at 8:35 AM, Mohan at 9:25 AM and Gabriel at 1:45 PM' -> [('Ivan', 515), ...], or None if any item
+    is not 'Name at time'."""
+    parts = re.split(r",\s+(?:and\s+)?|\s+and\s+", items.strip().rstrip("."))
+    out = []
+    for p in parts:
+        m = re.fullmatch(rf"({NAME})(?: was logged| arrived| first arrived)? at ({TIME})", p.strip())
+        if not m:
+            return None
+        out.append((m.group(1), tm(m.group(2))))
+    return out
+
+
+@register
+class AccessLog(Family):
+    """'The archive badge log accurately records every entry to the archive that day. It shows exactly two
+    entries: Joel at 9:30 AM and Kiran at 11:45 AM.' The log is complete, so an entry it does not list is a lie,
+    and so is denying a listed entry. Exit logs ('... records every time someone left the clinic that day') work
+    the same way for leaving. Being inside after one's own logged entry is fine; being inside with no entry might
+    still be true (from the day before), so it is left alone."""
+
+    name = "access_log"
+    EVERY = re.compile(rf"\baccurately records every (?:(?P<e>entry to|entry into|time someone entered|time someone "
+                       rf"went into)|(?P<x>exit from|time someone left|time someone exited|departure from)) "
+                       rf"(?:the )?(?P<p>{NP})(?= that day|,|$| and)", re.I)
+    ITEMS = re.compile(rf"\bexactly (?P<k>\w+) (?P<kind>entries|entry|exits|exit)\b[^:]*: (?P<items>.+?)\.?$", re.I)
+    FLAVOUR = re.compile(rf"^(?:the )?(?P<p>{NP}) has (?:a single|one|only one) door$|^(?:someone checks )?(?:the )?"
+                         rf"(?:{NP} )?log is checked every evening$|^every evening (?:the )?{NP} log is checked$|"
+                         rf"^someone checks the {NP} log every evening$", re.I)
+
+    def parse(self, ctx):
+        logs = []  # [kind, place, entries or None]
+        flavour = []
+        for i, s in enumerate(ctx.sentences):
+            body = s.rstrip(".")
+            m = self.EVERY.search(body)
+            if m:
+                logs.append(["exit" if m.group("x") else "entry", clean_np(m.group("p")), None])
+                ctx.consume(i)
+            m = self.ITEMS.search(body)
+            if m and logs and logs[-1][2] is None:
+                kind = "exit" if m.group("kind").lower().startswith("exit") else "entry"
+                items = name_times(m.group("items"))
+                k = NUMBER_WORDS.get(m.group("k").lower()) or (int(m.group("k")) if m.group("k").isdigit() else None)
+                if kind == logs[-1][0] and items is not None and k == len(items):
+                    logs[-1][2] = items
+                    ctx.consume(i)
+            for cl in [c for c in re.split(r",\s+and\s+|;\s+", body)]:
+                if self.FLAVOUR.match(cl):
+                    flavour.append(i)
+        logs = [tuple(lg) for lg in logs if lg[2] is not None]
+        if not logs:
+            return None
+        for i in flavour:
+            ctx.consume(i)
+        return logs
+
+    NEVER = r"(?:at all|that day|all day)"
+
+    def judge(self, ctx, facts, msg):
+        c = claim(ctx, msg)
+        if c is None or c.actor is None:
+            return None
+        for kind, p, items in facts:
+            mine = [t for n, t in items if n == c.actor]
+            pr = place_re(p)
+            if not re.search(pr, c.text):
+                continue
+            if kind == "entry":
+                return self.judge_entry(c, p, pr, mine)
+            return self.judge_exit(c, p, pr, mine)
+        return None
+
+    def judge_entry(self, c, p, pr, mine):
+        went = re.search(entry_re(p), c.text) or re.search(rf"@ {AUX}set foot in {pr}", c.text)
+        if went and negated(c):
+            sp = span(c)
+            if sp:
+                inside = [t for t in mine if sp[0] <= t <= sp[1]]
+                return verdict(self, not inside, f"log entries for {c.actor}: {[T.fmt_time(t) for t in mine]}")
+            if re.search(rf"\b{self.NEVER}$|@ never ", c.text) and not c.times:
+                return verdict(self, not mine, f"log entries for {c.actor}: {[T.fmt_time(t) for t in mine]}")
+            return None
+        if went:
+            if re.search(r"\bbefore noon\b", c.text) and not c.times:
+                return verdict(self, any(t < 720 for t in mine), f"{c.actor} entries {self.fmt(mine)}")
+            if re.search(r"\b(?:after noon|in the afternoon)\b", c.text) and not c.times:
+                return verdict(self, any(t > 720 for t in mine), f"{c.actor} entries {self.fmt(mine)}")
+            t = event_time(c)
+            if t is None:
+                return None
+            return verdict(self, t in mine, f"log shows {c.actor} entering the {p} at {self.fmt(mine)}")
+        if re.search(rf"@ (?:was|were) (?:still )?(?:in|inside) {pr}", c.text) and not negated(c):
+            t = event_time(c)
+            if t is not None and any(e <= t for e in mine):
+                return verdict(self, True, f"{c.actor} entered at {self.fmt(mine)}")
+        return None
+
+    def judge_exit(self, c, p, pr, mine):
+        left = re.search(rf"@ {AUX}(?:leave|left|leaving|exit|exited|exiting|step out of|stepped out of|go out of|"
+                         rf"went out of|walk out of|walked out of) {pr}", c.text) or \
+            re.search(rf"\bdid @ (?:leave|exit|step out of|go out of|walk out of) {pr}", c.text)
+        if not left:
+            return None
+        if negated(c):
+            sp = span(c)
+            if sp:
+                inside = [t for t in mine if sp[0] <= t <= sp[1]]
+                return verdict(self, not inside, f"exit log for {c.actor}: {self.fmt(mine)}")
+            if re.search(rf"\b{self.NEVER}$", c.text) and not c.times:
+                return verdict(self, not mine, f"exit log for {c.actor}: {self.fmt(mine)}")
+            return None
+        t = event_time(c)
+        if t is None:
+            return None
+        return verdict(self, t in mine, f"exit log for {c.actor}: {self.fmt(mine)}")
+
+    @staticmethod
+    def fmt(ts):
+        return ", ".join(T.fmt_time(t) for t in ts) or "none"
