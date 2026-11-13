@@ -31,8 +31,8 @@ CUDA 12.9 (Kaggle's 580 does).
    - a sample that reached its cap while still thinking, continued to 16,384 tokens in total. It goes first only
      while the first samples are on schedule, and holds at most half of the slots while they wait;
    - the first sample of the next case, seed 0, longest prompt first (a long prompt means long reasoning, so slow
-     cases start early). Its cap is 4,096 tokens, or an even share of the tokens left before the stop time when
-     those no longer cover every waiting case (at least 768);
+     cases start early). Its cap is 4,096 tokens; in the last 20 minutes before the stop time it is an even share
+     of the tokens left when those no longer cover every waiting case (at least 768);
    - an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin first, up to 5 samples a
      case, none once two clean samples agree.
 
@@ -98,7 +98,7 @@ total parameters on its official page.
 
 | Check | Result |
 |---|---|
-| Kit `selftest.py --n 200`, Kaggle, two T4 cards | KAGGLE_SELFTEST |
+| Kit `selftest.py --n 200`, Kaggle, two T4 cards | OK, accuracy 1.000, 5.4 min (estimate for 450: 12 min); 12 cases reached the model |
 | 450 test cases the rules leave open (the closest stand-in for new families), Kaggle, two T4 cards, cold start | KAGGLE_450 |
 | 40 of those cases on one T4 (15-minute budget) | KAGGLE_ONE_T4 |
 | The 300 new-family cases, Kaggle, two T4 cards | 0.957 (table above) |

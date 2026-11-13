@@ -6,8 +6,9 @@ kaggle/kjudge.py) on the cases in --cases, and appends one JSON line per finishe
 the environment, which predict.py fills from its MODEL_ENV table. A free slot takes, in this order:
   1. a continuation: a first sample that reached its cap while still thinking goes on to LC_CONT_TOKENS in total. It
      goes first only while the first samples are on schedule, and holds at most half the slots while they wait.
-  2. the first sample of the next case, seed 0, longest prompt first. Its cap is LC_MAIN_TOKENS, or an even share of
-     the tokens left before --stop-new when those no longer cover every waiting case (at least 768).
+  2. the first sample of the next case, seed 0, longest prompt first. Its cap is LC_MAIN_TOKENS; in the last 20
+     minutes before --stop-new it is an even share of the tokens left when those no longer cover every waiting case
+     (at least 768).
   3. an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin over the speakers the rules
      did not clear, at most 5 samples a case, none once the margin reaches 1.5.
 A sample with no "ANSWER:" line gets a forced answer: "ANSWER:" is appended and one more token is read.
@@ -140,7 +141,8 @@ def main():
     flight = {}  # request id -> (kind, case id, k, text so far, tokens so far, kind of the sample it answers for)
     queued_cont, quick, dead = deque(), deque(), set()  # dead: cases whose request could not start
     counts = dict.fromkeys(("main", "cont", "extra", "force", "nothink", "main_capped", "cont_finished", "not_started"), 0)
-    tokens_out = n_req = seq_tokens = seq_n = 0
+    tokens_out = n_req = seq_tokens = seq_n = decoded = 0  # decoded: tokens generated, counted one per thinking request per step
+    share_log = [0.0]  # when share() last logged a reduced cap
 
     def record(cid, k, src, letter, p, forced, tokens):
         r = {"id": cid, "k": k, "stage": int(src == "cont"), "kind": src, "pred": letter, "p_mean": p, "forced": [forced],
@@ -197,14 +199,18 @@ def main():
         return best and ("extra", best[1], best[2])
 
     def share():
-        """The first-sample cap: MAIN_TOKENS, or less once the tokens left before the stop time do not cover every case
-        still waiting. 1,024 tokens of thought and a forced answer beat no thought at all (67% against 40% for
-        Qwen3-8B on our new-family cases)."""
-        if seq_n < 20:
-            return MAIN_TOKENS
+        """The first-sample cap: MAIN_TOKENS, or in the last 20 minutes before the stop time an even share of the
+        tokens left when those no longer cover every waiting case (at least 768). 1,024 tokens of thought and a forced
+        answer beat no thought at all (67% against 40% for Qwen3-8B on our new-family cases)."""
         now = time.time()
+        if a.stop_new - now > 20 * 60 or now - t_ready < 60:
+            return MAIN_TOKENS
         left = len(main_q) + 1 + sum(v[0] == "main" for v in flight.values())
-        return max(768, min(MAIN_TOKENS, int(tokens_out / (now - t_ready) * (a.stop_new - now) / left)))
+        cap = max(768, min(MAIN_TOKENS, int(decoded / (now - t_ready) * (a.stop_new - now) / left)))
+        if cap < MAIN_TOKENS and now - share_log[0] > 60:
+            log(f"first-sample cap {cap} tokens: {left} cases still to start or finish, {(a.stop_new - now) / 60:.1f} min left")
+            share_log[0] = now
+        return cap
 
     def on_schedule(now):
         done = sum(1 for i in order if 0 in samples.get(i, {}))
@@ -270,6 +276,7 @@ def main():
             start(*quick.popleft())
         if not flight:
             break
+        decoded += running(True)
         for o in eng.step():
             if not o.finished:
                 continue
