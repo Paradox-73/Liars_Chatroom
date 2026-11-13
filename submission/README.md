@@ -31,8 +31,9 @@ CUDA 12.9 (Kaggle's 580 does).
    - a sample that reached its cap while still thinking, continued to 16,384 tokens in total. It goes first only
      while the first samples are on schedule, and holds at most half of the slots while they wait;
    - the first sample of the next case, seed 0, longest prompt first (a long prompt means long reasoning, so slow
-     cases start early). Its cap is 4,096 tokens; in the last 20 minutes before the stop time it is an even share
-     of the tokens left when those no longer cover every waiting case (at least 768);
+     cases start early), at most 4,096 tokens. Cutting later cases shorter to fit the time costs accuracy: on our
+     300 new-family cases a cap that shared the remaining tokens out evenly scored 0.930 against 0.957 without it,
+     because the cases still waiting are the short ones and most of them finish in time anyway;
    - an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin first, up to 5 samples a
      case, none once two clean samples agree.
 
@@ -49,6 +50,10 @@ The clock starts with `predict.py`. A file of 450 to 600 cases gets 80 minutes; 
 (`test.csv`: about 190 minutes). No new model work starts in the last 5 minutes. Then optional samples stop, and every
 case without a finished sample gets a one-token answer without thinking; 90 seconds before the end, unfinished first
 samples stop too. At the end the model process is stopped and the final file is written. `--minutes` overrides it.
+
+Nothing cuts reasoning short to make room for waiting cases. On two T4 cards every case reached a thinking answer in
+time (our 300 new-family cases and 450 test cases). On a slower machine, a case not reached by the stop time gets the
+one-token answer, which is right far less often (40% for Qwen3-8B on the new-family cases, against 95% with thinking).
 
 ### Failure handling
 
@@ -99,8 +104,8 @@ total parameters on its official page.
 | Check | Result |
 |---|---|
 | Kit `selftest.py --n 200`, Kaggle, two T4 cards | OK, accuracy 1.000, 5.4 min (estimate for 450: 12 min); 12 cases reached the model |
-| 450 test cases the rules leave open (the closest stand-in for new families), Kaggle, two T4 cards, cold start | KAGGLE_450 |
-| 40 of those cases on one T4 (15-minute budget) | KAGGLE_ONE_T4 |
+| 450 test cases the rules leave open (the closest stand-in for new families), Kaggle, two T4 cards, cold start | 75.0 min including model load (engine ready at 2.4 min), exit 0. All 449 cases the model judged got a thinking answer: 21 first answers hit a cap (20 at 4,096 tokens, 1 at the tail cap), 14 of those were continued and finished, 7 stayed forced; none needed the answer without thinking. Mean 1,532 output tokens per case |
+| 40 of those cases on one T4 (15-minute budget) | 10.8 min, exit 0. Cache room for 6 cases in flight; the 15-minute budget gave 30 of 40 cases a thinking answer (24 cut at 768 tokens) and 10 the answer without thinking |
 | The 300 new-family cases, Kaggle, two T4 cards | 0.957 (table above) |
 | Kit `selftest.py --n 50` on a laptop without a GPU | OK, 0.980 (rules and fallbacks only) |
 | GPU server (A6000, Qwen3-8B as a stand-in): restarts after a failed engine, stop-time answers, continuations | all paths ran and the final file was valid each time |
