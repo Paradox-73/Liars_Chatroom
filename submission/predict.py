@@ -191,8 +191,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--input", required=True)
     ap.add_argument("--output", required=True)
-    ap.add_argument("--model", default=os.environ.get("LC_MODEL_DIR", os.path.join(HERE, "models", "qwen3-14b-awq")),
-                    help="local model folder (default: models/qwen3-14b-awq, where setup.sh puts it, or $LC_MODEL_DIR)")
+    ap.add_argument("--model", default=os.environ.get("LC_MODEL_DIR", os.path.join(HERE, "models", "judge")),
+                    help="local model folder (default: models/judge, where setup.sh puts it, or $LC_MODEL_DIR)")
     ap.add_argument("--minutes", type=float, help="time budget; default 80 for 450 to 600 cases, else 80 x cases / 450")
     ap.add_argument("--no-llm", action="store_true", help="rules and fallbacks only")
     ap.add_argument("--workdir", help="folder for the model's answers (default: a new temporary folder)")
