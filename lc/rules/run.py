@@ -11,6 +11,7 @@ import collections
 from lc.data import load
 from lc.rules import REGISTRY, solve
 from lc.rules.core import LIE
+from lc.combine import open_speakers
 
 
 def show(case, res):
@@ -41,12 +42,14 @@ def main():
     fam_active = collections.Counter()
     n = answered = correct = confident = conf_correct = 0
     wrong, missed, errs = [], [], 0
+    liar_cleared = 0
     for c in cases:
         r = solve(c)
         if a.family and not any(a.family in f for f in r.families):
             continue
         n += 1
         errs += bool(r.errors)
+        liar_cleared += c.label not in open_speakers(c, r)
         for f in r.families:
             fam_active[f] += 1
         for num, vs in r.verdicts.items():
@@ -68,6 +71,7 @@ def main():
     print(f"cases {n}  answered {answered} ({answered / max(n, 1):.1%})  correct {correct} "
           f"(precision {correct / max(answered, 1):.2%})  coverage-accuracy {correct / max(n, 1):.1%}")
     print(f"confident {confident}, of which correct {conf_correct}; cases with family exceptions {errs}")
+    print(f"cases where every claim of the true liar was judged consistent (wrong OK verdicts, must be 0): {liar_cleared}")
     print("family: active cases / LIE verdicts on the liar / LIE verdicts on an innocent speaker (must be 0)")
     for f in sorted(fam_active, key=lambda k: -fam_active[k]):
         print(f"  {f:28s} {fam_active[f]:5d} {fam_true[f]:5d} {fam_false[f]:5d}")

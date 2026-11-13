@@ -7,7 +7,7 @@ to be a lie; everything else is left to the language-model judge.
 """
 from dataclasses import dataclass, field
 
-from .text import find_dates, is_filler, split_sentences
+from .text import find_dates, find_times, is_filler, split_sentences
 
 LIE = "lie"
 OK = "ok"
@@ -86,9 +86,21 @@ class Result:
         return self.pred is not None and not self.unknown_claims
 
 
+def overnight(case):
+    """True when the case uses midnight or a clock time before 5:00 AM. The families compare clock minutes within
+    one day, so a window crossing midnight would be misread; train has no such case, so the rules step aside."""
+    texts = [case.evidence] + [m.text for m in case.messages]
+    return any(t < 5 * 60 for s in texts for t, _ in find_times(s))
+
+
 def solve(case, registry=None):
     ctx = Ctx(case)
     res = Result(case.id)
+    if overnight(case):
+        res.errors.append(("core", "overnight times: rules abstain"))
+        res.unconsumed = ctx.unconsumed()
+        res.unknown_claims = [m.num for m in case.messages if not is_filler(m.text)]
+        return res
     active = []
     for fam in registry or REGISTRY:
         try:
