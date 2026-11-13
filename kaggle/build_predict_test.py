@@ -10,8 +10,10 @@ python kaggle/build_predict_test.py kaggle/predict-full --full --zip ClaudeLaggy
 """
 import argparse
 import base64
+import hashlib
 import json
 import os
+import subprocess
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -30,6 +32,7 @@ def sh(cmd, check=True):
     return subprocess.run(cmd, shell=True, check=check).returncode
 
 
+log(f"code: commit {COMMIT}, zip md5 {ZIP_MD5}")
 zipfile.ZipFile(io.BytesIO(base64.b64decode(ZIP))).extractall(SUB)
 with open(f"{SUB}/selftest.py", "w") as f:
     f.write(SELFTEST)
@@ -108,7 +111,14 @@ def main():
         zip_b64 = base64.b64encode(f.read()).decode()
     with open(a.selftest, encoding="utf-8") as f:
         selftest = f.read()
-    run_py = f"ZIP = {zip_b64!r}\nSELFTEST = {selftest!r}\nIDS = {ids!r}\nFULL = {a.full!r}\n{DRIVER}"
+    # pin the kernel to committed code: the zip must come from a clean checkout of submission/ and lc/
+    dirty = subprocess.run(["git", "-C", HERE, "status", "--porcelain", "--", "../submission", "../lc"], capture_output=True,
+                           text=True).stdout
+    assert not dirty, f"uncommitted changes in the code that goes into the zip:\n{dirty}"
+    commit = subprocess.run(["git", "-C", HERE, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    zip_md5 = hashlib.md5(base64.b64decode(zip_b64)).hexdigest()
+    run_py = (f'"""Built by kaggle/build_predict_test.py from commit {commit}."""\nCOMMIT = {commit!r}\nZIP_MD5 = {zip_md5!r}\n'
+              f"ZIP = {zip_b64!r}\nSELFTEST = {selftest!r}\nIDS = {ids!r}\nFULL = {a.full!r}\n{DRIVER}")
     compile(run_py, "run.py", "exec")
     slug = os.path.basename(os.path.normpath(a.kernel))
     meta = {"id": f"{a.owner}/{slug}", "title": slug, "code_file": "run.py", "language": "python", "kernel_type": "script",
