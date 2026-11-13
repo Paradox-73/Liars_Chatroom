@@ -180,18 +180,17 @@ def run_model(a, cases, cands, write, stop_new, hard):
         w.update(child=subprocess.Popen(cmd, env=dict(w["env"], **attempt_env), start_new_session=os.name == "posix"),
                  started=time.time())
 
-    recs, last_write = {}, time.time()
+    recs, last_write, unwritten = {}, time.time(), False
     try:
         for w in workers:
             launch(w)
         while any(w["child"] for w in workers):
             time.sleep(5)
-            new = False
             for w in workers:
                 if not w["child"]:
                     continue
                 pos = merge(w["answers"], w["pos"], recs)
-                new, w["pos"] = new or pos != w["pos"], pos
+                unwritten, w["pos"] = unwritten or pos != w["pos"], pos
                 now = time.time()
                 beat = os.path.getmtime(w["heartbeat"]) if os.path.exists(w["heartbeat"]) else None
                 why = ("time is up" if now > hard + 60 else
@@ -202,7 +201,8 @@ def run_model(a, cases, cands, write, stop_new, hard):
                 if why:
                     log(f"stopping model process {w['n']}: {why}")
                 stop(w["child"])
-                w["pos"] = merge(w["answers"], w["pos"], recs)
+                pos = merge(w["answers"], w["pos"], recs)
+                unwritten, w["pos"] = unwritten or pos != w["pos"], pos
                 rc, w["child"] = w["child"].returncode, None
                 log(f"model process {w['n']} exited with code {rc}; {len(recs)} answers so far")
                 if rc == 0 or rc in NO_RETRY or time.time() > stop_new - 10 * 60:
@@ -213,9 +213,9 @@ def run_model(a, cases, cands, write, stop_new, hard):
                     launch(w)
                 else:
                     log(f"MODEL PROCESS {w['n']} FAILED on every attempt")
-            if new and time.time() - last_write > 30:
+            if unwritten and time.time() - last_write > 30:
                 write(recs)
-                last_write = time.time()
+                last_write, unwritten = time.time(), False
     finally:
         for w in workers:
             if w["child"] is not None and w["child"].poll() is None:
