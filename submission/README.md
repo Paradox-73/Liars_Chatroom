@@ -31,8 +31,9 @@ CUDA 12.9 (Kaggle's 580 does).
    - a sample that reached its cap while still thinking, continued to 16,384 tokens in total. It goes first only
      while the first samples are on schedule, and holds at most half of the slots while they wait;
    - the first sample of the next case, seed 0, longest prompt first (a long prompt means long reasoning, so slow
-     cases start early). Its cap is 4,096 tokens; in the last 20 minutes before the stop time it is an even share
-     of the tokens left when those no longer cover every waiting case (at least 768);
+     cases start early), at most 4,096 tokens. Cutting later cases shorter to fit the time costs accuracy: on our
+     300 new-family cases a cap that shared the remaining tokens out evenly scored 0.930 against 0.957 without it,
+     because the cases still waiting are the short ones and most of them finish in time anyway;
    - an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin first, up to 5 samples a
      case, none once two clean samples agree.
 
