@@ -24,6 +24,8 @@ KERNELS = {
     "bake-qwen35-4b-awq": ("bhavyajain1098", "cyankiwi/Qwen3.5-4B-AWQ-4bit", "d3e78b50c727b1f34802f440ca84b25781625352",
                            {"LC_SLOTS": "48", "LC_PRESENCE_PENALTY": "1.5"}),
     "bake-qwen3-14b-awq": ("bhavyajain1098", "Qwen/Qwen3-14B-AWQ", "31c69efc29464b6bb0aee1398b5a7b50a99340c3", {}),
+    "bake-qwen3-14b-awq-v2": ("paradox73", "Qwen/Qwen3-14B-AWQ", "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+                              {"LC_TOKEN_LOGPROBS": "0", "LC_MAIN_TOKENS": "4096", "LC_ENGINE_STATS": "1"}),
     "bake-qwen35-9b-fp16": ("aaryanantala", "Qwen/Qwen3.5-9B", "c202236235762e1c871ad0ccb60c8ee5ba337b9a",
                             {"LC_SLOTS": "24", "LC_PRESENCE_PENALTY": "1.5"}),
     "bake-qwen35-4b-fp16": ("aaryanantala", "Qwen/Qwen3.5-4B", "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
