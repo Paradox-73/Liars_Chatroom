@@ -943,6 +943,10 @@ def _selfcheck():
                                    ("The pool had 120 litres in it at 10:30 AM.", LIE)]),
         (Level, "The tank held 400 litres at 9:00 AM, except on weekdays. Nothing else was added or removed before "
                 "2:00 PM.", [("At 11:00 AM the tank held 300 litres.", None)]),
+        (Level, "The sand pile held exactly 150 bags at 12:20 PM. Nothing else was added or removed before 2:10 PM.",
+         [("At 1:00 PM there were 150 bags in the sand pile.", OK), ("At 1:00 PM there were 5 more bags in the pile.", None),
+          ("At 1:00 PM there were twenty five bags in the pile.", None),
+          ("At 1:00 PM there were 50 bags in the paddling sand pile.", None)]),
         (Tickets, "Exactly 50 passes were sold for the museum tour, and exactly 20% of them were sold before noon. "
                   "Exactly half of the morning passes were sold online.",
          [("Before noon, 10 passes were sold.", OK), ("After noon, 30 passes were sold.", LIE),
@@ -954,7 +958,8 @@ def _selfcheck():
         (Attendance, "The sign-in register for the 9:00 AM safety briefing lists exactly two people: Nina and Ade. "
                      "Everyone on the list attended, and everyone who attended is on it.",
          [("I skipped the 9:00 AM safety briefing.", LIE), ("Ade attended the safety briefing.", OK),
-          ("I skipped the 4:00 PM safety briefing.", None)]),
+          ("I skipped the 4:00 PM safety briefing.", None),
+          ("During the safety briefing I sat near the window in the office.", None)]),
     ]
     for fam_cls, evidence, msgs in checks:
         case = Case("check", "", speakers, evidence, [Message(i + 1, "A", t) for i, (t, _) in enumerate(msgs)])
