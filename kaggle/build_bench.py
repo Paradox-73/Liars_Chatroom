@@ -46,7 +46,10 @@ def log(msg):
 
 def sh(cmd, check=True):
     log(f"$ {cmd}")
-    return subprocess.run(cmd, shell=True, check=check, executable="/bin/bash").returncode
+    rc = subprocess.run(cmd, shell=True, check=check, executable="/bin/bash").returncode
+    # bench.py leaves with os._exit, so its engine processes would keep the cards' memory for the next run
+    subprocess.run("pkill -9 -f /tmp/sub/.venv/bin/python; sleep 5", shell=True)
+    return rc
 
 
 zipfile.ZipFile(io.BytesIO(base64.b64decode(ZIP))).extractall("/tmp/sub")
