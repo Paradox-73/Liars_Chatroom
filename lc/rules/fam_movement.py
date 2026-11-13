@@ -210,9 +210,9 @@ TM_ = r"(?:\d{1,2}:\d{2} (?:am|pm)|noon|midday|midnight)"
 DUR_ = r"(?:(?:\d+|an?|one|two|three|four|five|six) hours?(?: (?:and )?\d+ minutes?)?|\d+ minutes?)"
 NUM_ = r"\d+(?:\.\d+)?"
 COLOUR = r"(?:grey|gray|blue|red|green|white|black|yellow|brown|orange|silver|wooden|metal)"
-DECOR_PRED = (rf"(?:has an? {COLOUR} (?:door|label|lid)|is (?:painted )?{COLOUR}|(?:is|sits|stands) on the [a-z]+ floor|"
-              rf"seats [a-z]+ people|has seating for [a-z]+ people|(?:stands|sits) (?:by|beside|next to|near) the window|"
-              rf"was labelled in {COLOUR} ink|was kept on a shelf)")
+DECOR_PRED = (rf"(?:has an? {COLOUR} (?:door|label|lid)|is (?:painted )?{COLOUR}|(?:is|sits|stands) on the [a-z]+ "
+              rf"floor|seats [a-z]+ people|has seating for [a-z]+ people|(?:stands|sits) (?:by|beside|next to|near) "
+              rf"the window|was labelled in {COLOUR} ink|was kept on a shelf)")
 DECOR_SENTS = [re.compile(p) for p in (  # decoration that changes no time or place: 'The red key has a white label.'
     rf"^the (?P<d>{NP}) {DECOR_PRED}\.?$",
     rf"^an? {COLOUR} label is (?:stuck|fixed|attached) (?:on|to) the (?P<d>{NP})\.?$",
@@ -317,7 +317,8 @@ LEAD = (r"(?:(?:and )?then |and )?(?:for |on |over |covering |first covering |it
 LEG = rf"{LEAD}{NUM_} km(?: first)?,? {MAXP} {SPD}"
 LEGS = rf"{LEG}(?:,? {LEG})+"
 ONE_SPEED = rf"(?:its speed|its top speed|it) never went (?:above|over|faster than) {SPD}"
-ROUTE_TO = rf"{GO} (?:straight|directly) (?:along the {NUM_} km route )?to the (?P<dest>{NP})(?: along the {NUM_} km route)?"
+ROUTE_TO = (rf"{GO} (?:straight|directly) (?:along the {NUM_} km route )?to the (?P<dest>{NP})"
+            rf"(?: along the {NUM_} km route)?")
 ROUTE_TAIL = rf"(?:(?:,? and|;|,) {ONE_SPEED}|,? never going (?:above|over|faster than) {SPD}|(?::|,|, and) {LEGS})"
 ROUTE_SENT = [
     re.compile(rf"^(?:at (?P<ta>{TM_}),? )?(?:the|a|an) (?P<veh>{NP}) {DEPART} the (?P<orig>{NP})(?: at (?P<tb>{TM_}))?"
@@ -422,8 +423,8 @@ class MoveRoute(Family):
 # ---------------------------------------------------------------- move_away
 
 AWAY_HEAD = rf"(?:at (?P<ta>{TM_}),? )?(?:the|a|an) (?P<veh>{NP}) {DEPART} the (?P<stop>{NP})(?: at (?P<tb>{TM_}))?"
-AWAY_RET = (rf"(?:,? and (?:it )?|, it )(?:(?:did not|didn't) (?:return|come back|get back)(?: to the (?P<rstop>{NP}))? "
-            rf"(?:before|until) (?P<t1>{TM_})|(?:was|stayed) away until (?P<t1b>{TM_}))")
+AWAY_RET = (rf"(?:,? and (?:it )?|, it )(?:(?:did not|didn't) (?:return|come back|get back)"
+            rf"(?: to the (?P<rstop>{NP}))? (?:before|until) (?P<t1>{TM_})|(?:was|stayed) away until (?P<t1b>{TM_}))")
 AWAY_ROUND = (rf",? and its round trip took at least (?P<dur>{DUR_}),? so it could not be back at the (?P<stop2>{NP}) "
               rf"before then")
 AWAY_NOBODY = (rf",? and nobody could (?:get on|board) the (?P<nveh>{NP}) at the (?P<nstop>{NP}) unless (?:the "
@@ -431,8 +432,8 @@ AWAY_NOBODY = (rf",? and nobody could (?:get on|board) the (?P<nveh>{NP}) at the
 AWAY_SENT = re.compile(rf"^{AWAY_HEAD}(?:{AWAY_RET}|{AWAY_ROUND})?(?:{AWAY_NOBODY})?\.?$")
 ROUND_SENT = re.compile(rf"^(?:its round trip|the round trip of the (?P<veh>{NP})) took at least (?P<dur>{DUR_}),? so "
                         rf"it could not be back at the (?P<stop>{NP}) before then\.?$")
-RET_SENT = re.compile(rf"^it (?:did not|didn't) (?:return|come back|get back)(?: to the (?P<stop>{NP}))? (?:before|until) "
-                      rf"(?P<t1>{TM_})\.?$")
+RET_SENT = re.compile(rf"^it (?:did not|didn't) (?:return|come back|get back)(?: to the (?P<stop>{NP}))? "
+                      rf"(?:before|until) (?P<t1>{TM_})\.?$")
 NOBODY_SENT = re.compile(rf"^nobody could (?:get on|board) the (?P<veh>{NP}) at the (?P<stop>{NP}) unless (?:the "
                          rf"(?P<veh2>{NP})|it) was at the (?P<stop2>{NP})\.?$")
 BOARD = (r"(?:got on|got onto|got on board|got aboard|got into|boarded|climbed onto|climbed on|climbed aboard|"
@@ -978,9 +979,9 @@ class MoveChain(Family):
             out.append({
                 "obj": obj, "segs": segs, "exclusive": exclusive, "nobody_else": window is not None,
                 "names": {h for h, _, _ in segs},
-                "self": re.compile(rf"i (?:had|held|was holding|was carrying|had hold of|was minding|kept|was keeping"
-                                   rf"|was looking after) the {o}(?: with me| in my hands?| on me)?|the {o} was (?:with "
-                                   rf"me|in my hands?|on me)"),
+                "self": re.compile(rf"i (?:had|held|was holding|was carrying|had hold of|was minding|kept|was "
+                                   rf"keeping|was looking after) the {o}(?: with me| in my hands?| on me)?|the {o} "
+                                   rf"was (?:with me|in my hands?|on me)"),
                 "other": re.compile(rf"i {SAW} ({NAME}) (?:holding|hold|with|carrying|carry|keeping) the {o}|({NAME}) "
                                     rf"(?:had|held|was holding|was carrying) the {o}{SEEN_TAIL}"),
                 "give": re.compile(rf"i (?:gave|handed|passed) (?:the {o} (?:over )?to ({NAME})|({NAME}) the {o})"),
@@ -1178,11 +1179,13 @@ if __name__ == "__main__":  # self-check: python -m lc.rules.fam_movement
     assert claim("It was 3:10 PM when the tractor got to the far field.") == (910, "the tractor got to the far field")
     assert claim("It was at 1:00 PM that I took the exam paper out of the sealed envelope.")[1] == \
         "i took the exam paper out of the sealed envelope"
-    assert claim("I reached the shop before 9:00 AM.") is None and claim("Did the van reach the farm at 2:50 PM?") is None
-    assert route_legs("first 12 km where it never went above 36 km/h, then 30 km where it never went above 60 km/h") == 50
+    assert claim("I reached the shop before 9:00 AM.") is None
+    assert claim("Did the van reach the farm at 2:50 PM?") is None
+    legs = "first 12 km where it never went above 36 km/h, then 30 km where it never went above 60 km/h"
+    assert route_legs(legs) == 50 and reads("it first covered " + legs[6:] + ".")
     assert route_legs("along the 42 km route: first 12 km at 36 km/h, then 30 km at 60 km/h") == 50
-    assert parse_chain("aiko held it from 10:50 am to 11:50 am, then handed it to sofia. sofia held it until 1:20 pm") == [
-        ("aiko", 650, 710), ("sofia", 710, 800)]
+    assert parse_chain("aiko held it from 10:50 am to 11:50 am, then handed it to sofia. sofia held it until "
+                       "1:20 pm") == [("aiko", 650, 710), ("sofia", 710, 800)]
     assert parse_chain("from 10:45 am fatima held it for exactly 1 hour, then handed it to isla. isla kept it for "
                        "exactly 1 hour, then handed it to sami, who kept it for exactly 2 hours") == [
         ("fatima", 645, 705), ("isla", 705, 765), ("sami", 765, 885)]
