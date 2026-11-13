@@ -388,19 +388,27 @@ class AccessSupply(Family):
                    rf"{WIN}$", re.I),
         re.compile(rf"^{WIN},? (?:the )?(?P<b>{NP}) (?:supplied|provided|delivered|gave) no \w+$", re.I),
     ]
-    NO_ROUTE = re.compile(r"^there was no other remote route$", re.I)
+    NO_ROUTE = re.compile(rf"^there was no other remote route(?: to (?:the )?(?P<s>{NP}))?$", re.I)
 
     def parse(self, ctx):
         deps, outs, remote = [], [], []
         pats = [self.NO_ROUTE] + self.DEP + self.REMOTE + self.OFF
         kinds = ["route"] + ["dep"] * len(self.DEP) + ["remote"] * len(self.REMOTE) + ["off"] * len(self.OFF)
+        server = None  # "There was no other remote route to the archive server, and every remote sign-in to it ..."
         for i, s in enumerate(ctx.sentences):
             found = match_pieces(s, pats)
             for n, m in found:
-                if kinds[n] == "dep":
+                if kinds[n] == "route" and m.group("s"):
+                    server = clean_np(m.group("s"))
+                elif kinds[n] == "dep":
                     deps.append((clean_np(m.group("a")), m.group("v").lower(), clean_np(m.group("b"))))
                 elif kinds[n] == "remote":
-                    remote.append((clean_np(m.group("s")), clean_np(m.group("b"))))
+                    s_name = clean_np(m.group("s"))
+                    if s_name == "it":
+                        if server is None:
+                            continue
+                        s_name = server
+                    remote.append((s_name, clean_np(m.group("b"))))
                 elif kinds[n] == "off":
                     a, b = m.group("t1") or m.group("t3"), m.group("t2") or m.group("t4")
                     outs.append((clean_np(m.group("b")), tm(a), tm(b), m.group("t3") is not None))
@@ -532,19 +540,20 @@ class AccessCode(Family):
         for i, s in enumerate(ctx.sentences):
             used = False
             for n, m in match_pieces(s, pats):
-                if n < len(self.BEFORE):
-                    last_door = clean_np(m.group("d"))
-                    t = tm(m.group("t"))
-                    rules.setdefault(last_door, []).append((0, t, m.group("c"), m.group("r").lower() == "until"))
-                    used = True
-                elif n < len(self.BEFORE) + len(self.AFTER):
-                    d = clean_np(m.group("d")) if m.group("d") else last_door
-                    if d is None:
-                        continue
-                    rules.setdefault(d, []).append((tm(m.group("t")), DAY_END, m.group("c"), False))
-                    used = True
-                else:
+                if n >= len(self.BEFORE) + len(self.AFTER):
                     flavour.append(i)
+                    continue
+                d = clean_np(m.group("d")) if m.group("d") else "it"
+                d = last_door if d == "it" else d  # "... only code 8932 could unlock it."
+                if d is None:
+                    continue
+                last_door = d
+                if n < len(self.BEFORE):
+                    rule = (0, tm(m.group("t")), m.group("c"), m.group("r").lower() == "until")
+                else:
+                    rule = (tm(m.group("t")), DAY_END, m.group("c"), False)
+                rules.setdefault(d, []).append(rule)
+                used = True
             if used:
                 ctx.consume(i)
         if not rules:
