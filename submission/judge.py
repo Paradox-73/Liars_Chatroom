@@ -86,6 +86,8 @@ def main():
     think_slots = int(os.environ.get("LC_SLOTS", think_slots))  # per model: fewer when the weights leave little room
     max_len = int(os.environ.get("LC_MAX_LEN", max_len))  # per model: a small one has room for continuations on one card
     presence = float(os.environ.get("LC_PRESENCE_PENALTY", 0))  # per model: the Qwen3.5 models use 1.5
+    # letter probabilities at the answer need log-probabilities on every sampled token; without them the letter alone votes
+    token_logprobs = NUM_LOGPROBS if os.environ.get("LC_TOKEN_LOGPROBS", "1") == "1" else None
     util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered only to test on a shared card
     with open(os.path.join(a.model, "config.json")) as f:
         multimodal = "vision_config" in json.load(f)  # Qwen3.5 checkpoints carry a vision tower; it is not loaded
@@ -159,7 +161,7 @@ def main():
                     raise ValueError(f"only {room} tokens of room")
                 eng.add_request(rid, prompt(cid) + text, SamplingParams(
                     temperature=0.6, top_p=0.95, top_k=20, presence_penalty=presence, seed=k, max_tokens=cap,
-                    logprobs=NUM_LOGPROBS, output_kind=final))
+                    logprobs=token_logprobs, output_kind=final))
             else:  # text is the whole prompt of a one-token answer
                 eng.add_request(rid, text, one_token)
         except Exception as e:  # one bad case must not stop the others

@@ -50,6 +50,8 @@ def read_answer(out):
     found = ANSWER_RE.findall(out.text.rsplit("</think>", 1)[1])
     if not found:
         return None, None
+    if not out.logprobs:  # sampled without log-probabilities: the letter alone
+        return found[-1], None
     toks = [lp[t].decoded_token or "" for t, lp in zip(out.token_ids, out.logprobs)]
     for i in range(len(toks) - 1, -1, -1):
         if toks[i].strip(" *") == found[-1] and re.search(r"ANSWER\W{0,6}$", "".join(toks[max(0, i - 6):i])):
