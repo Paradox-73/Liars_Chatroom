@@ -99,8 +99,8 @@ total parameters on its official page.
 | Check | Result |
 |---|---|
 | Kit `selftest.py --n 200`, Kaggle, two T4 cards | OK, accuracy 1.000, 5.4 min (estimate for 450: 12 min); 12 cases reached the model |
-| 450 test cases the rules leave open (the closest stand-in for new families), Kaggle, two T4 cards, cold start | KAGGLE_450 |
-| 40 of those cases on one T4 (15-minute budget) | KAGGLE_ONE_T4 |
+| 450 test cases the rules leave open (the closest stand-in for new families), Kaggle, two T4 cards, cold start | 75.0 min including model load (engine ready at 2.4 min), exit 0. All 449 cases the model judged got a thinking answer: 21 first answers hit a cap (20 at 4,096 tokens, 1 at the tail cap), 14 of those were continued and finished, 7 stayed forced; none needed the answer without thinking. Mean 1,532 output tokens per case |
+| 40 of those cases on one T4 (15-minute budget) | 10.8 min, exit 0. Cache room for 6 cases in flight; the 15-minute budget gave 30 of 40 cases a thinking answer (24 cut at 768 tokens) and 10 the answer without thinking |
 | The 300 new-family cases, Kaggle, two T4 cards | 0.957 (table above) |
 | Kit `selftest.py --n 50` on a laptop without a GPU | OK, 0.980 (rules and fallbacks only) |
 | GPU server (A6000, Qwen3-8B as a stand-in): restarts after a failed engine, stop-time answers, continuations | all paths ran and the final file was valid each time |
