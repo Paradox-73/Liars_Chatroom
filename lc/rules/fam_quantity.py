@@ -39,14 +39,18 @@ def body(text):
 
 
 def mask_times(s):
-    """Replace each clock time in s with '@T'; return (masked text, minutes since midnight in order)."""
+    """Replace each clock time in s with '@T'; return (masked text, minutes since midnight in order). An impossible
+    time such as '13:30 PM' stays as written, so no pattern reads it."""
     out = []
 
     def rep(m):
         if m.group(4):
             out.append(0 if m.group(4).lower() == "midnight" else 720)
-        else:
+            return "@T"
+        try:
             out.append(T.time_to_min(m.group(1), m.group(2), m.group(3)))
+        except ValueError:
+            return m.group(0)
         return "@T"
 
     return T.TIME_RE.sub(rep, s), out
@@ -105,11 +109,8 @@ def unit_of(u):
 
 
 def same_dim(a, b):
-    """Same measure, or the same counted noun allowing a shorter name ('envelope' for 'sealed envelope')."""
-    if a == b:
-        return True
-    return a.startswith("count:") and b.startswith("count:") and (
-        a.endswith(" " + b[6:]) or b.endswith(" " + a[6:]))
+    """Same measure, or exactly the same counted noun: 'five empty bags' says nothing about how many bags there are."""
+    return a == b
 
 
 def head(c):
@@ -134,7 +135,10 @@ def unparsed_mention(ctx, used, key):
 # -------------------------------------------------------------------------------------- qty_level: containers
 
 C = r"(?:the|that|this) (?P<c>[a-z][a-z'\- ]*?)"
-QTY = r"(?:exactly )?(?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?)(?: of [a-z]+)?"  # "150 bags (of sand)"
+# a unit after a number; "twenty five bags" or "5 more bags" is not "N bags"
+UNIT = (r"(?P<u>(?!(?:" + "|".join(WORDNUM) + r"|hundred|thousand|million|dozen|more|fewer|less|extra|other|"
+        r"additional|further)\b)[a-z]+(?: [a-z]+)?)")
+QTY = r"(?:exactly )?(?P<n>" + NUM + r") " + UNIT + r"(?: of [a-z]+)?"  # "150 bags (of sand)"
 SPAN = r"(?:from @T (?:to|until)|between @T and) @T"
 STATES = [re.compile(r"^(?:(?P<pre>at @T|" + SPAN + r"),? )?" + p + r"(?: (?P<post>at @T|" + SPAN + r"))?$") for p in (
     r"(?:" + C + r"|(?P<it>it)) (?:held|contained|had|was holding) " + QTY + r"(?: in it)?",
@@ -145,7 +149,7 @@ RATE = re.compile(r"^(?:(?P<pre>" + SPAN + r"|from then (?:to|until) @T|until @T
                   r"(?P<r>\d+(?:\.\d+)?) (?P<u>[a-z]+) (?:per|an|a|each|every) (?P<per>hour|minute)"
                   r"(?: (?P<post>" + SPAN + r"|from then (?:to|until) @T|until @T))?$")
 ADDED = ("added", "poured in", "put in", "tipped in", "pumped in", "delivered")
-EVENT = re.compile(r"^(?:then )?(?:at @T,? )?(?:exactly )?(?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?) (?:was|were) "
+EVENT = re.compile(r"^(?:then )?(?:at @T,? )?(?:exactly )?(?P<n>" + NUM + r") " + UNIT + r" (?:was|were) "
                    r"(?P<v>" + "|".join(ADDED) + r"|removed|taken out|taken|taken away|drawn off|used|poured out|"
                    r"tipped out|scooped out|pumped out|drained off)"
                    r"(?: (?:to|into|from|out of|off) (?:it|" + C + r"))?(?: at @T)?$")
@@ -252,17 +256,19 @@ class Store:
                 return None
             if w[2] == "add" and (self.events or not self.rates):
                 return None  # only additions are ruled out, and the rate alone does not pin the amount
-        at_t = 0
+        at_t = []
         for te, d in self.events:
             if te < t:
                 a += d
             elif te == t:
-                at_t += d
+                at_t.append(d)
         for ra, rb, r in self.rates:
             lo, hi = max(ra, t0), min(rb, t)
             if hi > lo:
                 a += r * (hi - lo)
-        possible = {a, a + at_t} if at_t else {a}
+        possible = {a}
+        for d in at_t:  # changes at that very minute may or may not have happened yet, in any order
+            possible |= {p + d for p in possible}
         return (possible, True) if min(possible) >= 0 else None  # below empty: the reading of the evidence is off
 
     def removal(self, t):
@@ -289,12 +295,18 @@ class Store:
         return LIE
 
 
-def pick(stores, name):
-    found = [s for s in stores if same_name(name, s.name)]
+def pick(stores, name, claim=False):
+    """The one store with this name. A claim may shorten the name ('the tank' for 'the water tank') but not add to
+    it: 'the paddling pool' may be a different pool from 'the pool'."""
+    if claim:
+        c = head(name)
+        found = [s for s in stores if head(s.name) == c or head(s.name).endswith(" " + c)]
+    else:
+        found = [s for s in stores if same_name(name, s.name)]
     return found[0] if len(found) == 1 else None
 
 
-CQ = r"(?:exactly |only |just )?(?P<n>" + NUM + r") (?P<u>[a-z]+(?: [a-z]+)?)(?: of [a-z]+)?"
+CQ = r"(?:exactly |only |just )?(?P<n>" + NUM + r") " + UNIT
 AMOUNT = [re.compile(r"^(?:at @T,? )?(?:" + f.format(Q=CQ, C=C) + r")(?: at @T)?$") for f in (
     r"there (?:were|was) {Q} in {C}",
     r"{C} (?:held|had|contained|still held|still had|was holding) {Q}(?: in it)?",
@@ -468,7 +480,7 @@ class Level(Family):
             m = rx.match(s)
             if m is None:
                 continue
-            st = pick(stores, m["c"])
+            st = pick(stores, m["c"], claim=True)
             if st is None or len(times) != 1:
                 return None
             u = unit_of(m["u"])
@@ -486,14 +498,16 @@ class Level(Family):
             return Verdict(res, self.name, f"{st.name} at {T.fmt_time(times[0])}: evidence {want}")
         m = TOOK.match(s)
         if m:
-            st = pick(stores, m["c"])
+            st = pick(stores, m["c"], claim=True)
             u = m["u"] or m["u2"]
             if st is None or len(times) != 1 or (u and not same_dim(unit_of(u)[0], st.unit[0])):
                 return None
             res = st.removal(times[0])
+            if res == LIE and st.unit[0].startswith("count:") and not u:
+                return None  # "some" from a drawer of folders may be something other than a folder
             return Verdict(res, self.name, f"removal from {st.name} at {T.fmt_time(times[0])}") if res else None
         m = NEUTRAL.match(s)
-        if m and len(times) <= 1 and pick(stores, m["c"]):
+        if m and len(times) <= 1 and pick(stores, m["c"], claim=True):
             return Verdict(OK, self.name, "no claim about the amount")
         if not re.search(r"\d", s) and OPINION.search(s) and any(
                 re.search(r"\b" + re.escape(head(st.name).split()[-1]) + r"\b", s) for st in stores):
@@ -784,6 +798,9 @@ STAYED_AWAY = (r"(?:missed|skipped|wasn't at|was not at|didn't attend|did not at
                r"didn't turn up (?:to|at|for)|did not turn up (?:to|at|for)|wasn't present at|was not present at)")
 NOT_A_NAME = set("i me everyone everybody nobody someone somebody anyone anybody he she they we it one all none no "
                  "the this that".split())
+# a seat in the room where the event ran; "near the window in the office during the drill" is somewhere else
+SEAT = (r"(?:sat|took a seat|was sitting|was seated|stood|was standing) (?:near|by|at|next to|beside) the "
+        r"(?:door|doors|window|front|back|exit|entrance|stage|wall|aisle)")
 
 
 @register
@@ -846,10 +863,8 @@ class Attendance(Family):
             (r"^" + ev + r" (?:was|is) one (?P<who>[a-z][a-z'\-]*) (?:attended|went to)$", True),
             (r"^" + ev + r" (?:was|is) one (?P<who>[a-z][a-z'\-]*) (?:skipped|missed)$", False),
             (r"^" + ev + r" (?:passed|went ahead|happened|took place) without (?P<who>[a-z][a-z'\-]*)$", False),
-            (r"^during " + ev + r",? (?P<who>i) (?:sat|took a seat|was sitting|was seated|stood|was standing) "
-             r"(?:near|by|at|next to|beside) the [a-z ]+$", True),
-            (r"^(?P<who>i) (?:sat|took a seat|was sitting|was seated|stood|was standing) (?:near|by|at|next to|beside) "
-             r"the [a-z ]+? during " + ev + r"$", True))]
+            (r"^during " + ev + r",? (?P<who>i) " + SEAT + r"$", True),
+            (r"^(?P<who>i) " + SEAT + r" during " + ev + r"$", True))]
         f["headcount"] = [re.compile(p) for p in (
             r"^(?:exactly |only )?(?P<k>" + NUM + r") (?:people|attendees|persons) (?:attended|went to|were at|"
             r"turned up (?:to|at|for)|showed up (?:to|at|for)|took part in) " + ev + r"$",
