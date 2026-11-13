@@ -25,7 +25,7 @@ from collections import deque
 T0 = time.time()
 try:
     import torch
-    from lc.llm.judge_vllm import NUM_LOGPROBS, letter_probs, read_answer  # also turns off the FlashInfer sampler
+    from lc.llm.judge_vllm import ANSWER_RE, NUM_LOGPROBS, letter_probs, read_answer  # also turns off the FlashInfer sampler
     from vllm import LLM, SamplingParams
     from vllm.sampling_params import RequestOutputKind
 except ImportError as e:
@@ -39,6 +39,9 @@ MAIN_TOKENS = int(os.environ.get("LC_MAIN_TOKENS", 8192))  # first sample
 CONT_TOKENS = int(os.environ.get("LC_CONT_TOKENS", 16384))  # a continued sample in total
 MAX_SAMPLES, SETTLED = 5, 1.5
 THINKING = ("main", "cont", "extra")  # the kinds that generate many tokens and hold a thinking slot
+# Qwen3's own sentence for ending thought at a budget (Qwen3 model card, thinking budget), used with LC_FORCE=budget
+BUDGET = ("\n\nConsidering the limited time by the user, I have to give the solution based on the thinking directly now."
+          "\n</think>\n\n")
 # per tensor-parallel size: max model length, thinking slots, one-token slots, tokens per engine step
 ENGINE = {2: (CONT_TOKENS + 2048, 40, 24, 4096), 1: (8192 + 2048, 8, 8, 2048)}
 
@@ -110,6 +113,10 @@ def main():
 
     final = RequestOutputKind.FINAL_ONLY
     one_token = SamplingParams(max_tokens=1, temperature=0.0, logprobs=NUM_LOGPROBS, output_kind=final)
+    # exploration (LC_FORCE=budget): a sample capped while still thinking gets Qwen's thinking-budget sentence and writes
+    # a short final answer; a one-token answer only if that has no ANSWER line
+    budget_tokens = int(os.environ.get("LC_FORCE_TOKENS", "256")) if os.environ.get("LC_FORCE") == "budget" else 0
+    budget_params = SamplingParams(max_tokens=max(budget_tokens, 1), temperature=0.0, output_kind=final)
     prompts, plens = {}, {}
 
     def prompt(cid):
@@ -140,7 +147,8 @@ def main():
     fout = open(a.out, "a", encoding="utf-8")
     flight = {}  # request id -> (kind, case id, k, text so far, tokens so far, kind of the sample it answers for)
     queued_cont, quick, dead = deque(), deque(), set()  # dead: cases whose request could not start
-    counts = dict.fromkeys(("main", "cont", "extra", "force", "nothink", "main_capped", "cont_finished", "not_started"), 0)
+    counts = dict.fromkeys(("main", "cont", "extra", "force", "budget", "nothink", "main_capped", "cont_finished",
+                            "not_started"), 0)
     tokens_out = n_req = seq_tokens = seq_n = 0
 
     def record(cid, k, src, letter, p, forced, tokens):
@@ -165,8 +173,8 @@ def main():
                 eng.add_request(rid, prompt(cid) + text, SamplingParams(
                     temperature=0.6, top_p=0.95, top_k=20, presence_penalty=presence, seed=k, max_tokens=cap,
                     logprobs=token_logprobs, output_kind=final))
-            else:  # text is the whole prompt of a one-token answer
-                eng.add_request(rid, text, one_token)
+            else:  # text is the whole prompt of a one-token answer, or of a short final answer after the budget sentence
+                eng.add_request(rid, text, budget_params if kind == "budget" else one_token)
         except Exception as e:  # one bad case must not stop the others
             counts["not_started"] += 1
             dead.add(cid)
@@ -269,6 +277,13 @@ def main():
             kind, cid, k, text, tokens, src = flight.pop(o.request_id)
             counts[kind] += 1
             out = o.outputs[0]
+            if kind == "budget":
+                found = ANSWER_RE.findall(out.text)
+                if found:
+                    record(cid, k, src, found[-1], None, True, tokens)
+                else:  # no ANSWER line in the short answer: the one-token answer after it
+                    quick.appendleft(("force", cid, k, text + out.text + "\n\nANSWER:", tokens, src))
+                continue
             if kind not in THINKING:
                 p = letter_probs(out.logprobs[0] if out.logprobs else {})
                 record(cid, k, src, max(p, key=p.get) if any(p.values()) else None, p, kind == "force", tokens)
@@ -281,8 +296,11 @@ def main():
                 record(cid, k, kind, letter, p, False, tokens)
                 counts["cont_finished"] += kind == "cont"
                 continue
-            suffix = "\n\nANSWER:" if "</think>" in text else "\n</think>\n\nANSWER:"
-            quick.appendleft(("force", cid, k, prompt(cid) + text + suffix, tokens, kind))
+            if budget_tokens and "</think>" not in text:
+                quick.appendleft(("budget", cid, k, prompt(cid) + text + BUDGET, tokens, kind))
+            else:
+                suffix = "\n\nANSWER:" if "</think>" in text else "\n</think>\n\nANSWER:"
+                quick.appendleft(("force", cid, k, prompt(cid) + text + suffix, tokens, kind))
             if kind == "main":
                 counts["main_capped"] += 1
                 if "</think>" not in text and max_len - plen(cid) - tokens - 64 >= 2048:
