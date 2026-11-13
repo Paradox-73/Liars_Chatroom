@@ -612,37 +612,41 @@ PRONOUN = r"(?:he|she|they)"
 SOLD_TO = rf"sold it (?:on )?to (?P<b>{NAME})"
 WHEN = rf"(?:on (?P<d>{DATE_PAT})|exactly (?P<n>\w+) days? after buying it)"
 START = rf"at the start of {MY_PAT}"
-# one sale per clause; a sentence is split into clauses at ', and <Name>'
+# one sale per clause; a sentence is split into clauses at ', and <Name>'. 'it' is the item of the head sentence;
+# where a clause names the item, (?P<item>) must be that item, and a second seller name (?P<s2>) must repeat (?P<s>)
 SALE_RES = [
-    re.compile(rf"^(?P<s>{NAME}) owned the {NP} until (?:selling|(?:{PRONOUN}|{NAME}) sold) it to (?P<b>{NAME}) "
-               rf"on (?P<d>{DATE_PAT})$"),
-    re.compile(rf"^(?P<s>{NAME}) owned the {NP} until (?P<d>{DATE_PAT}), when {PRONOUN} sold it to (?P<b>{NAME})$"),
-    re.compile(rf"^(?P<s>{NAME}) was the {NP}'s owner until selling it to (?P<b>{NAME}) on (?P<d>{DATE_PAT})$"),
+    re.compile(rf"^(?P<s>{NAME}) owned the (?P<item>{NP}) until (?:selling|(?:{PRONOUN}|(?P<s2>{NAME})) sold) it to "
+               rf"(?P<b>{NAME}) on (?P<d>{DATE_PAT})$"),
+    re.compile(rf"^(?P<s>{NAME}) owned the (?P<item>{NP}) until (?P<d>{DATE_PAT}), when {PRONOUN} sold it to "
+               rf"(?P<b>{NAME})$"),
+    re.compile(rf"^(?P<s>{NAME}) was the (?P<item>{NP})'s owner until selling it to (?P<b>{NAME}) on (?P<d>{DATE_PAT})$"),
     re.compile(rf"^(?i:until) (?:selling|{PRONOUN} sold) it to (?P<b>{NAME}) on (?P<d>{DATE_PAT}), (?P<s>{NAME}) "
-               rf"owned the {NP}$"),
-    re.compile(rf"^(?P<s>{NAME}) owned the {NP} {START} and {SOLD_TO} on (?P<d>{DATE_PAT})$"),
-    re.compile(rf"^(?i:at) the start of {MY_PAT},? (?P<s>{NAME}) owned the {NP}, and {PRONOUN} {SOLD_TO} on "
-               rf"(?P<d>{DATE_PAT})$"),
-    re.compile(rf"^(?i:at) the start of {MY_PAT},? the {NP} belonged to (?P<s>{NAME}), who {SOLD_TO} on "
+               rf"owned the (?P<item>{NP})$"),
+    re.compile(rf"^(?P<s>{NAME}) owned the (?P<item>{NP}) {START} and {SOLD_TO} on (?P<d>{DATE_PAT})$"),
+    re.compile(rf"^(?i:at) the start of {MY_PAT},? (?P<s>{NAME}) owned the (?P<item>{NP}), and "
+               rf"(?:{PRONOUN}|(?P<s2>{NAME})) {SOLD_TO} on (?P<d>{DATE_PAT})$"),
+    re.compile(rf"^(?i:at) the start of {MY_PAT},? the (?P<item>{NP}) belonged to (?P<s>{NAME}), who {SOLD_TO} on "
                rf"(?P<d>{DATE_PAT})$"),
     re.compile(rf"^(?P<s>{NAME}) (?:then )?{SOLD_TO} {WHEN}$"),
     re.compile(rf"^(?i:on) (?P<d>{DATE_PAT}),? (?P<s>{NAME}) (?:then )?{SOLD_TO}$"),
     re.compile(rf"^(?i:exactly) (?P<n>\w+) days? after buying it, (?P<s>{NAME}) (?:then )?{SOLD_TO}$"),
 ]
-START_OWNER_RE = re.compile(rf"^(?:(?i:at) the start of {MY_PAT},? )?{NAME} owned the {NP}(?: {START})?$")
+START_OWNER_RE = re.compile(rf"^(?:(?i:at) the start of {MY_PAT},? )?{NAME} owned the (?P<item>{NP})(?: {START})?$")
 
 
-def sale(clause):
+def sale(clause, item):
     """'Camila owned the kayak until selling it to Tomas on 8 September 2026' -> (seller, buyer, date), where the
-    date is ('after', n) for '... exactly 14 days after buying it'; None when no sale pattern matches the clause."""
+    date is ('after', n) for '... exactly 14 days after buying it'; None when no sale of this item matches."""
     m = first_match(SALE_RES, clause)
     if not m:
         return None
     g = m.groupdict()
+    if g.get("item") not in (None, item) or g.get("s2") not in (None, g["s"]):
+        return None
     if g.get("d"):
-        return m.group("s"), m.group("b"), T.parse_date(g["d"])
+        return g["s"], g["b"], T.parse_date(g["d"])
     n = T.word_num(g["n"])
-    return (m.group("s"), m.group("b"), ("after", n)) if n else None
+    return (g["s"], g["b"], ("after", n)) if n else None
 
 
 @register
@@ -664,8 +668,9 @@ class MonthOwners(Family):
             if i == hi or not s.endswith("."):
                 continue
             clauses = re.split(r",? and (?=[A-Z])", s[:-1])  # '..., and Ivan sold it to Jonas on 15 May 2026.'
-            found = [sale(c) for c in clauses]
-            if all(x or START_OWNER_RE.match(c) for x, c in zip(found, clauses)):
+            found = [sale(c, item) for c in clauses]
+            starts = [START_OWNER_RE.match(c) for c in clauses]
+            if all(x or (st and st.group("item") == item) for x, st in zip(found, starts)):
                 sales += [x for x in found if x]
                 used.append(i)
             # any other sentence naming the item or an owner makes the family abstain (checked below)
