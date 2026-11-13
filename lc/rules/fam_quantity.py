@@ -523,12 +523,12 @@ PERIODS = [(re.compile(r"\b(?:before (?:noon|midday)|in the morning|morning)\b")
            (re.compile(r"\b(?:at the box office|box office)\b"), " _b_ "),
            (re.compile(r"\bonline\b"), " _o_ "),
            (re.compile(r"^i make it\b"), " ")]
-SALE_WORDS = set("there were was sold got went bought purchased booked in the of at number count came to sales total "
+SALE_WORDS = set("there were was sold got went bought purchased in the of at number count came to sales total "
                  "for only just exactly a all overall altogether".split())
 BOUGHT = [re.compile(p) for p in (
-    r"^(?:at @T,? )?i (?:bought|purchased|got|booked) (?:mine|my (?:own )?(?P<u>[a-z]+)|one|a (?P<u2>[a-z]+))"
+    r"^(?:at @T,? )?i (?:bought|purchased|got) (?:mine|my (?:own )?(?P<u>[a-z]+)|one|a (?P<u2>[a-z]+))"
     r"(?: (?P<ch>online|at the box office))?(?: at @T)?$",
-    r"^my (?:own )?(?P<u>[a-z]+) was (?:bought|purchased|booked)(?: (?P<ch>online|at the box office))? at @T$")]
+    r"^my (?:own )?(?P<u>[a-z]+) was (?:bought|purchased)(?: (?P<ch>online|at the box office))? at @T$")]
 
 
 @register
@@ -574,7 +574,7 @@ class Tickets(Family):
         for i in used:
             ctx.consume(i)
         words = SALE_WORDS | set((f["event"] or "").split())
-        return {"counts": counts, "unit": f["unit"], "words": words}
+        return {"counts": counts, "unit": f["unit"], "words": words, "event": f["event"]}
 
     def judge(self, ctx, f, msg):
         if msg.text.strip().endswith("?"):
@@ -598,10 +598,10 @@ class Tickets(Family):
             return Verdict(OK if n > 0 else LIE, self.name, f"{n} sold in that part of the day")
         if re.search(r"\d:\d\d", low):
             return None
-        s = low
+        s = re.sub(r"\b" + re.escape(f["event"]) + r"\b", " _e_ ", low) if f["event"] else low  # "the morning walk"
         for rx, tag in PERIODS:
             s = rx.sub(tag, s)
-        toks = re.findall(r"_[mabo]_|\d+(?:\.\d+)?|[a-z']+", s)
+        toks = re.findall(r"_[mabeo]_|\d+(?:\.\d+)?|[a-z']+", s)
         nums = [t for t in toks if t[0].isdigit()]
         if len(nums) != 1 or "." in nums[0] or any(
                 t not in f["words"] and sing(t) != f["unit"] for t in toks if t[0].isalpha()):
@@ -647,10 +647,6 @@ RATIO_ALONE = re.compile(r"^the (?:one )?long (?P<p1>[a-z]+) was " + RATIO + r" 
                          r"(?:ones|(?P<p2>[a-z]+))$")
 PIECE_WORDS = {"piece", "slice", "length", "portion", "share", "part", "bit", "section", "segment", "strip", "chunk",
                "wedge"}
-PIECE_TALK = set("my own the a one of i got had ended up with received was given took kept handed came away that which "
-                 "measured measures measure to out at weighed weighs weigh in long length is were made make together "
-                 "put added combined between them two both short each every all ran totalled totaled total ones it "
-                 "me from came".split())
 
 
 def ratio(m):
@@ -711,56 +707,56 @@ class Pieces(Family):
             return None
         for i in idx:
             ctx.consume(i)
-        return {"name": obj["o"], "dim": d, "sizes": sizes, "nouns": PIECE_WORDS | {noun}}
+        return {"name": obj["o"], "dim": d, "sizes": sizes, "frames": piece_frames(obj["o"], PIECE_WORDS | {noun})}
 
     def judge(self, ctx, f, msg):
         if msg.text.strip().endswith("?"):
             return None
         s = body(msg.text).lower()
-        if re.search(r"\d:\d\d", s):
-            return None
-        toks = re.findall(r"\d+(?:\.\d+)?|[a-z']+", s)
-        obj_words = set(f["name"].split())
         if not re.search(r"\d", s):
-            if re.search(r"\bcut(?:ting)?\b", s) and obj_words <= set(toks) and not re.search(
-                    r"\b(?:not|never|nobody|no one|didn't|wasn't|isn't)\b|n't\b", s):
+            if re.search(r"\bcut(?:ting)?\b", s) and set(f["name"].split()) <= set(re.findall(r"[a-z]+", s)) \
+                    and not re.search(r"\b(?:not|never|nobody|no one)\b|n't\b", s):
                 return Verdict(OK, self.name, "says who cut it")
             return None
-        qty = re.findall(r"(\d+(?:\.\d+)?) ([a-z]+)", s)
-        if len(qty) != 1 or len(re.findall(r"\d+(?:\.\d+)?", s)) != 1:
-            return None
-        n, u = qty[0]
-        d, size = unit_of(u)
-        if d != f["dim"]:
-            return None
-        nouns = {w for w in toks if sing(w) in f["nouns"]}
-        if any(w not in PIECE_TALK and w not in obj_words and w not in nouns and w != u and not w[0].isdigit()
-               for w in toks):
-            return None
-        P = r"(?:" + "|".join(sorted(f["nouns"])) + r")"
-        if re.search(r"\b(?:two|both) short " + P + r"s\b", s):
-            ref = "two short" if re.search(r"\b(?:together|combined|between them|in total|altogether)\b", s) else None
-        elif re.search(r"\b(?:the|each|one|a) short " + P + r"\b", s):
-            ref = "short"
-        elif re.search(r"\bthe (?:one )?long " + P + r"\b", s):
-            ref = "long"
-        elif re.search(r"\b(?:each|every) " + P + r"\b|\b(?:the|all the|all) " + P + r"s\b.*\beach\b", s):
-            ref = "each"
-        elif re.search(r"\bmy (?:own )?" + P + r"\b|\b" + P + r" (?:that )?i (?:got|had|ended up with|received|was given|"
-                       r"took|kept|was handed|came away with)\b|\bi (?:got|had|received|was given|ended up with|took|"
-                       r"kept|came away with) (?:a|one|the) " + P + r"\b", s):
-            ref = "mine"
-        elif not nouns and re.search(r"\bthe (?:whole |entire |full )?" + re.escape(f["name"]) + r"\b", s):
-            ref = "total"
-        else:
-            ref = None
-        possible = f["sizes"].get(ref) if ref else None
-        if not possible:
-            return None
-        res = settle(num(n) * size, precision(n) * size, possible)
-        if res is None:
-            return None
-        return Verdict(res, self.name, f"{ref}: evidence {', '.join(str(float(p)) for p in sorted(possible))}")
+        for ref, rx in f["frames"]:
+            m = rx.match(s)
+            if m is None:
+                continue
+            d, size = unit_of(m["u"])
+            possible = f["sizes"].get(ref)
+            if d != f["dim"] or not possible:
+                return None
+            res = settle(num(m["n"]) * size, precision(m["n"]) * size, possible)
+            if res is None:
+                return None
+            return Verdict(res, self.name, f"{ref}: evidence {', '.join(str(float(p)) for p in sorted(possible))}")
+        return None
+
+
+def piece_frames(name, nouns):
+    """Whole-message patterns for claims about one piece, the long or short ones, all pieces, or the whole object."""
+    P, O = "(?:" + "|".join(sorted(nouns)) + ")", re.escape(name)
+    Q = r"(?P<n>\d+(?:\.\d+)?) (?P<u>[a-z]+)"
+    was = r"(?:was|is|measured|came to|came out at|weighed|weighed in at|ran to)"
+    end = r"(?: long| in length)?"
+    got = r"(?:got|had|ended up with|received|was given|took|kept|was handed|came away with)"
+    made = r"(?:made|came to|totalled|totaled|added up to)"
+    together = r"(?:together|combined|put together|added together)"
+    return [(ref, re.compile(p)) for ref, p in (
+        ("mine", r"^my (?:own )?" + P + r"(?: of (?:the )?" + O + r")? " + was + " " + Q + end + "$"),
+        ("mine", r"^the " + P + r" (?:that )?i " + got + " " + was + " " + Q + end + "$"),
+        ("mine", r"^i " + got + r" (?:a|one) " + P + r" (?:that|which) " + was + " " + Q + end + "$"),
+        ("mine", r"^the (?:length|weight) of my " + P + r" (?:was|came to) " + Q + "$"),
+        ("long", r"^the (?:one )?long " + P + " " + was + " " + Q + end + "$"),
+        ("short", r"^(?:the|each|one|either) short " + P + " " + was + " " + Q + end + "$"),
+        ("short", r"^each of the (?:two |three |four )?short " + P + "s " + was + " " + Q + end + "$"),
+        ("two short", r"^" + together + r",? the two short " + P + r"s (?:" + made + r"|measured|weighed) " + Q + "$"),
+        ("two short", r"^the two short " + P + r"s " + together + r" (?:" + made + r"|measured|weighed) " + Q + "$"),
+        ("two short", r"^the two short " + P + r"s " + made + " " + Q
+         + r"(?: together| combined| between them| in total)?$"),
+        ("each", r"^(?:each|every) " + P + " " + was + " " + Q + end + "$"),
+        ("each", r"^(?:all )?the " + P + r"s (?:were|measured|weighed) " + Q + end + " each$"),
+        ("total", r"^the (?:whole |entire |full |original )?" + O + " " + was + " " + Q + end + r"(?: in total)?$"))]
 
 
 # ------------------------------------------------------------------------------- qty_attendance: complete lists
