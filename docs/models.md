@@ -7,8 +7,8 @@ Weights are downloaded at the pinned Hugging Face revisions in `scripts/server/g
 
 | Model | Revision | Licence | Parameters | Role |
 |---|---|---|---|---|
-| [`Qwen/Qwen3-8B-AWQ`](https://huggingface.co/Qwen/Qwen3-8B-AWQ) | `4da05a8edb55c6046cce958586c33b61da07bb79` | Apache-2.0 | 8.2B, 4-bit AWQ (official) | judge for the train and test predictions |
-| [`cyankiwi/Qwen3.5-4B-AWQ-4bit`](https://huggingface.co/cyankiwi/Qwen3.5-4B-AWQ-4bit) | `d3e78b50c727b1f34802f440ca84b25781625352` | Apache-2.0 | 4B, 4-bit AWQ of `Qwen/Qwen3.5-4B` | judge candidate, compared on 200 train cases |
+| [`Qwen/Qwen3-8B-AWQ`](https://huggingface.co/Qwen/Qwen3-8B-AWQ) | `4da05a8edb55c6046cce958586c33b61da07bb79` | Apache-2.0 | 8.2B, 4-bit AWQ (official) | second judge on the hardest test cases |
+| [`cyankiwi/Qwen3.5-4B-AWQ-4bit`](https://huggingface.co/cyankiwi/Qwen3.5-4B-AWQ-4bit) | `d3e78b50c727b1f34802f440ca84b25781625352` | Apache-2.0 | 4B, 4-bit AWQ of `Qwen/Qwen3.5-4B` | main judge for the test and train predictions |
 | [`Qwen/Qwen3.5-0.8B`](https://huggingface.co/Qwen/Qwen3.5-0.8B) | `2fc06364715b967f1860aea9cf38778875588b17` | Apache-2.0 | 0.8B | install check only (`scripts/server/smoke_test.sh`) |
 
 The base models are by the Qwen team (Alibaba Cloud): Qwen3 technical report, arXiv:2505.09388, and the Qwen3.5 model cards on Hugging Face.
