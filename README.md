@@ -99,7 +99,7 @@ The design puts precision before coverage:
 - **Plain claims only.** Questions, hedged or negated sentences, reported speech and claims at the exact edge of a window are not judged. They stay with the model.
 - **Exact arithmetic.** Quantities use Python `fractions.Fraction`, never floats. Times are whole minutes in one day.
 - **The overnight guard.** `overnight()` in `core.py` makes the rules step aside for any case that mentions midnight or a clock time before 5:00 AM, because the families compare minutes within one day.
-- **Fillers.** `is_filler()` treats a question, or a sentence with no digit that reads as an opinion, as never the answer.
+- **Fillers.** `is_filler()` treats a question, or a sentence with no digit that reads as an opinion, as no claim to judge. Only questions leave the vote, though: an opinion pattern can match a real claim ("I want to be clear: Priya never entered the lab").
 
 An exception inside a family never stops a case. It is recorded and the family is skipped. On train there are none. On our 300 synthetic cases from 17 new families the rules answer none and misfire on none.
 
@@ -118,7 +118,7 @@ An exception inside a family never stops a case. It is recorded and the family i
 
 1. **rule.** Exactly one speaker has a message judged a lie, so that speaker is the answer.
 2. **elim.** No rule fired, but every claim of three speakers was judged consistent and the fourth has claims nobody could judge. One liar exists, so it is the fourth. On train this tier never fires. On test it fires for 8 cases.
-3. **llm.** The samples vote over the speakers the rules did not clear. A speaker is cleared when all of their non-filler claims were judged consistent. A forced answer counts at half weight.
+3. **llm.** The samples vote over the speakers the rules did not clear. A speaker is cleared when all of their messages other than questions were judged consistent. A forced answer counts at half weight.
 4. **fallback.** A case the model never reached gets a one-token answer without thinking, and failing that the letter C, the most common train label.
 
 ## Rules compliance

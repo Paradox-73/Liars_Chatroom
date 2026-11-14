@@ -23,7 +23,6 @@ import os
 from lc.data import load
 from lc.rules import solve
 from lc.rules.core import OK
-from lc.rules.text import is_filler
 
 FALLBACK = "C"  # most common train label; only used when no source has an answer
 LETTERS = ("A", "B", "C", "D")
@@ -43,10 +42,12 @@ def load_llm(path):
 
 
 def open_speakers(case, res):
-    """Speakers with at least one claim the rules did not judge consistent; only they can be the liar."""
+    """Speakers with at least one message the rules did not judge consistent; only they can be the liar. Only questions
+    are passed over: is_filler's opinion patterns also match real claims ("I want to be clear: Priya never entered the
+    lab"), which would drop a liar from the vote."""
     out = set()
     for m in case.messages:
-        if is_filler(m.text):
+        if m.text.strip().endswith("?"):
             continue
         vs = res.verdicts.get(m.num, [])
         if not vs or not all(v.status == OK for v in vs):
