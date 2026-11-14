@@ -12,8 +12,9 @@ MODEL_DIR=${LC_MODEL_DIR:-models/judge}
 
 if command -v uv >/dev/null; then
   UV=uv
-else
-  python3 -m pip install --quiet --user uv || python3 -m pip install --quiet --user --break-system-packages uv
+else  # a plain install first: pip refuses --user inside a virtualenv
+  python3 -m pip install --quiet uv || python3 -m pip install --quiet --user uv ||
+    python3 -m pip install --quiet --user --break-system-packages uv
   UV="python3 -m uv"
 fi
 $UV venv .venv --python 3.12 --allow-existing
