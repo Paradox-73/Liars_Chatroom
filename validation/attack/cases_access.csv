@@ -1,0 +1,98 @@
+id,scenario,speakers,evidence,chat,label
+ATK_ACC_01,Gardeners argue over the greenhouse.,A = Ravi; B = Mia; C = Leo; D = Zoe,All times in this case refer to 14 May 2026. Nobody could enter the greenhouse between 9:00 AM and 11:00 AM.,"1. A: I didn't go into the greenhouse until 10:00 AM, when I went in to water the tomatoes.
+2. B: I went into the greenhouse at 11:30 AM.
+3. C: I was waiting outside the greenhouse at 9:30 AM.
+4. D: I watered the lawn at 12:15 PM.
+5. B: Who has the hose?",A
+ATK_ACC_02,Office staff argue over who came in when.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. The door log accurately records when each of these four people first arrived at the office that day: Ravi at 8:30 AM, Mia at 8:45 AM, Leo at 9:00 AM and Zoe at 9:10 AM.","1. A: I arrived at the office again at 1:30 PM.
+2. B: My first arrival at the office was at 8:45 AM.
+3. C: I was the second of us four to arrive at the office.
+4. D: I first arrived at the office at 9:10 AM.",C
+ATK_ACC_03,Office staff argue over who came in when.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. The door log accurately records when each of these four people first arrived at the office that day: Ravi at 8:30 AM, Mia at 8:45 AM, Leo at 9:00 AM and Zoe at 9:10 AM.","1. C: I got to the office twenty minutes after Mia.
+2. A: My first arrival at the office was at 8:30 AM.
+3. B: I first arrived at the office at 8:45 AM.
+4. D: At 12:00 PM I ate lunch at my desk.",C
+ATK_ACC_04,Office staff argue over who came in when.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. The door log accurately records when each of these four people first arrived at the office that day: Ravi at 8:30 AM, Mia at 8:45 AM, Leo at 9:00 AM and Zoe at 9:10 AM.","1. A: I came to the office at 5:00 PM for the evening meeting.
+2. B: I was the first of us four to arrive at the office.
+3. C: I first arrived at the office at 9:00 AM.
+4. D: My first arrival at the office was at 9:10 AM.",B
+ATK_ACC_05,Studio members argue over the door codes.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. Before 10:15 AM, only code 1764 could unlock the studio door. From 10:15 AM to the end of the day, only code 6139 could unlock it.","1. A: At 9:30 AM I typed code 6139 to unlock the studio door, but it stayed shut.
+2. B: At 11:00 AM the studio door opened for me when I keyed in 1764.
+3. C: I unlocked the studio door with code 6139 at 12:00 PM.
+4. D: At 9:40 AM I used code 1764 to unlock the studio door.",B
+ATK_ACC_06,Guards argue over who stood at the gate.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. From 2:30 PM to 6:30 PM, only Ravi and Mia were at the security gate. Nobody else was at the security gate during that time.","1. C: I was at the security gate at 2:15 PM for an hour.
+2. A: I was at the security gate at 4:00 PM.
+3. B: I was at the security gate at 5:00 PM.
+4. D: I bought a sandwich at 3:00 PM.",C
+ATK_ACC_07,Gardeners argue over the greenhouse.,A = Ravi; B = Mia; C = Leo; D = Zoe,All times in this case refer to 14 May 2026. Nobody could be in the greenhouse between 9:00 AM and 11:00 AM.,"1. A: I was in the greenhouse at 8:30 AM for two hours.
+2. B: I was in the greenhouse at 11:30 AM.
+3. C: I was in the greenhouse at 8:00 AM.
+4. D: I repotted the ferns in the shed at 10:00 AM.",A
+ATK_ACC_08,Residents argue over the lift.,A = Ravi; B = Mia; C = Leo; D = Zoe,All times in this case refer to 14 May 2026. The lift could run only while the main power was on. The main power was off from 5:15 PM to 5:45 PM.,"1. B: The lift was running at 5:00 PM for an hour.
+2. A: I took the lift at 6:00 PM.
+3. C: I took the lift at 5:00 PM.
+4. D: At 5:30 PM I carried the boxes up the stairs.",B
+ATK_ACC_09,Archivists argue over who went into the archive.,A = Ravi; B = Mia; C = Leo; D = Zoe,All times in this case refer to 14 May 2026. The archive badge log accurately records every entry to the archive that day. It shows exactly two entries: Leo at 9:30 AM and Zoe at 11:45 AM.,"1. C: I went into the archive twice, the first time at 9:30 AM.
+2. D: I went into the archive at 11:45 AM.
+3. A: I didn't go into the archive at all.
+4. B: At 10:00 AM I sorted the post at reception.",C
+ATK_ACC_10,Swimmers argue over the pool area.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. Nobody could enter the pool area except by scanning their own active wristband. Leo's wristband was inactive before 10:05 AM, and active from 10:05 AM onward.","1. A: I saw Leo go into the pool area at 10:30 AM using Zoe's wristband.
+2. B: I saw Leo go into the pool area at 11:00 AM.
+3. D: I saw Leo go into the pool area at 12:00 PM.
+4. C: I swam lengths at 1:00 PM.",A
+ATK_ACC_11,Staff argue over the main hall bookings.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. The main hall was booked from 11:35 AM to 4:05 PM: the sales team had it until 1:05 PM, the finance team until 2:35 PM, and then the research team. During each booking, only that team was in the room.","1. D: The sales team was in the main hall at 12:40 PM for three hours.
+2. A: The finance team was in the main hall at 1:35 PM.
+3. B: At 3:20 PM the research team was in the main hall.
+4. C: I booked a taxi at 4:30 PM.",D
+ATK_ACC_12,Carpenters argue over the shed.,A = Ravi; B = Mia; C = Leo; D = Zoe,All times in this case refer to 14 May 2026. Nobody could enter the carpentry shed between 4:00 PM and 5:00 PM.,"1. B: I went into the carpentry shed at 3:30 PM for an hour.
+2. A: I saw Leo go into the carpentry shed at 4:59 PM.
+3. C: I went into the carpentry shed at 5:10 PM.
+4. D: I was waiting outside the carpentry shed at 4:30 PM.",A
+ATK_ACC_13,Office staff argue over who came in when.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. The door log accurately records when each of these four people first arrived at the office that day: Ravi at 8:30 AM, Mia at 8:45 AM, Leo at 9:00 AM and Zoe at 9:10 AM.","1. C: I first arrived at the office 5 minutes after Mia.
+2. A: I first arrived at the office at 8:30 AM.
+3. B: My first arrival at the office was at 8:45 AM.
+4. D: I made tea at 9:30 AM.",C
+ATK_ACC_14,Gardeners argue over the greenhouse.,A = Ravi; B = Mia; C = Leo; D = Zoe,All times in this case refer to 14 May 2026. Nobody could enter the greenhouse between 9:00 AM and 11:00 AM.,"1. B: I didn't enter the greenhouse before 10:30 AM, but I did go in then.
+2. A: I went into the greenhouse at 11:15 AM.
+3. C: I went into the greenhouse at 8:45 AM.
+4. D: I mowed the lawn at 10:00 AM.",B
+ATK_ACC_15,Studio members argue over the door codes.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. Before 10:15 AM, only code 1764 could unlock the studio door. From 10:15 AM to the end of the day, only code 6139 could unlock it.","1. A: I saw Zoe unlock the studio door with code 1764 at 11:00 AM.
+2. B: I unlocked the studio door with code 6139 at 10:20 AM.
+3. C: At 9:00 AM I used code 1764 to unlock the studio door.
+4. D: Who changed the code?",A
+ATK_ACC_16,Archivists argue over server sign-ins.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. Every remote sign-in to the archive server required the VPN, and there was no other remote route. The VPN service was offline from 1:00 PM to 2:00 PM.","1. A: I signed in to the archive server remotely at 12:30 PM and worked for two hours.
+2. D: I signed in to the archive server remotely at 1:30 PM.
+3. B: I signed in to the archive server locally at 1:30 PM.
+4. C: I signed in to the archive server remotely at 2:30 PM.",D
+ATK_ACC_17,Office staff argue over who came in when.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. The door log accurately records when each of these four people first arrived at the office that day: Ravi at 8:30 AM, Mia at 8:45 AM, Leo at 9:00 AM and Zoe at 9:10 AM.","1. B: I got to the office at 2:00 PM after my dentist appointment.
+2. D: I was in the office before Leo arrived.
+3. A: I first arrived at the office at 8:30 AM.
+4. C: My first arrival at the office was at 9:00 AM.",D
+ATK_ACC_18,Lab staff argue over the lab door.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. Mia and Zoe are on the safety-trained list, and Leo is on the volunteer rota. Nobody on the volunteer rota is on the safety-trained list. Before 9:45 AM the lab door opened only for people on the safety-trained list, and it was the only way into the lab.","1. A: At 9:00 AM I saw Leo come into the lab through the lab door.
+2. B: I came into the lab through the lab door at 9:10 AM.
+3. D: I came into the lab through the lab door at 9:20 AM.
+4. C: I came into the lab through the lab door at 10:30 AM.",A
+ATK_ACC_19,Lab staff argue over the lab door.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. Mia and Zoe are on the safety-trained list, and Leo is on the volunteer rota. Nobody on the volunteer rota is on the safety-trained list. Before 9:45 AM the lab door opened only for people on the safety-trained list, and it was the only way into the lab.","1. C: I came into the lab through the lab door at 9:50 AM and stayed for an hour.
+2. A: I saw Leo come into the lab at 9:10 AM.
+3. B: I came into the lab at 8:00 AM.
+4. D: I came into the lab at 8:30 AM.",A
+ATK_ACC_20,Gardeners argue over the greenhouse.,A = Ravi; B = Mia; C = Leo; D = Zoe,All times in this case refer to 14 May 2026. Nobody could enter the greenhouse from 9:00 AM to 11:00 AM.,"1. A: I went into the greenhouse at 8:50 AM.
+2. B: I went into the greenhouse at 10:00 AM.
+3. C: I went into the greenhouse at 11:30 AM.
+4. D: I was standing outside the greenhouse at 10:00 AM.",B
+ATK_ACC_21,Residents argue over the lift.,A = Ravi; B = Mia; C = Leo; D = Zoe,All times in this case refer to 14 May 2026. The lift could run only while the main power was on. The main power was off from 5:15 PM to 5:45 PM.,"1. A: I took the lift at 5:10 PM for two minutes.
+2. B: I rode the lift at 5:40 PM.
+3. C: I took the lift at 6:00 PM.
+4. D: I took the lift at 5:00 PM.",B
+ATK_ACC_22,Archivists argue over who went into the archive.,A = Ravi; B = Mia; C = Leo; D = Zoe,All times in this case refer to 14 May 2026. The archive badge log accurately records every entry to the archive that day. It shows exactly two entries: Leo at 9:30 AM and Zoe at 11:45 AM.,"1. C: I was in the archive at 10:00 AM.
+2. D: I went into the archive at 10:15 AM.
+3. A: I didn't go into the archive at all.
+4. B: I didn't go into the archive that day.",D
+ATK_ACC_23,Guards argue over who stood at the gate.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. From 2:30 PM to 6:30 PM, only Ravi and Mia were at the security gate. Nobody else was at the security gate during that time.","1. A: I saw Mia at the security gate at 3:00 PM.
+2. D: Honestly, I was at the security gate at 2:45 PM.
+3. C: I was at the security gate at 7:00 PM.
+4. B: I was at the security gate at 6:00 PM.",D
+ATK_ACC_24,Staff argue over the main hall bookings.,A = Ravi; B = Mia; C = Leo; D = Zoe,"All times in this case refer to 14 May 2026. The main hall was booked from 11:35 AM to 4:05 PM: the sales team had it until 1:05 PM, the finance team until 2:35 PM, and then the research team. During each booking, only that team was in the room.","1. A: The research team was in the main hall at 2:35 PM.
+2. C: The marketing team met in the main hall at 3:00 PM.
+3. B: The sales team was in the main hall at 12:00 PM.
+4. D: The marketing team met in the canteen at 3:00 PM.",C
