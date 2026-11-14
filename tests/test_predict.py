@@ -1,5 +1,6 @@
 """python -m pytest tests"""
 import csv
+import json
 import os
 import sys
 
@@ -25,3 +26,14 @@ def test_rule_answers_only_when_the_rules_read_all_the_evidence(tmp_path):
     ids, fixed, cases, cands = predict.read_cases(str(path))
     assert fixed == {"ruled": ("B", "rule")}  # before, the hybrid was fixed too: ("D", "elim"), a wrong answer
     assert list(cases) == ["hybrid"] and cands["hybrid"] == "ABCD"
+
+
+def test_a_bad_answer_line_is_skipped_not_the_whole_merge(tmp_path):
+    path = tmp_path / "answers0"
+    good = {"id": "x1", "k": 0, "stage": 0, "kind": "main", "pred": "B", "forced": [False]}
+    later = dict(good, id="x2", pred="D")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(json.dumps(good) + "\n{not json\n" + json.dumps({"id": "x3"}) + "\n" + json.dumps(later) + "\n")
+    recs = {}
+    pos = predict.merge(str(path), 0, recs)  # before: JSONDecodeError, which stopped the model step
+    assert pos == os.path.getsize(path) and sorted(recs) == [("x1", 0), ("x2", 0)]
