@@ -53,7 +53,8 @@ Public leaderboard:
 | File | What it contains | md5 | Public leaderboard |
 |---|---|---|---|
 | `s1_rules_only.csv` | Rule solver alone, letter C for every case the rules do not answer. A check of rule precision on test. | `96e2b8fd4448dde7caa94a58207d4178` | 0.93333 |
-| `s6` (final) | Rule solver, then Qwen3-14B-AWQ thinking on the 1,064 test cases the rules leave open, from the final code in `submission/`. | `86ef374890c2aa1ab4be4340ab9bceb3` | pending upload |
+| `s6` | Rule solver, then Qwen3-14B-AWQ thinking on the 1,064 test cases the rules leave open, from the code in `submission/` before version 2. | `86ef374890c2aa1ab4be4340ab9bceb3` | pending upload |
+| version 2 | The same from the code now in `submission/` (Kaggle kernel `predict-full-v2-nirbhay`). It replaces `s6` once its file is checked. | running | |
 
 `s6` is rebuilt byte for byte from frozen model answers (see [Reproduce](#reproduce)).
 
@@ -64,9 +65,9 @@ Numbers for the final pipeline:
 | Rule solver on train, cases answered | 2,257 of 2,500 (90.3%) | `python -m lc.rules.run` |
 | Rule solver on train, precision on answered cases | 100.00% (2,257 of 2,257) | same |
 | Liars wrongly judged consistent by the rules | 0 | same |
-| New-family accuracy, `validation/newfam` (300 cases) | 0.957 and 0.953 in two runs | [`docs/BAKEOFF.md`](docs/BAKEOFF.md) |
-| New-family accuracy, `validation/set2` (168 cases) | 0.911, against 0.857 with a 4,096-token first sample (10 cases better, 1 worse, p = 0.012) | same |
-| Kaggle check, 450 hard test cases, two T4 cards | 75.0 min including model load, limit 90; every case got a thinking answer | `submission/README.md` |
+| New-family accuracy, `validation/newfam` (300 cases) | 0.957 (287 of 300) with version 2; 0.957 and 0.953 in two runs before it | [`submission/README.md`](submission/README.md), [`docs/BAKEOFF.md`](docs/BAKEOFF.md) |
+| New-family accuracy, `validation/set2` (168 cases) | 0.946 (159 of 168) with version 2, against 0.911 before it (11 cases better, 5 worse) and 0.857 with a 4,096-token first sample | same |
+| Kaggle check, 450 hard test cases, two T4 cards | 75.0 min including model load, limit 90; every case got a thinking answer (code before version 2) | `submission/README.md` |
 | `s6`, full `test.csv` | 1,064 of 1,064 open cases got a thinking answer, 101 stopped at the cap and were forced, 194 extra samples | `results/frozen/s6/REBUILD.md` |
 
 ## How it works
@@ -109,7 +110,7 @@ An exception inside a family never stops a case. It is recorded and the family i
 
 - **First sample.** Each case gets one sample, shortest prompt first, capped at 3,072 tokens. The cap is fixed. It does not shrink when time runs short, and there is no cap on the tail of the queue.
 - **No continuations.** A sample that hits the cap is forced to an answer: `ANSWER:` is appended and one token is read. Spare time goes to extra samples (different seeds) for the least certain cases, up to 5 samples a case, and none once two clean samples agree.
-- **Time.** `predict.py` allots 80 minutes to a file of 450 to 1,500 cases, the same time per case for smaller files and 80 minutes per 450 judged cases for larger ones. In the last 5 minutes no new work starts, and any case without a finished sample gets a one-token answer without thinking.
+- **Time.** `predict.py` allots 80 minutes to a file of 450 to 1,500 cases, the same time per case for smaller files and 80 minutes per 450 judged cases for larger ones. In the last 5 minutes no new work starts, and any case without a finished sample gets a one-token answer without thinking. Extra samples already running go on when every case has its first sample.
 - **Failure handling.** The predictions file is complete from the first second and is rewritten every 30 s. A model process that crashes or stalls is restarted with safer settings, ending on one card. Without a GPU the rule answers and fallbacks stand.
 
 ### The vote
@@ -122,6 +123,24 @@ An exception inside a family never stops a case. It is recorded and the family i
 4. **fallback.** A case the model never reached gets a one-token answer without thinking, and failing that the letter C, the most common train label.
 
 `predict.py` keeps a rule or elim answer, and the cleared speakers, only when the rules read every evidence sentence. A sentence no family reads can change what the rest means, so such a case goes to the model with no speaker cleared. On train this sends 36 of the 2,257 rule answers to the model.
+
+### Robustness
+
+Fixes from a robustness review in version 2, one line each:
+
+- `setup.sh` runs under `sh` as well as `bash`: no `pipefail`, which Ubuntu's `sh` (dash) rejects.
+- `setup.sh` installs `uv` with a plain `pip install` first, since pip refuses `--user` inside a virtualenv.
+- `setup.sh` keeps a Python that `uv` downloads in `.python` beside the code, so `.venv/bin/python` does not point into a home folder; `predict.py` logs an error when it does not resolve.
+- `setup.sh` gives the package install and the model download two more tries, 30 s apart.
+- `setup.sh` ends by running a tensor on a card, so a driver that cannot run CUDA 12.9 fails setup and not the run.
+- The zip marks its files as made on Unix, so `unzip` keeps `setup.sh` and `predict.py` executable.
+- A model process that has not started after 10 minutes is restarted on one card at once, instead of hanging 20 minutes on each of three attempts.
+- The third and fourth attempts leave more card memory free, and the one-card attempt uses a 5,120-token context.
+- Files of 450 to 1,500 cases get 80 minutes; before, 601 cases got 106.8 minutes against a 90-minute limit.
+- An error in the polling loop keeps the model answers already read, and a killed process that does not exit is left after 60 s.
+- Chat and speaker lines in other forms are read instead of getting the letter C.
+- A rule answer counts only when the rules read every evidence sentence, and only questions leave a speaker out of the vote.
+- In Docker, run with `--ipc=host`: the two-card engine passes tensors through shared memory.
 
 ## Rules compliance
 
@@ -189,7 +208,7 @@ Each folder in `results/frozen/` has the model answers and a `REBUILD.md` with t
 | [`s3`](results/frozen/s3/REBUILD.md) | Weighted vote of 4B, 8B, 14B and 32B files, from the first plan |
 | [`s4`](results/frozen/s4/REBUILD.md) | Final code with the old tail cap. Kept for the record |
 | [`s5`](results/frozen/s5/REBUILD.md) | Final code with a 4,096-token first sample and continuations. Fallback |
-| [`s6`](results/frozen/s6/REBUILD.md) | Final code, 3,072-token first sample, no continuations. The final file |
+| [`s6`](results/frozen/s6/REBUILD.md) | Final code before version 2, 3,072-token first sample, no continuations. The final file until version 2's run is checked |
 
 ### Kaggle kernels
 
@@ -197,6 +216,8 @@ The kernels in [`kaggle/`](kaggle/) run on two T4 cards. `kaggle/build.py` embed
 
 | Folder | What it ran |
 |---|---|
+| `v2-set2`, `v2-newfam`, `v2-ending`, `v2-moved` | version 2's paired checks on set2 and newfam, the forced-ending test and the moved rule answers (`kaggle/build_v2.py`) |
+| `predict-full-v2`, `predict-test-v2` (and `-nirbhay` copies) | version 2's full `test.csv` run and its 450-case check; steps in `kaggle/V2_FINAL.md` |
 | `predict-full-final` | `predict.py` on the full `test.csv` (produced `s6`) |
 | `predict-test-final` | `predict.py` on 450 hard test cases (the 75.0-minute check) |
 | `predict-full`, `predict-full-nocap`, `predict-test`, `predict-test-nocap` | the same with earlier settings (`s4`, `s5`) |
@@ -210,6 +231,7 @@ The kernels in [`kaggle/`](kaggle/) run on two T4 cards. `kaggle/build.py` embed
 - **New-family sets.** The hidden cases come from families in neither train nor test, so we wrote labelled cases for that. `validation/newfam` has 300 cases from 17 families. `validation/set2` has 153 cases from nine more families, checked claim by claim against every world the evidence allows, plus 15 cases from a teammate (`validation/open_model_cases.csv`). The rules answer none of the 300 and misfire on none (`validation/newfam/REPORT.md`).
 - **Bake-off.** Each candidate ran through the full `predict.py` on Kaggle's two T4 cards at the time per case of the hidden run. Accuracy counts every case, including those the model did not reach in time. Tables: `docs/BAKEOFF.md`.
 - **Paired cap test.** On the 168 cases of `validation/set2` we compared the 3,072-token first sample with 4,096 on the same cases: 10 cases better, 1 worse, two-sided sign test p = 0.012.
+- **Paired version 2 test.** Version 2 against the code before it, same cases and time per case: `validation/set2` 0.946 against 0.911 (11 cases better, 5 worse, p = 0.21; 167 of 168 cases reached against 152), `validation/newfam` 0.957 against 0.957 (4 better, 4 worse). The ship rule was set before the runs: at least 3 cases better on set2 with at most 10 cases never reached, and at most 1 case worse on newfam.
 - **Public leaderboard.** Used as a check of the finished pipeline, never to tune.
 
 ## Results
@@ -224,8 +246,8 @@ The kernels in [`kaggle/`](kaggle/) run on two T4 cards. `kaggle/build.py` embed
 | `s6` first samples | 1,064 of 1,064 got a thinking answer; 101 stopped at 3,072 tokens and were forced | same |
 | `s6` extra samples | 194 | same |
 | `s6` runtime on Kaggle | 184.2 min of a 189.2 min budget, exit 0 | same |
-| New-family accuracy, 300 cases | 0.957 and 0.953 | `docs/BAKEOFF.md` |
-| New-family accuracy, 168 cases | 0.911 (153 of 168), 0.857 with the 4,096 cap | same |
+| New-family accuracy, 300 cases | 0.957 (version 2); 0.957 and 0.953 before it | `submission/README.md`, `docs/BAKEOFF.md` |
+| New-family accuracy, 168 cases | 0.946 (159 of 168, version 2); 0.911 before it, 0.857 with the 4,096 cap | same |
 | Kaggle check, 450 hard cases | 75.0 min including model load; limit 90 | `submission/README.md` |
 | Kit selftest, 200 cases | OK, accuracy 1.000, 5.4 min | same |
 
@@ -237,10 +259,11 @@ The first upload scored 0.93333 with C filled in for every unanswered case. That
 - **Smaller models on new families.** On the 300 cases the 8B scored 0.893 at best and 0.643 with a long cap, and DeepSeek-R1-0528-Qwen3-8B reached 13 cases and scored 0.313. Qwen3-14B-AWQ scored 0.957.
 - **Long continuations.** Continuing capped samples to 8,192 tokens gave a net 3 more right answers on 49 hard cases (p = 0.51) and cost 2,595 s. Extra samples in the spare time did better.
 - **A tail cap and a 4,096-token first sample.** The tail cap cut later cases short, and 4,096 left fewer cases a thinking answer in time. 3,072 raised the second set from 0.857 to 0.911.
+- **A forced answer that restates the rule.** Ending a capped sample with "Time is up. Only one message cannot be true..." before `ANSWER:` changed none of 62 forced answers (37 right either way).
 
 ## Limitations
 
-- **New families.** The rules are written from train and mostly abstain on a family they have not seen. The model decides, and our estimate of its accuracy is 0.91 to 0.96 on cases we wrote ourselves, which may differ from the hidden cases.
+- **New families.** The rules are written from train and mostly abstain on a family they have not seen. The model decides, and our estimate of its accuracy is 0.95 to 0.96 on cases we wrote ourselves, which may differ from the hidden cases.
 - **Rule coverage is not accuracy on test.** The rules score 100% on train because they were built against it. Their precision on test is checked only through the public leaderboard.
 - **Time.** On two T4 cards a case whose first sample has not ended by the deadline gets a one-token answer, which is right far less often. On one T4 the model reaches about a third as many cases a minute, so fewer get a thinking answer.
 - **Not bit-exact.** vLLM batching can change near-ties between two runs of the judge. The vote is deterministic, the judge is not.
