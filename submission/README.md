@@ -29,11 +29,11 @@ on two cards passes tensors between its processes through shared memory.
 2. **Model.** `judge.py`, a child process, serves Qwen3-14B-AWQ with vLLM (tensor parallel over both cards, float16)
    on the cases the rules leave open: the prompt of `lc/llm/prompt.py`, thinking mode, temperature 0.6, top-p 0.95,
    top-k 20. Up to 40 cases are in flight, fewer when the KV cache would overflow. A free slot takes, in order:
-   - the first sample of the next case, seed 0, longest prompt first (a long prompt means long reasoning, so slow
-     cases start early), at most 3,072 tokens (see Choosing the model). Cutting only the later cases shorter to fit
+   - the first sample of the next case, seed 0, shortest prompt first, at most 3,072 tokens (see Choosing the
+     model). A long prompt means long reasoning, so the cases left without a first sample when time runs out are the
+     slow ones, not the cheap ones that are almost always right once reached. Cutting the later cases shorter to fit
      the time costs accuracy: on our 300 new-family cases a cap that shared the remaining tokens out evenly scored
-     0.930 against 0.957 without it (both with a 4,096-token first sample), because the cases still waiting are the
-     short ones and most of them finish in time anyway;
+     0.930 against 0.957 without it (both with a 4,096-token first sample, longest prompt first);
    - an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin first, up to 5 samples a
      case, none once two clean samples agree.
 

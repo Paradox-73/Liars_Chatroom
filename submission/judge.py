@@ -6,7 +6,7 @@ kaggle/kjudge.py) on the cases in --cases, and appends one JSON line per finishe
 the environment, which predict.py fills from its MODEL_ENV table. A free slot takes, in this order:
   1. a continuation: a first sample that reached its cap while still thinking goes on to LC_CONT_TOKENS in total. It
      goes first only while the first samples are on schedule, and holds at most half the slots while they wait.
-  2. the first sample of the next case, seed 0, longest prompt first, at most LC_MAIN_TOKENS.
+  2. the first sample of the next case, seed 0, shortest prompt first, at most LC_MAIN_TOKENS.
   3. an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin over the speakers the rules
      did not clear, at most 5 samples a case, none once the margin reaches 1.5.
 A sample with no "ANSWER:" line gets a forced answer: "ANSWER:" is appended and one more token is read.
@@ -127,11 +127,12 @@ def main():
             plens[cid] = len(tok.encode(prompt(cid)))
         return plens[cid]
 
-    # Longest prompt first: on the 14B's test answers a long prompt means long reasoning (correlation 0.51; the top
-    # quarter of prompts held 21 of the 29 capped samples), so the slow cases start early and the cases left for the
-    # one-token answers at the stop time are the short ones.
+    # Shortest prompt first: a long prompt means long reasoning (correlation 0.51 on the 14B's test answers, 0.34 on set2),
+    # so the cases left without a first sample when time runs out are the slow ones, not the cheap ones. Longest first
+    # left the short ones: on set2, 15 of the 16 cases never reached were in the shortest quarter, whose 27 reached cases
+    # were all right.
     try:
-        main_q = deque(sorted(main_q, key=lambda cid: -plen(cid)))
+        main_q = deque(sorted(main_q, key=plen))
     except Exception as e:
         log(f"prompts not measured ({type(e).__name__}): input order")
 
