@@ -1,0 +1,40 @@
+{
+ "model": "Qwen/Qwen3-14B-AWQ",
+ "env": {
+  "LC_ENGINE_STATS": "1"
+ },
+ "exit": 0,
+ "setup_min": 2.9,
+ "predict_min": 28.8,
+ "engine_ready_min": [
+  2.5
+ ],
+ "restarts": 0,
+ "accuracy": 0.9464,
+ "first_samples": 167,
+ "first_correct": 159,
+ "first_forced": 27,
+ "first_forced_correct": 20,
+ "continued": 0,
+ "continued_finished": 0,
+ "extra_samples": 0,
+ "no_think_answers": 32,
+ "first_tokens_mean": 1873,
+ "first_done_min": {
+  "0.5": 16.5,
+  "0.9": 26.56,
+  "1.0": 28.78
+ },
+ "per_family": {
+  "auction": "16/17",
+  "bank": "17/17",
+  "exchange": "17/17",
+  "fuel": "16/17",
+  "league": "17/17",
+  "locker": "17/17",
+  "meeting": "17/17",
+  "nirbhay15": "15/15",
+  "race": "15/17",
+  "table": "12/17"
+ }
+}
