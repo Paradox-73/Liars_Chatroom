@@ -31,9 +31,10 @@ CUDA 12.9 (Kaggle's 580 does).
    - a sample that reached its cap while still thinking, continued to 16,384 tokens in total. It goes first only
      while the first samples are on schedule, and holds at most half of the slots while they wait;
    - the first sample of the next case, seed 0, longest prompt first (a long prompt means long reasoning, so slow
-     cases start early), at most 4,096 tokens. Cutting later cases shorter to fit the time costs accuracy: on our
-     300 new-family cases a cap that shared the remaining tokens out evenly scored 0.930 against 0.957 without it,
-     because the cases still waiting are the short ones and most of them finish in time anyway;
+     cases start early), at most 3,072 tokens (see Choosing the model). Cutting only the later cases shorter to fit
+     the time costs accuracy: on our 300 new-family cases a cap that shared the remaining tokens out evenly scored
+     0.930 against 0.957 without it (both with a 4,096-token first sample), because the cases still waiting are the
+     short ones and most of them finish in time anyway;
    - an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin first, up to 5 samples a
      case, none once two clean samples agree.
 
@@ -51,9 +52,10 @@ The clock starts with `predict.py`. A file of 450 to 600 cases gets 80 minutes; 
 case without a finished sample gets a one-token answer without thinking; 90 seconds before the end, unfinished first
 samples stop too. At the end the model process is stopped and the final file is written. `--minutes` overrides it.
 
-Nothing cuts reasoning short to make room for waiting cases. On two T4 cards every case reached a thinking answer in
-time (our 300 new-family cases and 450 test cases). On a slower machine, a case not reached by the stop time gets the
-one-token answer, which is right far less often (40% for Qwen3-8B on the new-family cases, against 95% with thinking).
+The 3,072-token cap on first samples is fixed: it does not shrink when time runs short. A case whose first sample has
+not ended (finished, or stopped at the cap and forced) by the end gets the one-token answer, which is right far less
+often (40% for Qwen3-8B on the new-family cases, against 95% with thinking). On two T4 cards that happened to none of
+our 300 new-family cases and to 16 of the 168 cases of our second set (41 with a 4,096-token first sample).
 
 ### Failure handling
 
@@ -84,7 +86,7 @@ run (53 minutes for 300 cases). Accuracy counts every case, including those the 
 
 | Judge on two T4 cards | New-family accuracy | Notes |
 |---|---|---|
-| Qwen3-14B-AWQ, 4,096-token first pass (this submission) | **0.957** (287 of 300) | 297 cases reached; 150 to 175 tokens/s |
+| Qwen3-14B-AWQ, 4,096-token first pass (this submission's model) | **0.957** (287 of 300) | 297 cases reached; 150 to 175 tokens/s |
 | Qwen3-8B-AWQ, 2,048-token first pass, continued to 8,192 | 0.893 | 299 cases reached, 199 of them capped |
 | Qwen3-8B unquantised (fp16), 8,192-token cap | 0.643 | 115 cases reached; little room left for the KV cache |
 | Qwen3-8B-AWQ, 8,192-token cap | 0.637 | 115 cases reached |
@@ -94,12 +96,23 @@ run (53 minutes for 300 cases). Accuracy counts every case, including those the 
 T4 cards generate about 150 to 200 tokens per second for these models, whatever their size, so the number of tokens
 a model writes per case decides how many cases it reaches. Qwen3-14B writes about half as many as Qwen3-8B.
 
+**First-sample length.** With the model chosen, we compared a 3,072-token first sample with 4,096 on Kaggle's two T4
+cards, same code, same time per case. We used a second labelled set of 168 cases: 153 from nine more families, written
+apart from the first set and checked claim by claim against every world the evidence allows (`validation/set2` in our
+repository), and 15 from a teammate's own set. There 3,072 scored 0.911 against 0.857: 10 cases better, 1 worse
+(two-sided sign test, p = 0.012), mostly because more cases got a thinking answer in time (152 of 168, against 127).
+On the first set both scored 0.953 (5 cases better, 5 worse); the 0.957 above is an earlier run at 4,096. This
+submission uses the 3,072-token first sample.
+
 **Size limit.** Update 2 lowered the limit for the final code check to 14B. The organisers then clarified on the
 Discussion tab: the limit is 15B total parameters, including embeddings, as listed on the model's official page, and a
 quantised build of an allowed model, such as a 4-bit AWQ, counts by the original model's total. Qwen3-14B has 14.8B
 total parameters on its official page.
 
 ## Tested
+
+The Kaggle rows below were measured with a 4,096-token first sample, before the switch to 3,072; the first three ran
+commit 8d46852, which still had the tail cap.
 
 | Check | Result |
 |---|---|

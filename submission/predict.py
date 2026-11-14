@@ -42,8 +42,9 @@ ATTEMPTS = [  # (judge.py arguments, environment), tried in order until one exit
     (["--eager"], {"VLLM_USE_TRITON_AWQ": "1", "VLLM_ATTENTION_BACKEND": "TRITON_ATTN"}),
     (["--eager", "--tp", "1"], {}),
 ]
-# How the judge model that setup.sh downloads runs; the environment can override each value.
-MODEL_ENV = {"LC_MAIN_TOKENS": "4096",  # first samples stop at 4,096 tokens; capped ones continue to 16,384 if on time
+# How the judge model that setup.sh downloads runs; the environment can override each value. First samples stop at
+# 3,072 tokens: on two T4 cards more cases then get a thinking answer in time than with 4,096 (README, Choosing the model).
+MODEL_ENV = {"LC_MAIN_TOKENS": "3072",  # capped first samples continue to 16,384 tokens if on time
              "LC_TOKEN_LOGPROBS": "0"}  # no log-probabilities on every token: 15% faster on T4, the letter votes alone
 START_LIMIT, STALL_LIMIT = 20 * 60, 5 * 60  # seconds without a heartbeat from judge.py before it counts as hung
 NO_RETRY = (3, 4)  # judge.py exit codes: no GPU, no vLLM
