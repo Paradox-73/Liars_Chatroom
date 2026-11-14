@@ -151,6 +151,7 @@ def main():
     ap.add_argument("--csv", required=True, help="labelled cases (train.csv columns)")
     ap.add_argument("--meta", help="pipe: id,family CSV for the per-family accuracy")
     ap.add_argument("--env", default="{}", help="pipe: JSON of environment settings for predict.py")
+    ap.add_argument("--minutes", type=float, help="pipe: predict.py --minutes (default: its own budget for the file)")
     ap.add_argument("--force", help="ending: force_out.jsonl of explore-force14 (id, k, label, text per first sample)")
     ap.add_argument("--cut", type=int, default=3072, help="ending: the first-sample cap to cut the texts at")
     ap.add_argument("--owner", required=True)
@@ -163,7 +164,11 @@ def main():
     if a.kind == "pipe":
         cfg = dict(MODEL, env=json.loads(a.env))
         meta = open(a.meta, encoding="utf-8", newline="").read()
-        run_py = f"{head}NEWFAM = {cases!r}\nMETA = {meta!r}\nCFG = {cfg!r}\n{show}{PIPE_DRIVER}"
+        driver = PIPE_DRIVER
+        if a.minutes:  # a small file's own budget leaves the model no time once it has loaded
+            driver = driver.replace("--workdir /tmp/w ", f"--workdir /tmp/w --minutes {a.minutes} ")
+            assert driver != PIPE_DRIVER
+        run_py = f"{head}NEWFAM = {cases!r}\nMETA = {meta!r}\nCFG = {cfg!r}\n{show}{driver}"
     else:
         recs = [json.loads(x) for x in open(a.force, encoding="utf-8")]
         ids = {r["id"] for r in recs}
