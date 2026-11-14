@@ -75,6 +75,10 @@ JOINED_RE = re.compile(r"\b(?:and|then|but|before|after|while) (?:then )?(?:@ )?
 NEG_RE = re.compile(r"\b(?:not|never|n't|didnt|no point|nobody|no one|nowhere|neither|nor|cannot|without|almost|"
                     r"nearly|tried to|try to|wanted to|meant to|planned to|hoped to|was going to|were going to)\b|n't\b")
 TIMES_WORD_RE = re.compile(r"(\w+)\W*$")
+# words that make a later arrival a second visit rather than a wrong first-arrival time
+SECOND_VISIT_RE = re.compile(r"\b(?:again|back|return\w*|second|another|later on|once more|for (?!the record)(?:the|a|an|my|our|some)\b|"
+                             r"after (?:my|the|a|an|our|lunch|work|school)|to (?:pick|collect|drop|meet|grab|fetch|get|"
+                             r"see|attend))\b")
 # "at 2:15 PM for an hour": the claim covers a stretch of time, not the one moment event_time() checks
 DURATION_RE = re.compile(r"\bfor (?:about |around |nearly |almost |over |under |another |a further )?(?:an?|one|two|"
                          r"three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty|\d+|half an|a few|several|"
@@ -1191,9 +1195,10 @@ class AccessArrival(Family):
             return None
         t = c.times[0][0]
         # Without "first" ("I got to the office at 9:55 AM") train always means the first arrival: innocents give
-        # exactly the logged time (27 of 27), liars an earlier or later one. A later time may be a second arrival
-        # ("I came to the office at 5:00 PM for the evening meeting"), so only an earlier one is a lie then.
-        if not is_first and t > me:
+        # exactly the logged time (27 of 27), liars an earlier or later one. A later time with a reason or "again"
+        # may be a second arrival ("I came to the office at 5:00 PM for the evening meeting"), so that one is left
+        # to the model; a bare later time ("I got to the office at 10:20 AM") is still a lie, as in train (3 of 3).
+        if not is_first and t > me and SECOND_VISIT_RE.search(c.text):
             return None
         return verdict(self, t == me, f"{c.actor} first arrived at {T.fmt_time(me)}"
                                       f"{'' if is_first else ' (arrival read as the first one)'}")

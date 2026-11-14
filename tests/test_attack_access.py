@@ -61,3 +61,13 @@ def test_liar_stays_open_for_the_model():
                                "2. A: I was at the security gate at 4:00 PM.\n"
                                "3. B: I was at the security gate at 5:00 PM.\n4. D: I bought a sandwich at 3:00 PM."})
     assert "C" in open_speakers(c, solve(c))
+
+
+def test_bare_later_arrival_is_still_a_lie_as_in_train():
+    # train LC04975 (label B), evidence and the liar's line as given; train labels a bare later time as the lie
+    sp = "A = Adaeze; B = Naledi; C = Yuki; D = Sunil"
+    ev = ("All times in this case refer to 29 September 2026. Sunil first arrived at the office at 9:50 AM. Adaeze "
+          "first arrived exactly 15 minutes after Sunil. Naledi first arrived exactly 25 minutes after Sunil.")
+    c = case_from_row({"id": "t", "scenario": "", "speakers": sp, "evidence": ev,
+                       "chat": "1. B: I got to the office at 10:20 AM."})
+    assert {v.status for v in solve(c).verdicts.get(1, [])} == {"lie"}
