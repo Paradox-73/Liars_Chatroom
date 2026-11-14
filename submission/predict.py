@@ -9,7 +9,7 @@
    over the speakers the rules did not clear (a forced answer at half weight), then the model's one-token answer
    without thinking, then the letter C (or the first open speaker if the rules cleared C).
 
-Time is measured from the start of this process: 80 min for an input of 450 to 600 cases (the limit is 90 min for
+Time is measured from the start of this process: 80 min for an input of 450 to 1,500 cases (the limit is 90 min for
 about 450), the same time per case for a smaller input, and the same time per model-judged case for a larger one.
 Model work stops 5 min before the end and the child is stopped at the end. A model process that fails or hangs is
 restarted with safer engine settings while time allows.
@@ -35,19 +35,21 @@ sys.path.insert(0, ROOT)
 from lc.combine import FALLBACK, LETTERS, decide, open_speakers, vote  # noqa: E402
 from lc.data import case_from_row  # noqa: E402
 from lc.rules import solve  # noqa: E402
+from lc.rules.core import Result  # noqa: E402
 
 ATTEMPTS = [  # (judge.py arguments, environment), tried in order until one exits cleanly; as in kaggle/launcher.py
     ([], {}),
     (["--eager"], {}),
-    (["--eager"], {"VLLM_USE_TRITON_AWQ": "1", "VLLM_ATTENTION_BACKEND": "TRITON_ATTN"}),
-    (["--eager", "--tp", "1"], {}),
+    (["--eager"], {"VLLM_USE_TRITON_AWQ": "1", "VLLM_ATTENTION_BACKEND": "TRITON_ATTN", "LC_GPU_UTIL": "0.85"}),
+    (["--eager", "--tp", "1"], {"LC_GPU_UTIL": "0.85", "LC_MAX_LEN": "5120"}),  # 5,120 as on two cards: prompt + 3,072
 ]
 # How the judge model that setup.sh downloads runs; the environment can override each value. First samples stop at
 # 3,072 tokens: on two T4 cards more cases then get a thinking answer in time than with 4,096 (README, Choosing the model).
 MODEL_ENV = {"LC_MAIN_TOKENS": "3072",
              "LC_CONT_TOKENS": "3072",  # = the cap, so no continuations: spare time goes to extra samples (README)
              "LC_TOKEN_LOGPROBS": "0"}  # no log-probabilities on every token: 15% faster on T4, the letter votes alone
-START_LIMIT, STALL_LIMIT = 20 * 60, 5 * 60  # seconds without a heartbeat from judge.py before it counts as hung
+START_LIMIT, STALL_LIMIT = 10 * 60, 5 * 60  # seconds without a heartbeat from judge.py before it counts as hung;
+# Kaggle's two T4 cards start the engine in under 3 min
 NO_RETRY = (3, 4)  # judge.py exit codes: no GPU, no vLLM
 
 
@@ -73,8 +75,13 @@ def read_cases(path):
             fixed[cid] = (FALLBACK, "unreadable")
             continue
         try:
-            letter, tier = decide(case, [])  # no model files yet: a case the rules leave open comes back as "fallback"
-            open_ = "".join(sorted(open_speakers(case, solve(case)))) if tier == "fallback" else ""
+            res = solve(case)
+            if any(not s.startswith("All times in this case refer to") for s in res.unconsumed):
+                # evidence no rule family read can change what the rest means: no rule answer, nobody cleared
+                letter, tier, res = None, "fallback", Result(cid)
+            else:
+                letter, tier = decide(case, [])  # no model files yet: a case the rules leave open comes back as "fallback"
+            open_ = "".join(sorted(open_speakers(case, res))) if tier == "fallback" else ""
         except Exception as e:
             log(f"case {cid}: the rules failed ({type(e).__name__}); the model judges every speaker")
             letter, tier, open_ = None, "fallback", ""
@@ -136,7 +143,10 @@ def stop(child):
             pass
     elif child.poll() is None:
         child.kill()
-    child.wait()
+    try:
+        child.wait(timeout=60)
+    except subprocess.TimeoutExpired:  # stuck in the driver: the final file matters more than reaping it
+        log(f"model process {child.pid} did not exit within 60 s of SIGKILL; going on without it")
 
 
 def gpu_ids():
@@ -150,9 +160,10 @@ def gpu_ids():
     return [str(i) for i in range(out.count("GPU "))]
 
 
-def run_model(a, cases, cands, write, stop_new, hard):
-    """Runs judge.py until it finishes or time is up, restarting it after a failure; returns the records. With
-    LC_DATA_PARALLEL=1 and two or more cards, one judge.py per card takes every n-th case on its own."""
+def run_model(a, cases, cands, recs, write, stop_new, hard):
+    """Runs judge.py until it finishes or time is up, restarting it after a failure, and merges its answers into recs
+    as they arrive, so an error here keeps them. With LC_DATA_PARALLEL=1 and two or more cards, one judge.py per card
+    takes every n-th case on its own."""
     work = a.workdir or tempfile.mkdtemp(prefix="liars_")
     os.makedirs(work, exist_ok=True)
     settings = dict(MODEL_ENV, **{k: v for k, v in os.environ.items() if k in MODEL_ENV})
@@ -160,6 +171,9 @@ def run_model(a, cases, cands, write, stop_new, hard):
     parts = len(gpus) if len(gpus) >= 2 else 1
     py = next((p for p in (os.environ.get("LC_PYTHON"), os.path.join(HERE, ".venv", "bin", "python")) if p and os.path.exists(p)),
               sys.executable)
+    if os.path.isdir(os.path.join(HERE, ".venv")) and not os.path.exists(os.path.join(HERE, ".venv", "bin", "python")):
+        log(f"ERROR: .venv/bin/python does not resolve (a moved folder, or the Python it links to is gone): the model "
+            f"process runs with {py}; run setup.sh again")
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}  # a PYTHONPATH made for another Python must not leak in
     env.update(settings, PYTHONPATH=ROOT, HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", VLLM_NO_USAGE_STATS="1", DO_NOT_TRACK="1")
     workers = []
@@ -188,7 +202,7 @@ def run_model(a, cases, cands, write, stop_new, hard):
         w.update(child=subprocess.Popen(cmd, env=dict(w["env"], **attempt_env), start_new_session=os.name == "posix"),
                  started=time.time())
 
-    recs, last_write, unwritten = {}, time.time(), False
+    last_write, unwritten = time.time(), False
     try:
         for w in workers:
             launch(w)
@@ -213,11 +227,12 @@ def run_model(a, cases, cands, write, stop_new, hard):
                 unwritten, w["pos"] = unwritten or pos != w["pos"], pos
                 rc, w["child"] = w["child"].returncode, None
                 log(f"model process {w['n']} exited with code {rc}; {len(recs)} answers so far")
-                if rc == 0 or rc in NO_RETRY or time.time() > stop_new - 10 * 60:
+                if rc == 0 or rc is None or rc in NO_RETRY or time.time() > stop_new - 10 * 60:  # None: still holds the cards
                     continue
                 if w["attempt"] + 1 < len(ATTEMPTS):
                     log(f"MODEL PROCESS {w['n']} FAILED; restarting it with safer settings")
-                    w["attempt"] += 1
+                    # after a start that hung, one card at once: the attempts in between start on two cards again
+                    w["attempt"] = len(ATTEMPTS) - 1 if why == "the engine did not start" else w["attempt"] + 1
                     launch(w)
                 else:
                     log(f"MODEL PROCESS {w['n']} FAILED on every attempt")
@@ -230,7 +245,6 @@ def run_model(a, cases, cands, write, stop_new, hard):
                 stop(w["child"])
         if not a.workdir:
             shutil.rmtree(work, ignore_errors=True)
-    return recs
 
 
 def main():
@@ -239,17 +253,17 @@ def main():
     ap.add_argument("--output", required=True)
     ap.add_argument("--model", default=os.environ.get("LC_MODEL_DIR", os.path.join(HERE, "models", "judge")),
                     help="local model folder (default: models/judge, where setup.sh puts it, or $LC_MODEL_DIR)")
-    ap.add_argument("--minutes", type=float, help="time budget; default 80 for 450 to 600 cases, 80 x cases / 450 below, 80 x model cases / 450 above")
+    ap.add_argument("--minutes", type=float, help="time budget; default 80 for 450 to 1,500 cases, 80 x cases / 450 below, 80 x model cases / 450 above")
     ap.add_argument("--no-llm", action="store_true", help="rules and fallbacks only")
     ap.add_argument("--workdir", help="folder for the model's answers (default: a new temporary folder)")
     a = ap.parse_args()
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))  # runs the finally blocks, which stop the model process
 
     ids, fixed, cases, cands = read_cases(a.input)
-    # The limit is 90 min for about 450 cases. 450 to 600 cases get 80 min and fewer get the same time per case. A bigger
+    # The limit is 90 min for about 450 cases. 450 to 1,500 cases get 80 min and fewer get the same time per case. A bigger
     # file (test.csv, when predict.py is checked against our submission) gets that time per case the model judges.
     n, n_model = len(ids), len(cases)
-    minutes = a.minutes or 80 * (n / 450 if n < 450 else 1 if n <= 600 else max(1, n_model / 450))
+    minutes = a.minutes or 80 * (n / 450 if n < 450 else 1 if n <= 1500 else max(1, n_model / 450))
     hard = T0 + 60 * minutes
     stop_new = hard - 5 * 60
     tiers = write_predictions(a.output, ids, fixed, cands, {})
@@ -266,7 +280,7 @@ def main():
         log("too little time to start the model: the rule answers and fallbacks stand")
     else:
         try:
-            recs = run_model(a, cases, cands, lambda r: write_predictions(a.output, ids, fixed, cands, r), stop_new, hard)
+            run_model(a, cases, cands, recs, lambda r: write_predictions(a.output, ids, fixed, cands, r), stop_new, hard)
         except Exception as e:
             log(f"MODEL STEP FAILED: {e!r}; the answers so far stand")
     tiers = write_predictions(a.output, ids, fixed, cands, recs)

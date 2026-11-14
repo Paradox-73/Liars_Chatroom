@@ -12,8 +12,8 @@ Model answers used (frozen here):
 Run: 3,500 cases; the rules answered 2,436 (8 of them by elimination). predict.py took 184.2 minutes (budget 189.2)
 and exited with code 0; the whole notebook step took 186.9 minutes.
 
-Command, from the repository root at commit 62523c8 (`lc/` and `submission/predict.py` at later commits are the same;
-only the README and `team_info.json` changed):
+Command, from the repository root at commit 62523c8 (`lc/` and `submission/predict.py` stay the same up to main at
+575a350, where only the README and `team_info.json` changed; branch feat/predict-v2 changes both, so check out 62523c8):
 
 ```
 python -c "import sys; sys.path.insert(0, 'submission'); import predict as p; \

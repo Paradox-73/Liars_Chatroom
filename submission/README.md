@@ -16,23 +16,26 @@ python predict.py --input hidden.csv --output predictions.csv   # offline
 `models/judge` (9.3 GB). `predict.py` needs only the standard library: it starts its model process with
 `.venv/bin/python`, so any Python 3 runs it (tested with 3.10, 3.12 and Kaggle's default Python). Another weights folder:
 `LC_MODEL_DIR=<folder>` for both scripts, or `--model <folder>` for `predict.py`. The NVIDIA driver must support
-CUDA 12.9 (Kaggle's 580 does).
+CUDA 12.9 (Kaggle's 580 does). In Docker, start the container with `--ipc=host` (or a large `--shm-size`): the engine
+on two cards passes tensors between its processes through shared memory.
 
 ## How it works
 
 1. **Rules.** `lc/rules` (27 families, standard library) parses the evidence and judges the claims it fully
    understands. A case is answered when exactly one speaker has a claim that cannot be true. A speaker whose claims
-   were all judged consistent is cleared. On train the rules answer 2,257 of 2,500 cases with no error. On scenario
-   families they were not written for they stay silent: on our 300 synthetic cases from 17 new families they answer
-   none and misfire on none. A complete predictions file is written at once.
+   were all judged consistent is cleared. On train the rules answer 2,257 of 2,500 cases with no error. Their answer
+   and the cleared speakers count only when the rules read every evidence sentence (2,221 of those 2,257): a sentence
+   no family reads can change what the rest means, so such a case goes to the model with no speaker cleared. On
+   scenario families they were not written for they stay silent: on our 300 synthetic cases from 17 new families
+   they answer none and misfire on none. A complete predictions file is written at once.
 2. **Model.** `judge.py`, a child process, serves Qwen3-14B-AWQ with vLLM (tensor parallel over both cards, float16)
    on the cases the rules leave open: the prompt of `lc/llm/prompt.py`, thinking mode, temperature 0.6, top-p 0.95,
    top-k 20. Up to 40 cases are in flight, fewer when the KV cache would overflow. A free slot takes, in order:
-   - the first sample of the next case, seed 0, longest prompt first (a long prompt means long reasoning, so slow
-     cases start early), at most 3,072 tokens (see Choosing the model). Cutting only the later cases shorter to fit
+   - the first sample of the next case, seed 0, shortest prompt first, at most 3,072 tokens (see Choosing the
+     model). A long prompt means long reasoning, so the cases left without a first sample when time runs out are the
+     slow ones, not the cheap ones that are almost always right once reached. Cutting the later cases shorter to fit
      the time costs accuracy: on our 300 new-family cases a cap that shared the remaining tokens out evenly scored
-     0.930 against 0.957 without it (both with a 4,096-token first sample), because the cases still waiting are the
-     short ones and most of them finish in time anyway;
+     0.930 against 0.957 without it (both with a 4,096-token first sample, longest prompt first);
    - an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin first, up to 5 samples a
      case, none once two clean samples agree.
 
@@ -48,24 +51,34 @@ CUDA 12.9 (Kaggle's 580 does).
 
 ### Time
 
-The clock starts with `predict.py`. A file of 450 to 600 cases gets 80 minutes; a smaller file the same time per case
+The clock starts with `predict.py`. A file of 450 to 1,500 cases gets 80 minutes; a smaller file the same time per case
 (the kit's selftest with 200 cases gets 35.6 minutes); a larger one 80 minutes per 450 cases the model judges
-(`test.csv`: about 190 minutes). No new model work starts in the last 5 minutes. Then optional samples stop, and every
-case without a finished sample gets a one-token answer without thinking; 90 seconds before the end, unfinished first
-samples stop too. At the end the model process is stopped and the final file is written. `--minutes` overrides it.
+(`test.csv`: about 190 minutes). No new model work starts in the last 5 minutes. Then every case without a finished
+sample gets a one-token answer without thinking. While first samples are still waiting or running, extra samples stop
+at once to give those answers their cache; when none are left, running extra samples go on until they end or time is
+up. 90 seconds before the end, any sample still thinking stops if one-token answers are waiting. At the end the model
+process is stopped and the final file is written. `--minutes` overrides it.
 
 The 3,072-token cap on first samples is fixed: it does not shrink when time runs short. A case whose first sample has
 not ended (finished, or stopped at the cap and forced) by the end gets the one-token answer, which is right far less
-often (40% for Qwen3-8B on the new-family cases, against 95% with thinking). On two T4 cards that happened to none of
-our 300 new-family cases and to 16 of the 168 cases of our second set (41 with a 4,096-token first sample).
+often (40% for Qwen3-8B on the new-family cases, against 95% with thinking). On two T4 cards, shortest prompt first,
+that happened to none of our 300 new-family cases and to 1 of the 168 cases of our second set (16 with longest prompt
+first, 41 with a 4,096-token first sample).
 
 ### Failure handling
 
 - The predictions file is complete from the first second and is rewritten every 30 s as answers arrive, by writing
   a new file and renaming it over the old one.
-- A model process that exits with an error, does not start within 20 minutes, or stops making progress for 5
+- A model process that exits with an error, does not start within 10 minutes, or stops making progress for 5
   minutes is stopped with all its engine processes and restarted with safer settings while time allows: no CUDA
-  graphs, then Triton AWQ and attention kernels, then one card. Answers already written are kept.
+  graphs, then Triton AWQ and attention kernels with more card memory left free, then one card. A process that did not
+  start goes to one card at once. Answers already read are kept, also when the polling loop itself fails.
+- `setup.sh` runs under `sh` as well as `bash`, installs `uv` with a plain `pip install` first, keeps a Python that `uv`
+  downloads in `.python` beside the code, retries the package install and the model download twice 30 s apart, and
+  ends by running a tensor on a card. The zip marks its files as made on Unix, so `unzip` keeps `setup.sh` and
+  `predict.py` executable. `predict.py` logs an error when `.venv/bin/python` does not resolve.
+- A chat or speaker list in another form (`1)` or no numbers, a lower-case label, `A (Name):`, `A: Name`, commas, a
+  trailing `;`) is read instead of getting the letter C; a line in no known form continues the message before it.
 - With one T4 the model runs on that card with 8 cases in flight. Without a GPU, vLLM or the weights, the rule
   answers and fallbacks stand, and the log says so.
 
@@ -113,6 +126,15 @@ is forced at once and spare time goes to extra samples. With the 3,072-token fir
 first set scored 0.957 (299 of 299 cases reached, 41 forced, 5 extra samples). On the second set no spare time is
 left for continuations either way.
 
+**Version 2.** First samples start shortest prompt first, running extra samples go on past the stop time when every
+case has its first sample, chat and speaker lines are read in more forms, a rule answer counts only when the rules read
+every evidence sentence, and only questions leave a speaker out of the vote. Against the code before it, on the same
+cases and time per case on Kaggle's two T4 cards: the second set scored 0.946 against 0.911 (11 cases better, 5 worse,
+two-sided sign test p = 0.21), with 167 of 168 cases getting a thinking answer against 152; the first set scored 0.957
+against 0.957 (4 better, 4 worse), with all 300 cases reached and 23 extra samples. Ending a capped sample with a
+sentence that restates the one-lie rule before `ANSWER:` changed none of 62 forced answers (37 right either way), so
+the plain ending stays.
+
 **Size limit.** Update 2 lowered the limit for the final code check to 14B. The organisers then clarified on the
 Discussion tab: the limit is 15B total parameters, including embeddings, as listed on the model's official page, and a
 quantised build of an allowed model, such as a 4-bit AWQ, counts by the original model's total. Qwen3-14B has 14.8B
@@ -120,10 +142,16 @@ total parameters on its official page.
 
 ## Tested
 
-The rows below ran this code (commit 62523c8: 3,072-token first sample, no continuations) unless a row says otherwise.
+The first rows ran this code (version 2, commit c5b55b1). The rows after them ran the code before version 2 (commit
+62523c8: 3,072-token first sample, no continuations, longest prompt first) unless a row says otherwise.
 
 | Check | Result |
 |---|---|
+| Version 2, the 300 new-family cases, Kaggle, two T4 cards | 0.957 (287 of 300), 52.3 of 53.3 min, exit 0. All 300 cases got a thinking answer (44 forced at 3,072 tokens); 23 extra samples |
+| Version 2, the 168 cases of the second set, Kaggle, two T4 cards | 0.946 (159 of 168), 28.8 of 29.9 min, exit 0. 167 cases got a thinking answer (27 forced); 1 the answer without thinking |
+| Version 2, `python -m pytest tests` | 20 passed: judge.py against a fake engine (shortest prompt first, extra samples at the stop time, the hard stop), parsing, the vote, rule answers on cases with unread evidence |
+| Version 2, `setup.sh` under Ubuntu's `sh` (dash) with stub downloads, and the zip through `unzip` | runs; a failing download is tried 3 times, then setup stops; `setup.sh` and `predict.py` keep mode 755 |
+| Version 2, kit `selftest.py --n 50` on a laptop without a GPU | OK, 0.980 in 1.0 s (rules and fallbacks only) |
 | Kit `selftest.py --n 200`, Kaggle, two T4 cards | OK, accuracy 1.000, 5.4 min (the kit's estimate for 450: 12.0 min); 12 cases reached the model |
 | 450 test cases the rules leave open (the closest stand-in for new families), Kaggle, two T4 cards, cold start | 75.0 min including model load (engine ready at 2.3 min), exit 0; the limit is 90. All 449 cases the model judged got a thinking answer: 35 first samples stopped at 3,072 tokens and were forced, and 92 extra samples went to 66 uncertain cases; none needed the answer without thinking. Mean 1,413 output tokens per first sample |
 | 40 of those cases on one T4 (15-minute budget) | 11.9 min, exit 0. Cache room for 6 cases in flight, so one card writes about a third as many tokens a minute as two: 19 of 40 cases got a thinking answer (2 forced) and 21 the answer without thinking |

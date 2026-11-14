@@ -6,12 +6,13 @@ kaggle/kjudge.py) on the cases in --cases, and appends one JSON line per finishe
 the environment, which predict.py fills from its MODEL_ENV table. A free slot takes, in this order:
   1. a continuation: a first sample that reached its cap while still thinking goes on to LC_CONT_TOKENS in total. It
      goes first only while the first samples are on schedule, and holds at most half the slots while they wait.
-  2. the first sample of the next case, seed 0, longest prompt first, at most LC_MAIN_TOKENS.
+  2. the first sample of the next case, seed 0, shortest prompt first, at most LC_MAIN_TOKENS.
   3. an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin over the speakers the rules
      did not clear, at most 5 samples a case, none once the margin reaches 1.5.
 A sample with no "ANSWER:" line gets a forced answer: "ANSWER:" is appended and one more token is read.
-No thinking work starts after --stop-new: running continuations and extra samples stop, and every case without a
-finished sample gets a one-token answer without thinking; 90 s before --hard-stop, unfinished first samples stop too.
+No thinking work starts after --stop-new: running continuations stop, and every case without a finished sample gets a
+one-token answer without thinking. Running extra samples stop too while first samples are waiting or running; with none
+left they go on. 90 s before --hard-stop, every sample still thinking stops if one-token answers are waiting.
 The process exits once nothing is left, or at --hard-stop.
 Exit codes: 0 done, 1 error, 3 no GPU, 4 vLLM missing.
 """
@@ -89,7 +90,7 @@ def main():
     presence = float(os.environ.get("LC_PRESENCE_PENALTY", 0))  # per model: the Qwen3.5 models use 1.5
     # letter probabilities at the answer need log-probabilities on every sampled token; without them the letter alone votes
     token_logprobs = NUM_LOGPROBS if os.environ.get("LC_TOKEN_LOGPROBS", "1") == "1" else None
-    util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered only to test on a shared card
+    util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered by the later attempts of predict.py and on a shared card
     with open(os.path.join(a.model, "config.json")) as f:
         multimodal = "vision_config" in json.load(f)  # Qwen3.5 checkpoints carry a vision tower; it is not loaded
     log(f"{gpus} GPU(s): tensor parallel {tp}, max model length {max_len}, {think_slots}+{quick_slots} slots, "
@@ -127,11 +128,12 @@ def main():
             plens[cid] = len(tok.encode(prompt(cid)))
         return plens[cid]
 
-    # Longest prompt first: on the 14B's test answers a long prompt means long reasoning (correlation 0.51; the top
-    # quarter of prompts held 21 of the 29 capped samples), so the slow cases start early and the cases left for the
-    # one-token answers at the stop time are the short ones.
+    # Shortest prompt first: a long prompt means long reasoning (correlation 0.51 on the 14B's test answers, 0.34 on set2),
+    # so the cases left without a first sample when time runs out are the slow ones, not the cheap ones. Longest first
+    # left the short ones: on set2, 15 of the 16 cases never reached were in the shortest quarter, whose 27 reached cases
+    # were all right.
     try:
-        main_q = deque(sorted(main_q, key=lambda cid: -plen(cid)))
+        main_q = deque(sorted(main_q, key=plen))
     except Exception as e:
         log(f"prompts not measured ({type(e).__name__}): input order")
 
@@ -234,10 +236,12 @@ def main():
         if now >= a.stop_new and not late:
             late = True
             need = [i for i in order if not any(k >= 0 for k in samples.get(i, {})) and -1 not in samples.get(i, {})]
-            # continuations and extra samples only improve cases that already have an answer
+            # continuations and extra samples only improve cases that already have an answer, so extra samples give their
+            # cache to the one-token answers while first samples are left; with none left they run on to the hard stop
+            first_left = bool(main_q) or any(v[0] == "main" for v in flight.values())
             log(f"stop time: {len(main_q)} first samples and {len(queued_cont)} continuations dropped, "
-                f"{abort(('cont', 'extra'))} running continuations and extra samples stopped; "
-                f"{len(need)} cases get an answer without thinking")
+                f"{abort(('cont', 'extra') if first_left else ('cont',))} running continuations"
+                f"{' and extra samples' if first_left else ''} stopped; {len(need)} cases get an answer without thinking")
             main_q.clear()
             queued_cont.clear()
             for cid in need:

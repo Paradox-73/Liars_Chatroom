@@ -8,7 +8,7 @@ import os
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SKIP = {"models", ".venv", "__pycache__", "make_zip.py"}
+SKIP = {"models", ".venv", ".python", "__pycache__", "make_zip.py"}
 
 
 def entries():
@@ -28,6 +28,7 @@ def main():
     with zipfile.ZipFile(a.out, "w", zipfile.ZIP_DEFLATED) as z:
         for path, arc in entries():
             info = zipfile.ZipInfo.from_file(path, arc)
+            info.create_system = 3  # Unix: unzip applies the mode bits only then (on Windows the entry says MS-DOS)
             info.external_attr = (0o100755 if arc in ("setup.sh", "predict.py") else 0o100644) << 16  # Windows has no x bit
             with open(path, "rb") as f:
                 z.writestr(info, f.read(), zipfile.ZIP_DEFLATED)
