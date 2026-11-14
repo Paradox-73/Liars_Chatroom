@@ -51,6 +51,7 @@ MODEL_ENV = {"LC_MAIN_TOKENS": "3072",
 START_LIMIT, STALL_LIMIT = 10 * 60, 5 * 60  # seconds without a heartbeat from judge.py before it counts as hung;
 # Kaggle's two T4 cards start the engine in under 3 min
 NO_RETRY = (3, 4)  # judge.py exit codes: no GPU, no vLLM
+LONG_CASE = 3000  # characters of evidence + chat messages above which the rules are skipped; train and test max 1,214
 
 
 def log(msg):
@@ -74,6 +75,12 @@ def read_cases(path):
         except Exception as e:  # only the type is logged: the message can quote the case's text
             log(f"case {cid} cannot be read ({type(e).__name__}): fallback letter")
             fixed[cid] = (FALLBACK, "unreadable")
+            continue
+        if len(case.evidence) + sum(len(m.text) for m in case.messages) > LONG_CASE:
+            # the rules' time grows steeply with the text (one train row, evidence repeated: 0.5 s at 4,800 characters,
+            # 3.8 s at 9,600, about 21 s at 20,000); such a case goes to the model with every speaker open
+            log(f"case {cid}: longer than {LONG_CASE} characters, the rules are skipped")
+            cases[cid], cands[cid] = case, "".join(LETTERS)
             continue
         try:
             res = solve(case)

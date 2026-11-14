@@ -3,6 +3,7 @@ import csv
 import json
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "submission"))
 import predict  # noqa: E402
@@ -47,3 +48,18 @@ def test_a_bad_answer_line_is_skipped_not_the_whole_merge(tmp_path):
     recs = {}
     pos = predict.merge(str(path), 0, recs)  # before: JSONDecodeError, which stopped the model step
     assert pos == os.path.getsize(path) and sorted(recs) == [("x1", 0), ("x2", 0)]
+
+
+def test_a_very_long_case_skips_the_rules(tmp_path):
+    long_evidence = " ".join([WINDOW] * (20000 // len(WINDOW) + 1))  # about 20,000 characters
+    path = tmp_path / "cases.csv"
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["id", "scenario", "speakers", "evidence", "chat"])
+        w.writerow(["long", "Shed visits.", SPEAKERS, long_evidence, CHAT.format(b="4:30 PM")])
+        w.writerow(["ruled", "Shed visits.", SPEAKERS, WINDOW, CHAT.format(b="4:30 PM")])
+    t = time.time()
+    ids, fixed, cases, cands = predict.read_cases(str(path))
+    assert time.time() - t < 5
+    assert ids == ["long", "ruled"] and fixed == {"ruled": ("B", "rule")}
+    assert list(cases) == ["long"] and cands["long"] == "ABCD"  # before: the rules ran on it and answered it
