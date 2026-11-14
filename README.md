@@ -53,7 +53,7 @@ Public leaderboard:
 | File | What it contains | md5 | Public leaderboard |
 |---|---|---|---|
 | `s1_rules_only.csv` | Rule solver alone, letter C for every case the rules do not answer. A check of rule precision on test. | `96e2b8fd4448dde7caa94a58207d4178` | 0.93333 |
-| `s6` (final) | Rule solver, then Qwen3-14B-AWQ thinking on the 1,064 test cases the rules leave open, from the final code in `submission/`. | `86ef374890c2aa1ab4be4340ab9bceb3` | 1.00000 |
+| `s6` (final) | Rule solver, then Qwen3-14B-AWQ thinking on the 1,064 test cases the rules leave open, from the final code in `submission/`. | `86ef374890c2aa1ab4be4340ab9bceb3` | pending upload |
 
 `s6` is rebuilt byte for byte from frozen model answers (see [Reproduce](#reproduce)).
 
@@ -215,7 +215,8 @@ The kernels in [`kaggle/`](kaggle/) run on two T4 cards. `kaggle/build.py` embed
 | Item | Value | Where it comes from |
 |---|---|---|
 | Public leaderboard, rules only (`s1`) | 0.93333 | Kaggle |
-| Public leaderboard, final file (`s6`) | 1.00000 | Kaggle |
+| Public leaderboard, best earlier uploads (`s2`, `s3`) | 1.00000 | Kaggle |
+| Public leaderboard, final file (`s6`) | pending upload | Kaggle |
 | Rule solver on test, cases answered | 2,436 of 3,500 (69.6%), 8 of them by elimination | `results/frozen/s6/REBUILD.md` |
 | Test cases the model judged | 1,064 | same |
 | `s6` first samples | 1,064 of 1,064 got a thinking answer; 101 stopped at 3,072 tokens and were forced | same |
