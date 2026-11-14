@@ -48,7 +48,7 @@ CUDA 12.9 (Kaggle's 580 does).
 
 ### Time
 
-The clock starts with `predict.py`. A file of 450 to 600 cases gets 80 minutes; a smaller file the same time per case
+The clock starts with `predict.py`. A file of 450 to 1,500 cases gets 80 minutes; a smaller file the same time per case
 (the kit's selftest with 200 cases gets 35.6 minutes); a larger one 80 minutes per 450 cases the model judges
 (`test.csv`: about 190 minutes). No new model work starts in the last 5 minutes. Then optional samples stop, and every
 case without a finished sample gets a one-token answer without thinking; 90 seconds before the end, unfinished first

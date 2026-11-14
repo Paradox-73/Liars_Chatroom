@@ -109,7 +109,7 @@ An exception inside a family never stops a case. It is recorded and the family i
 
 - **First sample.** Each case gets one sample, longest prompt first, capped at 3,072 tokens. The cap is fixed. It does not shrink when time runs short, and there is no cap on the tail of the queue.
 - **No continuations.** A sample that hits the cap is forced to an answer: `ANSWER:` is appended and one token is read. Spare time goes to extra samples (different seeds) for the least certain cases, up to 5 samples a case, and none once two clean samples agree.
-- **Time.** `predict.py` allots 80 minutes to a file of 450 to 600 cases, the same time per case for smaller files and 80 minutes per 450 judged cases for larger ones. In the last 5 minutes no new work starts, and any case without a finished sample gets a one-token answer without thinking.
+- **Time.** `predict.py` allots 80 minutes to a file of 450 to 1,500 cases, the same time per case for smaller files and 80 minutes per 450 judged cases for larger ones. In the last 5 minutes no new work starts, and any case without a finished sample gets a one-token answer without thinking.
 - **Failure handling.** The predictions file is complete from the first second and is rewritten every 30 s. A model process that crashes or stalls is restarted with safer settings, ending on one card. Without a GPU the rule answers and fallbacks stand.
 
 ### The vote
