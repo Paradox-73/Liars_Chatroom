@@ -39,12 +39,17 @@ def parse_speakers(s):
 
 
 def parse_chat(chat):
+    """The "N. A: text" messages. A line in another form continues the message before it (one dropped before the first
+    message), so one odd line no longer makes the whole case unreadable; blank lines are skipped."""
     msgs = []
     for line in chat.strip().splitlines():
         m = MSG_RE.match(line)
-        if not m:
-            raise ValueError(f"bad chat line: {line!r}")
-        msgs.append(Message(int(m.group(1)), m.group(2), m.group(3)))
+        if m:
+            msgs.append(Message(int(m.group(1)), m.group(2), m.group(3)))
+        elif line.strip() and msgs:
+            msgs[-1].text = f"{msgs[-1].text} {line.strip()}"
+    if not msgs:
+        raise ValueError("no chat line in the form N. A: text")
     return msgs
 
 
