@@ -1,19 +1,22 @@
 """Builds notebooks/methodology.ipynb from the repository: embeds the code zip of the final Kaggle kernel, our labelled
-validation files and, when results/frozen/s8/ exists, the frozen model answers of the final run.
+validation files and the frozen model answers of the final run s7.
 
 python notebooks/build_notebook.py             # from the repository root; writes notebooks/methodology.ipynb
 python notebooks/build_notebook.py --execute   # also runs the CPU cells and saves their outputs (needs nbformat,
                                                # nbclient and ipykernel; LC_NB_DATA = a folder with train.csv only)
-When s8 lands: set FINAL_MD5 below to its md5, add results/frozen/s8/<answers>.jsonl, and run with --execute.
+The kit zip is read from $LC_KIT_ZIP, default ../release/v3/ClaudeLaggye_code.zip beside the repository.
 """
 import ast, base64, glob, gzip, hashlib, json, os, sys
 
-FINAL_MD5 = "PENDING_S8"  # md5 of the final submission file s8
-RUN = "kaggle/predict-full-v3/run.py"
+FINAL_MD5 = "2cb35f3b2e402387c44206144154f30e"  # md5 of the final submission file s7
+KIT_MD5 = "0e48a64ba6dff204793f9241bb689ec3"
+kit = open(os.environ.get("LC_KIT_ZIP", "../release/v3/ClaudeLaggye_code.zip"), "rb").read()
+assert hashlib.md5(kit).hexdigest() == KIT_MD5, "the kit zip changed"
+RUN = "kaggle/predict-full-v2-nirbhay/run.py"  # the kernel that wrote s7: only its commit and zip md5 are quoted
 src = open(RUN, encoding="utf-8").read()
 consts = {n.targets[0].id: n.value.value for n in ast.parse(src).body
           if isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name) and n.targets[0].id in ("ZIP", "ZIP_MD5", "COMMIT")}
-assert hashlib.md5(base64.b64decode(consts["ZIP"])).hexdigest() == consts["ZIP_MD5"] == "2ec97551db7044ea0b9da95460a410fd"
+assert hashlib.md5(base64.b64decode(consts["ZIP"])).hexdigest() == consts["ZIP_MD5"] == "67c4f145d20fc5341ca0cc60e0bd083f"
 
 def blob(path):
     raw = open(path, "rb").read()
@@ -26,7 +29,7 @@ DATA = {name: blob(path) for name, path in (
     ("attack_access.csv", "validation/attack/cases_access.csv"),
     ("attack_move.csv", "validation/attack/cases_move.csv"),
     ("attack_calqty.csv", "validation/attack/cases_calqty.csv"),
-    *[("final_answers.jsonl", p) for p in sorted(glob.glob("results/frozen/s8/*.jsonl"))[:1]])}
+    ("final_answers.jsonl", "results/frozen/s7/test_qwen3-14b-awq_v2.jsonl"))}
 
 cells = []
 def md(text):
@@ -45,12 +48,13 @@ together with the evidence; the task is to name its sender. Our entry runs in tw
 plain Python (27 evidence families, standard library only) answers the cases it can prove and clears the speakers whose
 claims it judged consistent; it stays silent on anything it does not fully read. Every other case goes to one open
 model, Qwen3-14B-AWQ, run offline with vLLM on two T4 cards in thinking mode, with extra samples for the least certain
-cases and a vote over the speakers the rules did not clear. On train the rules answer 2,218 of 2,500 cases with no
+cases and a vote over the speakers the rules did not clear. On train the rules answer 2,221 of 2,500 cases with no
 error. On 300 labelled cases from 17 scenario families that appear in neither train nor test, the rules answer none and
 the full pipeline scores 0.957 (287 of 300); on a second, separately written set of 168 cases it scores 0.946. On
 Kaggle's two T4 cards, 450 cases the rules leave open took 78.5 of the 90 allowed minutes, including model load. The
-final submission file (s8) is the output of exactly this code on `test.csv`; section 8 rebuilds it from the frozen
-model answers of that run and checks its md5.
+final submission file is s7, written on Kaggle by this pipeline before the rule fixes of section 3b; on `test.csv`
+the fixed rules give exactly the same answers, and section 8 rebuilds s7 byte for byte with the code in this notebook
+from the frozen model answers of that run.
 """)
 
 md("""
@@ -71,8 +75,8 @@ md("""
 - **CPU cells** (sections 2 to 6) run anywhere in a few seconds: they read `train.csv` and our own validation files only.
 - **GPU cells** (section 8) need a Kaggle notebook with *GPU T4 x2* and *Internet on* (internet only for `setup.sh`).
   Each is guarded: without a GPU it prints why it was skipped. The flags in the next cell choose what runs.
-- The code is embedded in this notebook as the exact zip our final Kaggle kernel ran (md5 `2ec97551db7044ea0b9da95460a410fd`,
-  repository commit `2c00db8`); the next cells check the md5 and unpack it. Nothing is downloaded except by `setup.sh`.
+- The code is embedded in this notebook as our participant-kit zip, the code submission (md5
+  `0e48a64ba6dff204793f9241bb689ec3`, repository commit `900e11b`); the next cells check the md5 and unpack it. Nothing is downloaded except by `setup.sh`.
 - The saved outputs in this notebook come from a CPU-only run, so the GPU cells there show "skipped". The GPU
   results are in section 5, with the Kaggle kernel that produced each.
 """)
@@ -108,10 +112,11 @@ print("train.csv found:", TRAIN is not None, "| GPUs:", N_GPU, "| GPU cells will
 """)
 
 code(f"""
-# The code submission, exactly as the final Kaggle kernel (paradox73/predict-full-v3) embedded it:
-# kaggle/predict-full-v3/run.py, built from commit {consts["COMMIT"]}.
-ZIP_MD5 = "{consts["ZIP_MD5"]}"
-ZIP = "{consts["ZIP"]}"
+# The code submission: our participant-kit zip (release/v3/ClaudeLaggye_code.zip, repository commit 900e11b).
+# s7 itself was written on Kaggle by kernel predict-full-v2-nirbhay from the zip of commit {consts["COMMIT"][:7]}
+# (md5 {consts["ZIP_MD5"]}); this zip differs from that one only in the rule fixes of section 3b and the documents.
+ZIP_MD5 = "{KIT_MD5}"
+ZIP = "{base64.b64encode(kit).decode()}"
 raw = base64.b64decode(ZIP)
 assert hashlib.md5(raw).hexdigest() == ZIP_MD5, "embedded zip changed"
 shutil.rmtree(SUB, ignore_errors=True)
@@ -126,8 +131,8 @@ code("""
 # newfam.csv: 300 cases, 17 families; set2.csv: 153 cases, 9 families (both made by our generator programs in
 # validation/ of the repository); open_model_cases.csv: 15 cases a teammate generated with Qwen3-8B and checked.
 # attack_*.csv: 87 cases in train's evidence wording with different logic (validation/attack, section 3b).
-# final_answers.jsonl (when present): one line per model sample of the final test.csv run (case id, sample number,
-# letter, token count).
+# final_answers.jsonl: one line per model sample of the final test.csv run, s7 (case id, sample number, letter,
+# token count).
 FILES = {
 """ + "".join(f'    "{k}": ("{m}", "{b}"),\n' for k, (m, b) in DATA.items()) + """}
 DATA = os.path.join(SUB, "nbdata")
@@ -269,14 +274,16 @@ reuse train's evidence wording with logic train does not have. On these, the rul
 the true liar. Each fix makes a rule step aside, so the model decides:
 
 - **Lasting claims and unusual access wording**: a claim that lasts ("for an hour"), "didn't go in until T", a code
-  that did not work, someone else's wristband, and a later arrival without "first" are no longer judged.
+  that did not work, someone else's wristband, and a later arrival given with a reason or "again" are no longer
+  judged (a bare later arrival time is still judged a lie, as in train).
 - **Times the calendar rules do not read**: opening hours and sessions skip claims with 24-hour or "p.m." times,
   times of day in words, or a length of time.
 - **Shared place names**: a short place name stays unread when the evidence has two places with that name ("the
   cabinet by the door", "the cabinet by the window").
 
-The cost on train is 3 rule answers (2,218 instead of 2,221, all still right); those cases now go to the model. The
-rules still answer none of the newfam and set2 cases, so the validation runs of section 5 are unaffected. The check
+On train the rules still answer 2,221 cases, all right; on the attack cases they give 44 rule answers with no
+problem. The rules still answer none of the newfam and set2 cases, and on `test.csv` they give exactly the answers
+and cleared speakers they gave for s7, so the validation runs of section 5 and the final file are unaffected. The check
 of `validation/attack/check.py`, on the embedded copies (expected: no wrong rule answer and no cleared liar):
 """)
 
@@ -369,10 +376,9 @@ test labels (there are none):
 Each run below used the time per case of the hidden run (80 minutes per 450 cases), on Kaggle's two T4 cards unless
 stated. Accuracy counts every case, including any the model did not reach in time.
 
-The Kaggle rows ran version 2 of the code (zip md5 `67c4f145`, commit `c5b55b1`). The final code (version 3, zip
-`2ec97551`) differs from it only in the rule fixes of section 3b, which make the rules answer fewer cases. On newfam
-and set2 the rules answer none in either version, so those inputs reach the model the same way. On test the rules
-leave a few more cases to the model, so the timing row is a close stand-in rather than a measurement of version 3.
+The Kaggle rows ran version 2 of the code (zip md5 `67c4f145`, commit `c5b55b1`). The submitted code (kit zip
+`0e48a64b`) differs from it only in the rule fixes of section 3b. On newfam and set2 the rules answer none in either
+version, and on `test.csv` the rule step is identical, so every input of these rows reaches the model the same way.
 
 | Check | Result | Kaggle kernel |
 |---|---|---|
@@ -382,9 +388,8 @@ leave a few more cases to the model, so the timing row is a close stand-in rathe
 | One T4: 40 of those cases, 15-minute budget | 12.6 min, exit 0: 34 of 40 got a thinking answer (1 forced), 6 the answer without thinking | `nirbhaysharma504/predict-test-v2-nirbhay` |
 | Participant kit `selftest.py --n 200` | OK, accuracy 1.000, 6.5 min (kit's estimate for 450: 14.7 min); 15 cases reached the model | `nirbhaysharma504/predict-test-v2-nirbhay` |
 | Participant kit `selftest.py --n 50`, laptop without GPU | OK, 0.980 in 1.0 s (rules and fallbacks only) | local |
-| Unit tests, `python -m pytest tests`, version 3 | 36 passed (judge.py against a fake engine, parsing, the vote, rule answers on unread evidence, the attack cases) | local |
-| Version 2's final file s7 (history): all of `test.csv` | 3,500 cases; rules 2,248 (4 by elimination); 1,252 to the model, every one with a first sample (137 forced), 263 extra samples; 222.3 of 222.6 min, exit 0 | `nirbhaysharma504/predict-full-v2-nirbhay` |
-| Final file s8, version 3: all of `test.csv` | pending: running at the time of writing | `paradox73/predict-full-v3` |
+| Unit tests, `python -m pytest tests`, submitted code | 37 passed (judge.py against a fake engine, parsing, the vote, rule answers on unread evidence, the attack cases) | local |
+| Final file s7: all of `test.csv` | 3,500 cases; rules 2,248 (4 by elimination); 1,252 to the model, every one with a first sample (137 forced), 263 extra samples; 222.3 of 222.6 min, exit 0 | `nirbhaysharma504/predict-full-v2-nirbhay` |
 
 For the timing rows, the 450 test ids were chosen by the rules (cases they leave open) and the rows were passed to
 `predict.py` unchanged; nothing about their content was looked at, and no accuracy is measured on them.
@@ -403,7 +408,7 @@ For the timing rows, the 450 test ids were chosen by the rules (cases they leave
 T4 cards generate about 150 to 200 tokens per second for these models whatever their size, so the number of tokens a
 model writes per case decides how many cases it reaches. Qwen3-14B writes about half as many as Qwen3-8B.
 
-Summary of the frozen model answers of the final run s8 (aggregates only), when they are embedded:
+Summary of the frozen model answers of the final run s7 (aggregates only):
 """)
 
 code("""
@@ -412,7 +417,7 @@ FINAL_ANSWERS = os.path.join(DATA, "final_answers.jsonl")
 recs = [json.loads(l) for l in open(FINAL_ANSWERS, encoding="utf-8")] if os.path.exists(FINAL_ANSWERS) else []
 first = [r for r in recs if r["k"] == 0]
 if not recs:
-    print("skipped: the frozen answers of s8 are not embedded yet (results/frozen/s8/ in the repository)")
+    print("skipped: the frozen answers of s7 are not embedded")
 else:
   print(f"{len(recs)} samples for {len({r['id'] for r in recs})} cases: {len(first)} first samples "
       f"({sum(r['forced'][0] for r in first)} forced at the cap), {sum(r['k'] > 0 for r in recs)} extra samples, "
@@ -454,8 +459,8 @@ md("""
 md("""
 ## 8. Reproduction
 
-These cells mirror our final Kaggle kernel `predict-full-v3` (`kaggle/predict-full-v3/run.py` in the
-repository): unpack the embedded zip (done above), run `setup.sh` with internet, then run `predict.py` with the network
+These cells mirror our final Kaggle kernel `predict-full-v2-nirbhay` (`kaggle/predict-full-v2/run.py` in the
+repository), with the submitted code: unpack the embedded zip (done above), run `setup.sh` with internet, then run `predict.py` with the network
 cut. Turn on *GPU T4 x2* and *Internet* in the notebook settings. The heavy cell is off by default (`RUN_FULL_TEST`).
 
 All output of the child processes is streamed into the cell.
@@ -532,7 +537,7 @@ else:
 md("""
 **Full run on `test.csv` (HEAVY: about 225 minutes on two T4 cards).** The exact command of the final kernel. Set
 `RUN_FULL_TEST = True` in the first code cell to run it. Because vLLM batching is not bit-exact, a fresh run can differ
-from s8 on a few near-tie cases; the cell after it checks the final file itself.
+from s7 on a few near-tie cases; the cell after it checks the final file itself.
 """)
 
 code("""
@@ -548,21 +553,17 @@ else:
 
 md("""
 **Rebuild of the final file (CPU, seconds).** `predict.py`'s own functions read `test.csv` (rule answers), merge
-the frozen model answers of the final run (embedded above, from `results/frozen/s8/`), and write the predictions file.
-Its md5 must equal `FINAL_MD5`, the md5 of the `submission.csv` the Kaggle run wrote. No test row is printed; only the
-md5 and the label counts.
-
-History: the previous final file s7 came from version 2 of the code (md5 `2cb35f3b2e402387c44206144154f30e`, rebuilt
-byte for byte from its frozen answers with version 2). With version 3's rules, the same answers give a file that
-differs from s7 in 1 label.
+the frozen model answers of the final run (embedded above, from `results/frozen/s7/`), and write the predictions file.
+Its md5 must equal `FINAL_MD5`, the md5 of the `submission.csv` the Kaggle run wrote (s7). The rules in this notebook
+include the fixes of section 3b; on `test.csv` they give the same answers as the rules that ran for s7, so the
+rebuild matches byte for byte. No test row is printed; only the md5 and the label counts.
 """)
 
 code("""
-FINAL_MD5 = "@FINAL_MD5@"  # md5 of the final submission file s8
-S7_MD5 = "2cb35f3b2e402387c44206144154f30e"  # history: version 2's final file, not rebuilt here
+FINAL_MD5 = "@FINAL_MD5@"  # md5 of the final submission file s7
 TEST = find_data("test.csv")
 if not os.path.exists(FINAL_ANSWERS):
-    print("skipped: the frozen answers of s8 are not embedded yet (results/frozen/s8/ in the repository)")
+    print("skipped: the frozen answers of s7 are not embedded")
 elif not TEST:
     print("skipped: test.csv not found (on Kaggle, add the competition data the-liars-chatroom)")
 else:
