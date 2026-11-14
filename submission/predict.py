@@ -102,7 +102,12 @@ def merge(path, pos, recs):
         data = f.read()
     end = data.rfind(b"\n") + 1
     for line in data[:end].decode("utf-8").splitlines():
-        r = json.loads(line)
+        try:  # one bad line must not stop the merge: before, it ended the whole model step and the answers after it
+            r = json.loads(line)
+            r["id"], r["k"], r["stage"]  # noqa: B018 (the fields the merge needs)
+        except (ValueError, TypeError, KeyError):
+            log("skipping an answer line that cannot be read")
+            continue
         old = recs.get((r["id"], r["k"]))
         if old is None or r["stage"] >= old["stage"]:
             recs[(r["id"], r["k"])] = r
@@ -287,8 +292,8 @@ def main():
     tiers = write_predictions(a.output, ids, fixed, cands, recs)
     first = [r for (cid, k), r in recs.items() if k == 0]
     log(f"wrote {len(ids)} predictions to {a.output}: {dict(tiers)}")
-    log(f"model: {len(first)} of {len(cases)} cases have a first sample, {sum(r['forced'][0] for r in first)} of them forced; "
-        f"{sum(r['kind'] == 'cont' for r in first)} continued to 16,384 tokens; "
+    log(f"model: {len(first)} of {len(cases)} cases have a first sample, {sum(bool((r.get('forced') or [False])[0]) for r in first)} of them forced; "
+        f"{sum(r.get('kind') == 'cont' for r in first)} continued to 16,384 tokens; "
         f"{sum(1 for (cid, k) in recs if k > 0)} extra samples; {sum(1 for (cid, k) in recs if k < 0)} answers without thinking")
 
 
