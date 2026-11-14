@@ -151,9 +151,10 @@ def gpu_ids():
     return [str(i) for i in range(out.count("GPU "))]
 
 
-def run_model(a, cases, cands, write, stop_new, hard):
-    """Runs judge.py until it finishes or time is up, restarting it after a failure; returns the records. With
-    LC_DATA_PARALLEL=1 and two or more cards, one judge.py per card takes every n-th case on its own."""
+def run_model(a, cases, cands, recs, write, stop_new, hard):
+    """Runs judge.py until it finishes or time is up, restarting it after a failure, and merges its answers into recs
+    as they arrive, so an error here keeps them. With LC_DATA_PARALLEL=1 and two or more cards, one judge.py per card
+    takes every n-th case on its own."""
     work = a.workdir or tempfile.mkdtemp(prefix="liars_")
     os.makedirs(work, exist_ok=True)
     settings = dict(MODEL_ENV, **{k: v for k, v in os.environ.items() if k in MODEL_ENV})
@@ -192,7 +193,7 @@ def run_model(a, cases, cands, write, stop_new, hard):
         w.update(child=subprocess.Popen(cmd, env=dict(w["env"], **attempt_env), start_new_session=os.name == "posix"),
                  started=time.time())
 
-    recs, last_write, unwritten = {}, time.time(), False
+    last_write, unwritten = time.time(), False
     try:
         for w in workers:
             launch(w)
@@ -235,7 +236,6 @@ def run_model(a, cases, cands, write, stop_new, hard):
                 stop(w["child"])
         if not a.workdir:
             shutil.rmtree(work, ignore_errors=True)
-    return recs
 
 
 def main():
@@ -271,7 +271,7 @@ def main():
         log("too little time to start the model: the rule answers and fallbacks stand")
     else:
         try:
-            recs = run_model(a, cases, cands, lambda r: write_predictions(a.output, ids, fixed, cands, r), stop_new, hard)
+            run_model(a, cases, cands, recs, lambda r: write_predictions(a.output, ids, fixed, cands, r), stop_new, hard)
         except Exception as e:
             log(f"MODEL STEP FAILED: {e!r}; the answers so far stand")
     tiers = write_predictions(a.output, ids, fixed, cands, recs)
