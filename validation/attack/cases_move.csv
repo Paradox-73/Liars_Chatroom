@@ -1,0 +1,109 @@
+id,scenario,speakers,evidence,chat,label
+ATK_MOV_01,"Two cabinets, one key.",A = Kofi; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. There was one red key. It stayed in the cabinet by the window from 1:00 PM to 3:00 PM. The cabinet by the window and the cabinet by the door are separate locations.,"1. A: I saw the red key in the cabinet at 2:00 PM.
+2. B: Who has the spare?
+3. C: At around 2:30 PM I took the red key out of the cabinet by the window.
+4. D: I was at the cabinet by the door at 2:15 PM.",C
+ATK_MOV_02,Two store rooms.,A = Kofi; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. Priya stayed in the store room by the gate from 1:00 PM to 3:00 PM. The store room by the gate and the store room by the dock are separate locations.,"1. A: I saw Priya in the store room at 2:00 PM.
+2. B: Can we check the camera?
+3. D: Around 2:00 PM Priya was in the store room by the dock.
+4. C: I was busy all afternoon.",D
+ATK_MOV_03,Two shops.,A = Kofi; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. Kofi was at the warehouse at 2:00 PM. Every route from the warehouse to the shop by the river takes at least 40 minutes. Every route from the warehouse to the shop by the station takes at least 10 minutes. The shop by the river and the shop by the station are separate locations.,"1. B: I saw Kofi at the shop at 2:20 PM.
+2. C: Kofi was at the shop by the river at about 2:15 PM.
+3. D: Did anyone else see him?
+4. A: I was at the warehouse at 2:00 PM.",C
+ATK_MOV_04,Ferry away.,A = Kofi; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. The ferry left the pier at 2:15 PM and did not return before 3:45 PM.,"1. A: I got on the ferry at the pier at 4:30 PM.
+2. B: I saw the ferry at the pier at 3:00 PM.
+3. C: I was waiting at the pier at 3:00 PM.
+4. D: Weird that it took so long?",B
+ATK_MOV_05,"Shuttle, liar about someone else.",A = Kofi; B = Mira; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. The shuttle bus left the hotel stop at 1:00 PM and did not return before 2:30 PM. Nobody could get on the shuttle bus at the hotel stop unless the shuttle bus was at the hotel stop.,"1. A: I saw Mira get on the shuttle bus at the hotel stop at 1:45 PM.
+2. B: I got on the shuttle bus at the hotel stop at 12:50 PM.
+3. C: I was at the hotel stop at 2:00 PM.
+4. D: Who booked it?",A
+ATK_MOV_06,Van to farm.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. The delivery van left the depot at 2:00 PM and went straight to the farm along the 30 km route, never going above 60 km/h.","1. A: The delivery van reached the farm at 2:20 PM.
+2. B: I saw the delivery van on the way at 2:10 PM.
+3. C: The delivery van reached the farm at 2:45 PM.
+4. D: Was the gate open?",A
+ATK_MOV_07,Van at the exact earliest time.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. The delivery van left the depot at 2:00 PM and went straight to the farm along the 30 km route, never going above 60 km/h.","1. A: The delivery van reached the farm at 2:30 PM.
+2. B: I saw the delivery van at the farm at 2:25 PM.
+3. C: I saw the delivery van on the way at 2:05 PM.
+4. D: Fast driver, that one.",B
+ATK_MOV_08,Van across noon.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. The delivery van left the depot at 11:40 AM and went straight to the farm along the 40 km route, never going above 60 km/h.","1. A: The delivery van reached the farm at 12:25 PM.
+2. B: The delivery van reached the farm at 12:10 PM.
+3. C: I saw the delivery van on the way at 11:50 AM.
+4. D: Lunch was late.",B
+ATK_MOV_09,Another van.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. The delivery van left the depot at 11:40 AM and went straight to the farm along the 40 km route, never going above 60 km/h.","1. A: Another van arrived at the farm at 11:50 AM.
+2. B: The delivery van arrived at the farm at 12:00 PM.
+3. C: The delivery van reached the farm at 1:00 PM.
+4. D: Which van was it?",B
+ATK_MOV_10,Ravi before and after.,A = Aiko; B = Sofia; C = Ravi; D = Lena,All times in this case refer to 3 March 2026. Ravi was at the warehouse at 10:00 AM. Every route from the warehouse to the shop takes at least 30 minutes.,"1. C: I was at the shop at 9:20 AM.
+2. A: I saw Ravi at the shop at 10:20 AM.
+3. B: I saw Ravi at the warehouse at 10:15 AM.
+4. D: The shop was busy.",A
+ATK_MOV_11,Ravi far.,A = Aiko; B = Sofia; C = Ravi; D = Lena,All times in this case refer to 3 March 2026. Ravi was at the warehouse at 10:00 AM. Every route from the warehouse to the shop takes at least 30 minutes.,"1. A: I was at the shop at 10:10 AM.
+2. D: Ravi was at the shop at 10:10 AM.
+3. B: I saw Ravi at the shop at 11:00 AM.
+4. C: I left the warehouse late.",D
+ATK_MOV_12,Lena did not leave.,A = Aiko; B = Sofia; C = Ravi; D = Lena,All times in this case refer to 3 March 2026. Lena did not leave the lab between 1:00 PM and 3:00 PM. The lab and the office are separate locations.,"1. B: Lena was in the office at 2:10 PM.
+2. C: I was in the office at 2:10 PM.
+3. A: I saw Lena in the lab at 1:30 PM.
+4. D: The lab was cold.",B
+ATK_MOV_13,Blue case.,A = Kofi; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. There was one blue case. It stayed in the locker from 9:00 AM to 11:00 AM. The locker and the front desk are separate locations.,"1. A: I had the blue case at the front desk at 10:00 AM.
+2. B: I saw the blue case in the locker at 10:30 AM.
+3. C: I was at the front desk at 10:00 AM.
+4. D: I took the blue case out of the locker at 11:30 AM.",A
+ATK_MOV_14,Blue case moved.,A = Kofi; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. There was one blue case. It stayed in the locker from 9:00 AM to 11:00 AM. The locker and the front desk are separate locations.,"1. A: I took the blue case out of the locker at 8:30 AM.
+2. B: I was at the front desk at 9:30 AM.
+3. C: I moved the blue case to the front desk at 10:15 AM.
+4. D: Is the locker locked?",C
+ATK_MOV_15,Sealed bag.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. One evidence bag held the USB drive. It stayed sealed from 2:00 PM to 4:00 PM, and the USB drive could not be removed without breaking the seal.","1. A: I opened the evidence bag at 3:00 PM.
+2. B: I was holding the evidence bag at 3:00 PM.
+3. C: The evidence bag was still sealed when I checked it at 3:30 PM.
+4. D: I took the USB drive out of the evidence bag at 4:30 PM.",A
+ATK_MOV_16,"Sealed bag, someone else.",A = Kofi; B = Omar; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. One evidence bag held the USB drive. It stayed sealed from 2:00 PM to 4:00 PM, and the USB drive could not be removed without breaking the seal.","1. A: I was holding the evidence bag at 2:30 PM.
+2. C: I saw Omar take the USB drive out of the evidence bag at 2:30 PM.
+3. B: I took the USB drive out of the evidence bag at 1:30 PM.
+4. D: Who sealed it?",C
+ATK_MOV_17,Baton.,A = Aiko; B = Sofia; C = Ravi; D = Lena,"All times in this case refer to 3 March 2026. There was one relay baton, and only one person held it at any moment. Aiko held it from 10:50 AM to 11:50 AM, then handed it to Sofia. Sofia held it until 1:20 PM.","1. A: I had the relay baton at 11:30 AM.
+2. B: I was holding the relay baton at 11:20 AM.
+3. C: I saw Sofia holding the relay baton at 12:30 PM.
+4. D: Who has it now?",B
+ATK_MOV_18,Baton handed early.,A = Aiko; B = Sofia; C = Ravi; D = Lena,"All times in this case refer to 3 March 2026. There was one relay baton, and only one person held it at any moment. Aiko held it from 10:50 AM to 11:50 AM, then handed it to Sofia. Sofia held it until 1:20 PM.","1. C: Sofia handed the relay baton to me at 1:20 PM.
+2. A: I gave the relay baton to Sofia at 11:00 AM.
+3. B: I had the relay baton at 12:00 PM.
+4. D: Nice race.",A
+ATK_MOV_19,Medals.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. The display case held exactly 6 medals from 1:00 PM to 3:00 PM, and no medal was added or removed during that time.","1. A: I counted 5 medals in the display case at 2:00 PM.
+2. B: I saw 4 medals in the display case at 2:00 PM.
+3. C: There were 7 medals in the display case at 4:00 PM.
+4. D: I took one medal out of the display case at 12:30 PM.",A
+ATK_MOV_20,Tank litres.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. The water tank held exactly 40 litres from 8:00 AM to 10:00 AM, and no litre was added or removed during that time.","1. A: I was next to the water tank at 9:00 AM.
+2. B: There were 35 litres in the water tank at 9:00 AM.
+3. C: There were 30 litres in the water tank at 11:00 AM.
+4. D: Who checked the gauge?",B
+ATK_MOV_21,Two dozen eggs.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. The crate held exactly 2 dozen eggs from 9:00 AM to 11:00 AM, and no dozen egg was added or removed during that time.","1. A: There were 24 eggs in the crate at 10:00 AM.
+2. B: I counted 2 dozen eggs in the crate at 10:00 AM.
+3. C: There were 3 dozen eggs in the crate at 10:30 AM.
+4. D: Breakfast?",C
+ATK_MOV_22,Ferry past midnight.,A = Kofi; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. The ferry left the pier at 11:30 PM and did not return before 1:00 AM.,"1. A: I got on the ferry at the pier at 12:15 AM.
+2. B: I was waiting at the pier at 12:30 AM.
+3. C: I got on the ferry at the pier at 11:00 PM.
+4. D: Late crossing?",A
+ATK_MOV_23,Coach round trip.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. The tour coach left the museum gate at 10:00 AM, and its round trip took at least 1 hour 30 minutes, so it could not be back at the museum gate before then.","1. A: I boarded the tour coach at the museum gate at 11:20 AM.
+2. B: I boarded the tour coach at the museum gate at 11:40 AM.
+3. C: I was at the museum gate at 11:00 AM.
+4. D: Was it full?",A
+ATK_MOV_24,Via the bridge.,A = Jonas; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. Jonas was at the depot at 3:00 PM. Every route from the depot to the bridge takes at least 15 minutes. Every route from the bridge to the market takes at least 20 minutes. Every route from the depot to the market passes through the bridge.,"1. B: I saw Jonas at the market at 3:30 PM.
+2. C: Jonas was at the bridge at 3:20 PM.
+3. D: I saw Jonas at the market at 3:40 PM.
+4. A: Traffic was bad.",B
+ATK_MOV_25,Two display cases.,A = Kofi; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. The display case by the door held exactly 6 medals from 1:00 PM to 3:00 PM. The display case by the stairs held exactly 2 medals from 1:00 PM to 3:00 PM.,"1. A: There were 2 medals in the display case at 2:00 PM.
+2. B: Around 2:00 PM there were 5 medals in the display case by the stairs.
+3. C: I was beside the display case by the door at 2:10 PM.
+4. D: Shiny.",B
+ATK_MOV_26,Van 24-hour clock.,A = Kofi; B = Ama; C = Priya; D = Tomas,"All times in this case refer to 3 March 2026. The delivery van left the depot at 2:00 PM and went straight to the farm along the 30 km route, never going above 60 km/h.","1. A: The delivery van reached the farm at 14:45.
+2. B: The delivery van reached the farm at 2:15 PM.
+3. C: I saw the delivery van on the way at 2:10 PM.
+4. D: Was it raining?",B
+ATK_MOV_27,"Two lockers, one case.",A = Kofi; B = Ama; C = Priya; D = Tomas,All times in this case refer to 3 March 2026. There was one blue case. It stayed in the locker by the gym from 9:00 AM to 11:00 AM. The locker by the gym and the locker by the pool are separate locations.,"1. A: The blue case was in the locker at 10:00 AM.
+2. B: I was at the locker by the pool at 10:00 AM.
+3. C: Around 10:00 AM I saw the blue case in the locker by the pool.
+4. D: Whose case is it?",C

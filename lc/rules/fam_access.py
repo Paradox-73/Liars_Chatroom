@@ -75,6 +75,10 @@ JOINED_RE = re.compile(r"\b(?:and|then|but|before|after|while) (?:then )?(?:@ )?
 NEG_RE = re.compile(r"\b(?:not|never|n't|didnt|no point|nobody|no one|nowhere|neither|nor|cannot|without|almost|"
                     r"nearly|tried to|try to|wanted to|meant to|planned to|hoped to|was going to|were going to)\b|n't\b")
 TIMES_WORD_RE = re.compile(r"(\w+)\W*$")
+# "at 2:15 PM for an hour": the claim covers a stretch of time, not the one moment event_time() checks
+DURATION_RE = re.compile(r"\bfor (?:about |around |nearly |almost |over |under |another |a further )?(?:an?|one|two|"
+                         r"three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty|\d+|half an|a few|several|"
+                         r"a couple of) ?(?:hours?|minutes?|mins?|hrs?)\b|\bfor (?:the )?(?:whole|entire|rest)\b")
 
 
 @dataclass
@@ -173,7 +177,7 @@ def claim(ctx, msg):
 def event_time(c, same_event=()):
     """The single clock time of the claim when it is given as 'at T' and the claim names one action, else None.
     same_event lists verbs that may be joined on without changing the event ('punched in code 1311 and unlocked')."""
-    if len(c.times) != 1:
+    if len(c.times) != 1 or DURATION_RE.search(c.text):
         return None
     m = JOINED_RE.search(c.text)
     if m and m.group(1) not in same_event:
@@ -369,7 +373,8 @@ class AccessWindow(Family):
             if hit:
                 if negated(c):
                     plain = (re.search(rf"@ (?:didn't|did not|never) (?:{ENTER}|set foot in) {pr}", c.text)
-                             and not re.search(r"\bwithout\b", c.text))
+                             # "didn't go in until 10:00 AM" / "not before 10:30 AM, but I did go in then": a later entry
+                             and not re.search(r"\b(?:without|until|till|before|but|then|when)\b", c.text))
                     return verdict(self, True, f"denies entering {p}") if plain else None
                 t = event_time(c)
                 if t is None:
@@ -653,7 +658,8 @@ class AccessCode(Family):
         re.compile(rf"\b(?:with|using) code (\d+) @ {UNLOCKED}\b"),
         re.compile(rf"\bcode (\d+) (?:was|is) what @ used to {UNLOCKED}\b"),
     ]
-    ATTEMPT = re.compile(r"\b(?:tried|try|tries|trying|attempt\w*|failed|wouldn't|couldn't|didn't|refused|wrong)\b")
+    ATTEMPT = re.compile(r"\b(?:tried|try|tries|trying|attempt\w*|failed|wouldn't|couldn't|didn't|refused|wrong|"
+                         r"but|stayed|remained|shut|locked)\b")  # "typed code 6139 to unlock it, but it stayed shut"
 
     def judge(self, ctx, facts, msg):
         c = claim(ctx, msg)
@@ -882,6 +888,8 @@ class AccessBadge(Family):
             t = event_time(c)
             if negated(c) or t is None or facts["unread"].noun(p) or facts["unread"].person(c.actor):
                 return None
+            if re.search(r"\b(?:using|with|borrow\w*|someone else)\b|\b[a-z]+'s\b", c.text):
+                return None  # "using Zoe's wristband": whose card was scanned is no longer the actor's
             spans = facts["cards"].get(c.actor)
             if spans is None:
                 return None
@@ -1183,7 +1191,10 @@ class AccessArrival(Family):
             return None
         t = c.times[0][0]
         # Without "first" ("I got to the office at 9:55 AM") train always means the first arrival: innocents give
-        # exactly the logged time (27 of 27), liars an earlier or later one.
+        # exactly the logged time (27 of 27), liars an earlier or later one. A later time may be a second arrival
+        # ("I came to the office at 5:00 PM for the evening meeting"), so only an earlier one is a lie then.
+        if not is_first and t > me:
+            return None
         return verdict(self, t == me, f"{c.actor} first arrived at {T.fmt_time(me)}"
                                       f"{'' if is_first else ' (arrival read as the first one)'}")
 
