@@ -39,8 +39,8 @@ from lc.rules import solve  # noqa: E402
 ATTEMPTS = [  # (judge.py arguments, environment), tried in order until one exits cleanly; as in kaggle/launcher.py
     ([], {}),
     (["--eager"], {}),
-    (["--eager"], {"VLLM_USE_TRITON_AWQ": "1", "VLLM_ATTENTION_BACKEND": "TRITON_ATTN"}),
-    (["--eager", "--tp", "1"], {}),
+    (["--eager"], {"VLLM_USE_TRITON_AWQ": "1", "VLLM_ATTENTION_BACKEND": "TRITON_ATTN", "LC_GPU_UTIL": "0.85"}),
+    (["--eager", "--tp", "1"], {"LC_GPU_UTIL": "0.85", "LC_MAX_LEN": "5120"}),  # 5,120 as on two cards: prompt + 3,072
 ]
 # How the judge model that setup.sh downloads runs; the environment can override each value. First samples stop at
 # 3,072 tokens: on two T4 cards more cases then get a thinking answer in time than with 4,096 (README, Choosing the model).

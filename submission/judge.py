@@ -89,7 +89,7 @@ def main():
     presence = float(os.environ.get("LC_PRESENCE_PENALTY", 0))  # per model: the Qwen3.5 models use 1.5
     # letter probabilities at the answer need log-probabilities on every sampled token; without them the letter alone votes
     token_logprobs = NUM_LOGPROBS if os.environ.get("LC_TOKEN_LOGPROBS", "1") == "1" else None
-    util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered only to test on a shared card
+    util = float(os.environ.get("LC_GPU_UTIL", "0.92"))  # lowered by the later attempts of predict.py and on a shared card
     with open(os.path.join(a.model, "config.json")) as f:
         multimodal = "vision_config" in json.load(f)  # Qwen3.5 checkpoints carry a vision tower; it is not loaded
     log(f"{gpus} GPU(s): tensor parallel {tp}, max model length {max_len}, {think_slots}+{quick_slots} slots, "
