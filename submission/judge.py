@@ -10,8 +10,9 @@ the environment, which predict.py fills from its MODEL_ENV table. A free slot ta
   3. an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin over the speakers the rules
      did not clear, at most 5 samples a case, none once the margin reaches 1.5.
 A sample with no "ANSWER:" line gets a forced answer: "ANSWER:" is appended and one more token is read.
-No thinking work starts after --stop-new: running continuations and extra samples stop, and every case without a
-finished sample gets a one-token answer without thinking; 90 s before --hard-stop, unfinished first samples stop too.
+No thinking work starts after --stop-new: running continuations stop, and every case without a finished sample gets a
+one-token answer without thinking. Running extra samples stop too while first samples are waiting or running; with none
+left they go on. 90 s before --hard-stop, every sample still thinking stops if one-token answers are waiting.
 The process exits once nothing is left, or at --hard-stop.
 Exit codes: 0 done, 1 error, 3 no GPU, 4 vLLM missing.
 """
@@ -235,10 +236,12 @@ def main():
         if now >= a.stop_new and not late:
             late = True
             need = [i for i in order if not any(k >= 0 for k in samples.get(i, {})) and -1 not in samples.get(i, {})]
-            # continuations and extra samples only improve cases that already have an answer
+            # continuations and extra samples only improve cases that already have an answer, so extra samples give their
+            # cache to the one-token answers while first samples are left; with none left they run on to the hard stop
+            first_left = bool(main_q) or any(v[0] == "main" for v in flight.values())
             log(f"stop time: {len(main_q)} first samples and {len(queued_cont)} continuations dropped, "
-                f"{abort(('cont', 'extra'))} running continuations and extra samples stopped; "
-                f"{len(need)} cases get an answer without thinking")
+                f"{abort(('cont', 'extra') if first_left else ('cont',))} running continuations"
+                f"{' and extra samples' if first_left else ''} stopped; {len(need)} cases get an answer without thinking")
             main_q.clear()
             queued_cont.clear()
             for cid in need:

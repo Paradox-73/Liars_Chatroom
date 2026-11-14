@@ -51,9 +51,11 @@ on two cards passes tensors between its processes through shared memory.
 
 The clock starts with `predict.py`. A file of 450 to 1,500 cases gets 80 minutes; a smaller file the same time per case
 (the kit's selftest with 200 cases gets 35.6 minutes); a larger one 80 minutes per 450 cases the model judges
-(`test.csv`: about 190 minutes). No new model work starts in the last 5 minutes. Then optional samples stop, and every
-case without a finished sample gets a one-token answer without thinking; 90 seconds before the end, unfinished first
-samples stop too. At the end the model process is stopped and the final file is written. `--minutes` overrides it.
+(`test.csv`: about 190 minutes). No new model work starts in the last 5 minutes. Then every case without a finished
+sample gets a one-token answer without thinking. While first samples are still waiting or running, extra samples stop
+at once to give those answers their cache; when none are left, running extra samples go on until they end or time is
+up. 90 seconds before the end, any sample still thinking stops if one-token answers are waiting. At the end the model
+process is stopped and the final file is written. `--minutes` overrides it.
 
 The 3,072-token cap on first samples is fixed: it does not shrink when time runs short. A case whose first sample has
 not ended (finished, or stopped at the cap and forced) by the end gets the one-token answer, which is right far less
