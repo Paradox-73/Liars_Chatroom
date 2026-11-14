@@ -1,0 +1,46 @@
+{"id": "LC00196", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [512], "min": 2.6}
+{"id": "LC00238", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [636], "min": 2.79}
+{"id": "LC00200", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [648], "min": 2.81}
+{"id": "LC00099", "k": 0, "stage": 0, "kind": "main", "pred": "D", "p_mean": null, "forced": [false], "out_tokens": [693], "min": 2.86}
+{"id": "LC00086", "k": 0, "stage": 0, "kind": "main", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [1058], "min": 3.28}
+{"id": "LC00183", "k": 0, "stage": 0, "kind": "main", "pred": "D", "p_mean": null, "forced": [false], "out_tokens": [1207], "min": 3.47}
+{"id": "LC00124", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [601], "min": 3.52}
+{"id": "LC00176", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [758], "min": 3.55}
+{"id": "LC00239", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [918], "min": 3.95}
+{"id": "LC00130", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [749], "min": 4.19}
+{"id": "LC00136", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [826], "min": 4.55}
+{"id": "LC00011", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [959], "min": 4.65}
+{"id": "LC00024", "k": 0, "stage": 0, "kind": "main", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [1106], "min": 4.89}
+{"id": "LC00087", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [1785], "min": 4.98}
+{"id": "LC00053", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [687], "min": 5.07}
+{"id": "LC00115", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [634], "min": 5.35}
+{"id": "LC00194", "k": 0, "stage": 0, "kind": "main", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [1122], "min": 5.35}
+{"id": "LC00236", "k": 0, "stage": 0, "kind": "main", "pred": "D", "p_mean": null, "forced": [false], "out_tokens": [1006], "min": 6.21}
+{"id": "LC00243", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [836], "min": 6.4}
+{"id": "LC00080", "k": 0, "stage": 0, "kind": "main", "pred": "D", "p_mean": null, "forced": [false], "out_tokens": [1435], "min": 6.45}
+{"id": "LC00009", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [1106], "min": 6.45}
+{"id": "LC00181", "k": 0, "stage": 0, "kind": "main", "pred": "D", "p_mean": null, "forced": [false], "out_tokens": [1107], "min": 6.76}
+{"id": "LC00081", "k": 0, "stage": 0, "kind": "main", "pred": "A", "p_mean": null, "forced": [false], "out_tokens": [1206], "min": 7.82}
+{"id": "LC00037", "k": 0, "stage": 0, "kind": "main", "pred": "D", "p_mean": null, "forced": [false], "out_tokens": [1194], "min": 8.06}
+{"id": "LC00208", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [2773], "min": 8.56}
+{"id": "LC00056", "k": 0, "stage": 0, "kind": "main", "pred": "D", "p_mean": null, "forced": [false], "out_tokens": [1575], "min": 8.59}
+{"id": "LC00064", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [1792], "min": 8.92}
+{"id": "LC00219", "k": 0, "stage": 0, "kind": "main", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [2045], "min": 9.59}
+{"id": "LC00007", "k": -1, "stage": 0, "kind": "nothink", "pred": "D", "p_mean": {"A": 0.02423, "B": 0.00349, "C": 0.00421, "D": 0.96806}, "forced": [false], "out_tokens": [0], "min": 10.07}
+{"id": "LC00069", "k": -1, "stage": 0, "kind": "nothink", "pred": "A", "p_mean": {"A": 0.91651, "B": 0.07523, "C": 0.00227, "D": 0.00599}, "forced": [false], "out_tokens": [0], "min": 10.07}
+{"id": "LC00097", "k": -1, "stage": 0, "kind": "nothink", "pred": "B", "p_mean": {"A": 0.32636, "B": 0.48992, "C": 0.02942, "D": 0.15416}, "forced": [false], "out_tokens": [0], "min": 10.07}
+{"id": "LC00117", "k": -1, "stage": 0, "kind": "nothink", "pred": "A", "p_mean": {"A": 0.885, "B": 0.001, "C": 0.09041, "D": 0.02358}, "forced": [false], "out_tokens": [0], "min": 10.07}
+{"id": "LC00138", "k": -1, "stage": 0, "kind": "nothink", "pred": "A", "p_mean": {"A": 0.945, "B": 0.0456, "C": 0.00598, "D": 0.00341}, "forced": [false], "out_tokens": [0], "min": 10.07}
+{"id": "LC00140", "k": -1, "stage": 0, "kind": "nothink", "pred": "A", "p_mean": {"A": 0.41332, "B": 0.25865, "C": 0.31199, "D": 0.01603}, "forced": [false], "out_tokens": [0], "min": 10.07}
+{"id": "LC00155", "k": -1, "stage": 0, "kind": "nothink", "pred": "C", "p_mean": {"A": 0.00052, "B": 0.02071, "C": 0.96732, "D": 0.01144}, "forced": [false], "out_tokens": [0], "min": 10.07}
+{"id": "LC00182", "k": -1, "stage": 0, "kind": "nothink", "pred": "D", "p_mean": {"A": 2e-05, "B": 0.0, "C": 0.0, "D": 0.99992}, "forced": [false], "out_tokens": [0], "min": 10.07}
+{"id": "LC00185", "k": -1, "stage": 0, "kind": "nothink", "pred": "C", "p_mean": {"A": 0.10631, "B": 0.09987, "C": 0.76139, "D": 0.03242}, "forced": [false], "out_tokens": [0], "min": 10.1}
+{"id": "LC00235", "k": -1, "stage": 0, "kind": "nothink", "pred": "B", "p_mean": {"A": 0.19978, "B": 0.47925, "C": 0.29991, "D": 0.02106}, "forced": [false], "out_tokens": [0], "min": 10.1}
+{"id": "LC00240", "k": -1, "stage": 0, "kind": "nothink", "pred": "A", "p_mean": {"A": 0.65436, "B": 0.27278, "C": 0.05371, "D": 0.01915}, "forced": [false], "out_tokens": [0], "min": 10.1}
+{"id": "LC00266", "k": -1, "stage": 0, "kind": "nothink", "pred": "A", "p_mean": {"A": 0.99986, "B": 0.0, "C": 9e-05, "D": 5e-05}, "forced": [false], "out_tokens": [0], "min": 10.1}
+{"id": "LC00117", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [1269], "min": 10.42}
+{"id": "LC00097", "k": 0, "stage": 0, "kind": "main", "pred": "D", "p_mean": null, "forced": [false], "out_tokens": [1945], "min": 10.89}
+{"id": "LC00138", "k": 0, "stage": 0, "kind": "main", "pred": "C", "p_mean": null, "forced": [false], "out_tokens": [2125], "min": 10.91}
+{"id": "LC00069", "k": 0, "stage": 0, "kind": "main", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [1654], "min": 11.25}
+{"id": "LC00185", "k": 0, "stage": 0, "kind": "main", "pred": "B", "p_mean": {"A": 0.0124, "B": 0.98488, "C": 0.00012, "D": 0.0026}, "forced": [true], "out_tokens": [3072], "min": 12.52}
+{"id": "LC00240", "k": 0, "stage": 0, "kind": "main", "pred": "B", "p_mean": null, "forced": [false], "out_tokens": [2373], "min": 12.57}
