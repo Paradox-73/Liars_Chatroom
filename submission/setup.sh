@@ -4,7 +4,7 @@
 # 2. downloads the judge model at its pinned revision from Hugging Face to models/judge beside this file, or to
 #    $LC_MODEL_DIR when it is set (then give predict.py the same folder with --model or LC_MODEL_DIR)
 # predict.py starts its model process with .venv/bin/python, so `python predict.py ...` works with any Python 3.
-set -euo pipefail
+set -eu  # no pipefail: sh (dash) has none, and this script has no pipes
 cd "$(dirname "$0")"
 REPO=${LC_MODEL_REPO:-Qwen/Qwen3-14B-AWQ}
 REV=${LC_MODEL_REV:-31c69efc29464b6bb0aee1398b5a7b50a99340c3}
