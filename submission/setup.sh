@@ -30,5 +30,7 @@ retry $UV pip install --python .venv/bin/python -r requirements.txt --index-stra
 export HF_HUB_DISABLE_PROGRESS_BARS=1 HF_XET_HIGH_PERFORMANCE=1
 retry .venv/bin/hf download "$REPO" --revision "$REV" --local-dir "$MODEL_DIR"
 du -sh "$MODEL_DIR"
+# the check starts CUDA on a card when there is one, so a driver that cannot run CUDA 12.9 fails here, not in predict.py
 .venv/bin/python -c "import torch, vllm, transformers; print('torch', torch.__version__, 'CUDA', torch.version.cuda, \
-'GPUs', torch.cuda.device_count(), 'vLLM', vllm.__version__, 'transformers', transformers.__version__)"
+'GPUs', torch.cuda.device_count(), 'vLLM', vllm.__version__, 'transformers', transformers.__version__); \
+torch.cuda.device_count() and print('CUDA works:', torch.ones(1, device='cuda').sum().item() == 1)"
