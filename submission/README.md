@@ -16,7 +16,8 @@ python predict.py --input hidden.csv --output predictions.csv   # offline
 `models/judge` (9.3 GB). `predict.py` needs only the standard library: it starts its model process with
 `.venv/bin/python`, so any Python 3 runs it (tested with 3.10, 3.12 and Kaggle's default Python). Another weights folder:
 `LC_MODEL_DIR=<folder>` for both scripts, or `--model <folder>` for `predict.py`. The NVIDIA driver must support
-CUDA 12.9 (Kaggle's 580 does).
+CUDA 12.9 (Kaggle's 580 does). In Docker, start the container with `--ipc=host` (or a large `--shm-size`): the engine
+on two cards passes tensors between its processes through shared memory.
 
 ## How it works
 
