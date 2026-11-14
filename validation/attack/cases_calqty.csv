@@ -1,0 +1,145 @@
+id,scenario,speakers,evidence,chat,label
+ATK_CQ_01,Pool hours end point.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I swam at the pool at 5:00 PM on 11 April 2026.
+2. B: On 16 April 2026 at 10:00 AM I swam at the pool.
+3. C: I swam at the pool on a Tuesday afternoon in April 2026.
+4. D: I waited outside the pool on 13 April 2026.",C
+ATK_CQ_02,Pool open Friday to Monday.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Friday to Monday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I swam at the pool at 10:00 AM on 6 April 2026.
+2. B: I swam at the pool at 3:00 PM on 3 April 2026.
+3. C: I swam at the pool on a Wednesday in April 2026.
+4. D: On 8 April 2026 I waited outside the pool.",C
+ATK_CQ_03,Gym in a leap year.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 February 2028 was a Tuesday. In February 2028 the gym was open only Monday to Friday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I trained at the gym at 10:00 AM on 29 February 2028.
+2. B: On 1 February 2028 I trained at the gym at 4:00 PM.
+3. C: I trained at the gym at 11:00 AM on 26 February 2028.
+4. D: I waited outside the gym on 27 February 2028.",C
+ATK_CQ_04,Pool with a 24-hour clock.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I swam at the pool at 16:30 on 11 April 2026.
+2. B: On 16 April 2026 at 10:00 AM I swam at the pool.
+3. C: I swam at the pool at 17:45 on 11 April 2026.
+4. D: I waited outside the pool on 13 April 2026.",C
+ATK_CQ_05,Pool opens at noon.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Wednesday to Sunday, from 12:00 PM to 8:00 PM, and nobody could use it while it was closed.","1. A: I swam at the pool at 12:15 PM on 11 April 2026.
+2. B: On 16 April 2026 at 7:30 PM I swam at the pool.
+3. C: I swam at the pool at 11:45 AM on 11 April 2026.
+4. D: I waited outside the pool on 13 April 2026.",C
+ATK_CQ_06,Library closed on Tuesday mornings.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,1 April 2026 was a Wednesday. Nobody could be inside the library on any Tuesday in April 2026 before 1:00 PM.,"1. A: I was inside the library at 3:00 PM on 14 April 2026.
+2. B: I was inside the library on 16 April 2026.
+3. C: I was inside the library on the morning of 21 April 2026.
+4. D: I waited outside the library on 7 April 2026.",C
+ATK_CQ_07,Library across a month end.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,1 April 2026 was a Wednesday. Nobody could be inside the library on any Tuesday in April 2026.,"1. A: I was inside the library on 31 March 2026.
+2. B: I was inside the library on 16 April 2026.
+3. C: I was inside the library on the last Tuesday of April 2026.
+4. D: I waited outside the library on 7 April 2026.",C
+ATK_CQ_08,Ages on a birthday.,A = Sana; B = Ishaan; C = Lucy; D = Omar,"Sana was born on 14 July 1993, and Ishaan was born on 27 March 1998.","1. A: On 14 July 2026 I was 33.
+2. B: On 26 March 2026 I was 27.
+3. C: Sana turned 32 in July 2026.
+4. D: Who is organising the party?",C
+ATK_CQ_09,Leap-day birthday.,A = Pia; B = Bruno; C = Lucy; D = Omar,Pia was born on 29 February 2000. Bruno was born on 19 October 2002.,"1. A: In March 2026 I was 26.
+2. B: I turned 23 in October 2026.
+3. C: On 1 March 2026 Pia was 26.
+4. D: Who is organising the party?",B
+ATK_CQ_10,"Kayak owners, claim about someone else.",A = Tomas; B = Isla; C = Hari; D = Camila,Camila owned the kayak until selling it to Tomas on 8 September 2026. Tomas sold it to Isla on 20 September 2026. Nobody else owned the kayak in September 2026.,"1. A: I owned the kayak on 15 September 2026.
+2. B: I owned the kayak on 1 October 2026.
+3. C: Isla owned the kayak on 12 September 2026.
+4. D: I owned the kayak on 30 August 2026.",C
+ATK_CQ_11,"Kayak owners, seller.",A = Tomas; B = Isla; C = Hari; D = Camila,Camila owned the kayak until selling it to Tomas on 8 September 2026. Tomas sold it to Isla on 20 September 2026. Nobody else owned the kayak in September 2026.,"1. A: I sold the kayak to Isla on 20 September 2026.
+2. B: I bought the kayak from Tomas on 20 September 2026.
+3. C: I never owned the kayak in September 2026.
+4. D: I still owned the kayak on 10 September 2026.",D
+ATK_CQ_12,Seats with at least.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"All times in this case refer to 4 March 2026. Exactly 60 seats were sold for the workshop, and exactly 75% of them were sold before noon.","1. A: At least 40 seats were sold before noon.
+2. B: After noon, 15 seats were sold.
+3. C: Most of the seats were sold after noon.
+4. D: I bought mine at 9:50 AM.",C
+ATK_CQ_13,Seats with more than.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"All times in this case refer to 4 March 2026. Exactly 60 seats were sold for the workshop, and exactly 75% of them were sold before noon.","1. A: More than 10 seats were sold after noon.
+2. B: Before noon, 45 seats were sold.
+3. C: Only a third of the seats were sold before noon.
+4. D: I bought mine at 9:50 AM.",C
+ATK_CQ_14,Seats as fractions.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"All times in this case refer to 4 March 2026. Exactly 60 seats were sold for the workshop, and exactly 75% of them were sold before noon.","1. A: Exactly a quarter of the seats were sold after noon.
+2. B: After noon, 15 seats were sold.
+3. C: Two thirds of the seats were sold before noon.
+4. D: I bought mine at 9:50 AM.",C
+ATK_CQ_15,Seats with fewer than.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"All times in this case refer to 4 March 2026. Exactly 60 seats were sold for the workshop, and exactly 75% of them were sold before noon.","1. A: Fewer than 20 seats were sold after noon.
+2. B: Before noon, 45 seats were sold.
+3. C: No more than 10 seats were sold after noon.
+4. D: I bought mine at 9:50 AM.",C
+ATK_CQ_16,Water butt in millilitres.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"All times in this case refer to 4 March 2026. The water butt held 60 litres at 10:00 AM and drained at a steady 6 litres per hour until 2:00 PM, with nothing added.","1. A: At 12:00 PM the water butt held 48,000 millilitres.
+2. B: At 1:00 PM the water butt held 42 litres.
+3. C: The water butt never dropped below 50 litres before 2:00 PM.
+4. D: I checked the water butt at 11:00 AM.",C
+ATK_CQ_17,Water butt with at least.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"All times in this case refer to 4 March 2026. The water butt held 60 litres at 10:00 AM and drained at a steady 6 litres per hour until 2:00 PM, with nothing added.","1. A: At 11:00 AM the water butt held at least 50 litres.
+2. B: At 1:00 PM the water butt held 42 litres.
+3. C: By 1:00 PM the water butt had lost 30 litres.
+4. D: I checked the water butt at 11:00 AM.",C
+ATK_CQ_18,Water butt with ranges.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"All times in this case refer to 4 March 2026. The water butt held 60 litres at 10:00 AM and drained at a steady 6 litres per hour until 2:00 PM, with nothing added.","1. A: At noon the water butt held between 45 and 50 litres.
+2. B: At 13:00 the water butt held 42 litres.
+3. C: At 2:00 PM the water butt was down to 40 litres.
+4. D: I checked the water butt at 11:00 AM.",C
+ATK_CQ_19,Rice bin in grams.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,All times in this case refer to 4 March 2026. The rice bin held exactly 12 kilograms at 9:00 AM. At 11:00 AM exactly 500 grams were removed. Nothing else was added or removed before 3:00 PM.,"1. A: At noon the rice bin held 11.5 kilograms.
+2. B: At 10:00 AM the rice bin held 12000 grams.
+3. C: At 2:00 PM the rice bin held 11 kilograms.
+4. D: At 1:00 PM the rice bin held 11500 grams.",C
+ATK_CQ_20,Rope pieces with comparisons.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"The rope was exactly 3 metres long and was cut into five equal pieces, with nothing left over.","1. A: My piece measured 0.6 metres.
+2. B: My piece measured 600 millimetres.
+3. C: My piece was shorter than half a metre.
+4. D: My piece was longer than 50 centimetres.",C
+ATK_CQ_21,Rope long and short.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"The rope was exactly 3 metres long. It was cut into three pieces with nothing left over: one long piece twice as long as each of the two short pieces, which were equal.","1. A: The long piece was 1.5 metres.
+2. B: Each short piece was 75 cm.
+3. C: The long piece was three times as long as a short piece.
+4. D: I was the one who cut the rope.",C
+ATK_CQ_22,"Fire drill, one-way list.",A = Jun; B = Rahul; C = Anika; D = Mira,"All times in this case refer to 15 May 2026. The roll call sheet for the 10:45 AM fire drill lists exactly four people: Jun, Rahul, Gita and Yusuf. Everyone on the list attended. The fire drill was held in the main hall.","1. A: I attended the 10:45 AM fire drill.
+2. B: I skipped the 10:45 AM fire drill.
+3. C: I attended the 10:45 AM fire drill.
+4. D: Gita attended the 10:45 AM fire drill.",B
+ATK_CQ_23,"Fire drill, late and early.",A = Jun; B = Rahul; C = Anika; D = Mira,"All times in this case refer to 15 May 2026. The roll call sheet for the 10:45 AM fire drill lists exactly four people: Jun, Rahul, Gita and Yusuf. Everyone on the list attended, and everyone who attended is on it. The fire drill was held in the main hall.","1. A: I left the 10:45 AM fire drill early.
+2. B: I arrived late to the fire drill.
+3. C: I took part in the fire drill in the main hall.
+4. D: I was in the car park at 10:45 AM.",C
+ATK_CQ_24,"Fire drill, double negation.",A = Jun; B = Rahul; C = Anika; D = Mira,"All times in this case refer to 15 May 2026. The roll call sheet for the 10:45 AM fire drill lists exactly four people: Jun, Rahul, Gita and Yusuf. Everyone on the list attended, and everyone who attended is on it. The fire drill was held in the main hall.","1. A: I attended the 10:45 AM fire drill.
+2. B: I was there for the whole fire drill.
+3. C: Yusuf was off sick that day and never came in.
+4. D: Jun did not miss the 10:45 AM fire drill.",C
+ATK_CQ_25,Tour of 90 minutes.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,All times in this case refer to 21 February 2026. That day's only tour began at 12:45 PM and lasted exactly 90 minutes.,"1. A: At 2:10 PM I led the group during the tour.
+2. B: I led the group during the tour at 12:50 PM.
+3. C: I led the group during the tour three hours after it began.
+4. D: I checked the museum at 3:00 PM.",C
+ATK_CQ_26,Tour with a negation.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,All times in this case refer to 21 February 2026. That day's only tour began at 12:45 PM and lasted exactly 1 hour.,"1. A: I was not on the tour at 2:00 PM.
+2. B: I led the group during the tour at 1:00 PM.
+3. C: I led the group for the whole two hours of the tour.
+4. D: I checked the museum at 3:00 PM.",C
+ATK_CQ_27,Tour start point.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,All times in this case refer to 21 February 2026. That day's only tour began at 12:45 PM and lasted exactly 1 hour.,"1. A: I led the group during the tour at 12:45 PM.
+2. B: I led the group during the tour at 1:30 PM.
+3. C: I led the group during the tour at 2:30 PM.
+4. D: I checked the museum at 2:30 PM.",C
+ATK_CQ_28,Rota across a month end.,A = Jonas; B = Usha; C = Akira; D = Lena,"From 30 April 2026 to 5 May 2026, exactly one person worked the weekend call-out duty each night, following this rota exactly: Usha took the first two, Jonas took the next two, and Akira took the last two.","1. A: I worked the weekend call-out duty on 2 May 2026.
+2. B: I worked the weekend call-out duty on 1 May 2026.
+3. C: I worked the weekend call-out duty on 3 May 2026.
+4. D: I worked the day shift on 30 April 2026.",C
+ATK_CQ_29,"Rota, claim about someone else.",A = Eun; B = Obi; C = Lena; D = Kofi,"From 13 September 2026 to 19 September 2026, exactly one person worked the front desk night duty each night, and the rota was followed exactly: Eun on 13-15 September, Obi on 16-17 September, Mei on 18-19 September.","1. A: I worked the front desk night duty on 14 September 2026.
+2. B: On 17 September 2026 I worked the front desk night duty.
+3. C: Obi worked the front desk night duty on 18 September 2026.
+4. D: I worked the day shift on 18 September 2026.",C
+ATK_CQ_30,Pool with not before.,A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I did not swim at the pool before 9:00 AM on 11 April 2026.
+2. B: I swam at the pool at 10:00 AM on 16 April 2026.
+3. C: I swam at the pool at 5:30 PM on 11 April 2026.
+4. D: I waited outside the pool on 13 April 2026.",C
+ATK_CQ_31,"Pool, 24-hour liar.",A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I swam at the pool at 10:00 AM on 11 April 2026.
+2. B: On 16 April 2026 at 10:00 AM I swam at the pool.
+3. C: I swam at the pool at 17:45 on 11 April 2026.
+4. D: I drove past the pool on 13 April 2026.",C
+ATK_CQ_32,"Pool, p.m. liar.",A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I swam at the pool at 10:00 AM on 11 April 2026.
+2. B: On 16 April 2026 at 10:00 AM I swam at the pool.
+3. C: I swam at the pool at 7:30 p.m. on 11 April 2026.
+4. D: I drove past the pool on 13 April 2026.",C
+ATK_CQ_33,"Pool, at night.",A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I swam at the pool at 10:00 AM on 11 April 2026.
+2. B: On 16 April 2026 at 10:00 AM I swam at the pool.
+3. C: I swam at the pool at night on 11 April 2026.
+4. D: I drove past the pool on 13 April 2026.",C
+ATK_CQ_34,"Pool, swim runs past closing.",A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I swam at the pool at 10:00 AM on 11 April 2026.
+2. B: On 16 April 2026 at 10:00 AM I swam at the pool.
+3. C: I swam at the pool from 4:30 PM on 11 April 2026 for two hours.
+4. D: I drove past the pool on 13 April 2026.",C
+ATK_CQ_35,"Pool, swim starting at 3:00 PM.",A = Mateo; B = Maria; C = Zeynep; D = Carmen,"1 April 2026 was a Wednesday. In April 2026 the pool was open only Wednesday to Sunday, from 9:00 AM to 5:00 PM, and nobody could use it while it was closed.","1. A: I swam at the pool at 10:00 AM on 11 April 2026.
+2. B: On 16 April 2026 at 10:00 AM I swam at the pool.
+3. C: I swam at the pool for three hours starting at 3:00 PM on 11 April 2026.
+4. D: I drove past the pool on 13 April 2026.",C
+ATK_CQ_36,"Tour, claim that outlasts it.",A = Mateo; B = Maria; C = Zeynep; D = Carmen,All times in this case refer to 21 February 2026. That day's only tour began at 12:45 PM and lasted exactly 1 hour.,"1. A: I led the group during the tour at 1:00 PM.
+2. B: I led the group during the tour at 1:15 PM.
+3. C: I led the group during the tour at 1:30 PM for an hour.
+4. D: I checked the museum at 3:00 PM.",C

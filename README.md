@@ -1,5 +1,8 @@
 <div align="center">
 
+<img src="docs/figures/banner.svg" alt="The Liar's Chatroom: rules first, Qwen3-14B for the rest. Rules answer 2,257 of 2,500 train cases at 100% precision. New-family accuracy 0.957, 78.5 min of the 90-min limit. Synergy '26 Kaggle, IIIT Bangalore. Team Claude Laggye: Kanav Bhardwaj, Nirbhay Sharma, Bhavya Jain, Aaryan Antala." width="100%">
+<br>
+
 # The Liar's Chatroom
 
 **A rule solver that answers what it can prove, and Qwen3-14B in thinking mode for the rest.**<br>

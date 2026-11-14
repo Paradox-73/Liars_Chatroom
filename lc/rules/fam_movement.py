@@ -69,6 +69,10 @@ def np_re(np, sents):
     head = m.group(1)
     if any(w != "the" for s in sents for w in re.findall(rf"\b([a-z]+) {esc(head)}\b", s)):
         return esc(np)
+    tail = np[len(head) + 1:]  # 'the cabinet by the door' beside 'the cabinet by the window': 'the cabinet' is either
+    if any(not tail.startswith(t) for s in sents for t in re.findall(
+            rf"\bthe {esc(head)} ((?:by|near|beside|next to|behind|under|opposite) the [a-z]+)", s)):
+        return esc(np)
     return rf"(?:{esc(np)}|{esc(head)})"
 
 

@@ -167,6 +167,16 @@ NOT_USE_RE = re.compile(
     r"maintained|worked(?! out)|working(?! out)|staff|security|volunteered)\b",
     re.I)  # 'worked out at the gym' and 'checked a book out of the library' are uses; 'worked at the gym' may be a job
 
+UNREAD_TIME_RE = re.compile(r"\b\d{1,2}[:.]\d{2}\b|\b[ap]\.m\b|\bo'clock\b|\b(?:morning|afternoon|evening|night|"
+                            r"tonight|lunchtime|dawn|dusk|sunrise|sunset|overnight)\b", re.I)
+# a claim that lasts ('for two hours', 'until 6:00 PM', 'starting at 3:00 PM'): checking its one start time is not enough
+SPAN_CLAIM_RE = re.compile(r"\b(?:until|till|starting|stayed|plus)\b|\bfrom (?:\d|noon|midday)", re.I)
+
+
+def unread_time(t):
+    """True when the claim gives a time of day or a length of time beyond the one clock time the rules check."""
+    return bool(UNREAD_TIME_RE.search(T.TIME_RE.sub(" ", t)) or T.DUR_RE.search(t) or SPAN_CLAIM_RE.search(t))
+
 
 def use_re(noun):
     """Claims of using the place, in the wordings train uses for that ('I swam at the pool', 'I borrowed a book from
@@ -232,6 +242,8 @@ class OpeningHours(Family):
         if waiting_only(t):
             return Verdict(OK, self.name, "waiting outside is always possible")
         times = T.find_times(t)
+        if unread_time(t):
+            return None  # '17:45', 'in the evening', 'for two hours': more than the day and one clock time
         if not f["use"].search(t) or WAIT_RE.search(t) or NOT_USE_RE.search(t) or len(times) > 1:
             return None  # only wordings known to mean using the place are judged
         if f["month"] and (d.year, d.month) != f["month"]:
@@ -527,7 +539,7 @@ class OnlySession(Family):
         if not t or not f["rel"].search(t) or SESSION_NOT_RE.search(t):
             return None
         times = T.find_times(t)
-        if len(times) != 1 or T.find_dates(t):
+        if len(times) != 1 or T.find_dates(t) or unread_time(t):
             return None
         tm = times[0][0]
         if f["start"] <= tm <= f["end"]:
