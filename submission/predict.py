@@ -137,7 +137,10 @@ def stop(child):
             pass
     elif child.poll() is None:
         child.kill()
-    child.wait()
+    try:
+        child.wait(timeout=60)
+    except subprocess.TimeoutExpired:  # stuck in the driver: the final file matters more than reaping it
+        log(f"model process {child.pid} did not exit within 60 s of SIGKILL; going on without it")
 
 
 def gpu_ids():
@@ -218,7 +221,7 @@ def run_model(a, cases, cands, recs, write, stop_new, hard):
                 unwritten, w["pos"] = unwritten or pos != w["pos"], pos
                 rc, w["child"] = w["child"].returncode, None
                 log(f"model process {w['n']} exited with code {rc}; {len(recs)} answers so far")
-                if rc == 0 or rc in NO_RETRY or time.time() > stop_new - 10 * 60:
+                if rc == 0 or rc is None or rc in NO_RETRY or time.time() > stop_new - 10 * 60:  # None: still holds the cards
                     continue
                 if w["attempt"] + 1 < len(ATTEMPTS):
                     log(f"MODEL PROCESS {w['n']} FAILED; restarting it with safer settings")
