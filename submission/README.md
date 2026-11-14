@@ -120,17 +120,16 @@ total parameters on its official page.
 
 ## Tested
 
-The Kaggle rows below were measured with a 4,096-token first sample, before the switch to 3,072; the first three ran
-commit 8d46852, which still had the tail cap.
+The rows below ran this code (commit 62523c8: 3,072-token first sample, no continuations) unless a row says otherwise.
 
 | Check | Result |
 |---|---|
-| Kit `selftest.py --n 200`, Kaggle, two T4 cards | OK, accuracy 1.000, 5.4 min (estimate for 450: 12 min); 12 cases reached the model |
-| 450 test cases the rules leave open (the closest stand-in for new families), Kaggle, two T4 cards, cold start | 75.0 min including model load (engine ready at 2.4 min), exit 0. All 449 cases the model judged got a thinking answer: 21 first answers hit a cap (20 at 4,096 tokens, 1 at the tail cap), 14 of those were continued and finished, 7 stayed forced; none needed the answer without thinking. Mean 1,532 output tokens per case |
-| 40 of those cases on one T4 (15-minute budget) | 10.8 min, exit 0. Cache room for 6 cases in flight; the 15-minute budget gave 30 of 40 cases a thinking answer (24 cut at 768 tokens) and 10 the answer without thinking |
-| The 300 new-family cases, Kaggle, two T4 cards | 0.957 (table above) |
-| Kit `selftest.py --n 50` on a laptop without a GPU | OK, 0.980 (rules and fallbacks only) |
-| GPU server (A6000, Qwen3-8B as a stand-in): restarts after a failed engine, stop-time answers, continuations | all paths ran and the final file was valid each time |
+| Kit `selftest.py --n 200`, Kaggle, two T4 cards | OK, accuracy 1.000, 5.4 min (the kit's estimate for 450: 12.0 min); 12 cases reached the model |
+| 450 test cases the rules leave open (the closest stand-in for new families), Kaggle, two T4 cards, cold start | 75.0 min including model load (engine ready at 2.3 min), exit 0; the limit is 90. All 449 cases the model judged got a thinking answer: 35 first samples stopped at 3,072 tokens and were forced, and 92 extra samples went to 66 uncertain cases; none needed the answer without thinking. Mean 1,413 output tokens per first sample |
+| 40 of those cases on one T4 (15-minute budget) | 11.9 min, exit 0. Cache room for 6 cases in flight, so one card writes about a third as many tokens a minute as two: 19 of 40 cases got a thinking answer (2 forced) and 21 the answer without thinking |
+| The 300 new-family cases, Kaggle, two T4 cards | 0.957 (see No continuations): commit 5697d56 with these settings from the environment, which runs the same on two cards |
+| Kit `selftest.py --n 50` on a laptop without a GPU | OK, 0.980 in 0.9 s (rules and fallbacks only) |
+| GPU server (A6000, Qwen3-8B as a stand-in) | Earlier commits: restarts after a failed engine, stop-time answers and continuations all ran, and the final file was valid each time. This code on one card, 40 new-family cases: 12 capped samples forced, 13 extra samples, no continuation tried, exit 0 |
 
 ## Models and licences
 

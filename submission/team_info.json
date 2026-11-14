@@ -17,7 +17,7 @@
       "weights_location_in_zip_or_download_script": "not in the zip; setup.sh downloads it from Hugging Face at the pinned revision to models/judge"
     }
   ],
-  "hardware_assumed": "2x NVIDIA T4 16GB (one vLLM engine, tensor parallel over both cards); also runs on 1x T4 with fewer cases in flight",
+  "hardware_assumed": "2x NVIDIA T4 16GB (one vLLM engine, tensor parallel over both cards); measured 75.0 min for 450 cases including model load. Also runs on 1x T4 with 6 cases in flight instead of 40, so fewer cases get a thinking answer in the time",
   "approx_runtime_minutes_for_450_cases": 75,
   "uses_pseudo_labelling": false,
   "statement": "I confirm that: (1) no closed or hosted model API is called by the solution or was used to label data or produce training data; (2) no test labels were created by hand or by a person; (3) test.csv was not read to design family-specific rules; (4) predict.py reproduces the Final Submission when run on test.csv.",
