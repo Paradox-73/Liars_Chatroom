@@ -71,8 +71,8 @@ def model_scores(r):
     return {k: float(k == letter) for k in LETTERS}
 
 
-def vote(case_id, candidates, models):
-    """Weighted sum of model probabilities over the candidate speakers. Returns (letter, n_models_used)."""
+def tally(case_id, candidates, models):
+    """Weighted sum of model probabilities over the candidate speakers. Returns (letter -> score, n_models_used)."""
     total = collections.Counter()
     used = 0
     for weight, preds in models:
@@ -88,6 +88,12 @@ def vote(case_id, candidates, models):
         for c in candidates:
             total[c] += w * sc[c] / mass
         used += 1
+    return total, used
+
+
+def vote(case_id, candidates, models):
+    """The candidate with the largest weighted sum. Returns (letter, n_models_used)."""
+    total, used = tally(case_id, candidates, models)
     if not used:
         return None, 0
     best = max(total.values())

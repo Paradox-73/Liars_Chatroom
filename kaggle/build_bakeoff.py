@@ -14,6 +14,8 @@ import os
 # slug: (owner, Hugging Face repo, revision, judge.py environment)
 KERNELS = {
     "bake-qwen3-8b-awq": ("paradox73", "Qwen/Qwen3-8B-AWQ", "4da05a8edb55c6046cce958586c33b61da07bb79", {"LC_SLOTS": "48"}),
+    "bake-qwen35-4b-awq-dp": ("paradox73", "cyankiwi/Qwen3.5-4B-AWQ-4bit", "d3e78b50c727b1f34802f440ca84b25781625352",
+                              {"LC_DATA_PARALLEL": "1", "LC_SLOTS": "48", "LC_MAX_LEN": "18432", "LC_PRESENCE_PENALTY": "1.5"}),
     "bake-qwen35-9b-awq": ("paradox73", "cyankiwi/Qwen3.5-9B-AWQ-4bit", "e4d2d39cede8c5d1716d824cd843e2889c648083",
                            {"LC_SLOTS": "40", "LC_PRESENCE_PENALTY": "1.5"}),
     "bake-r1-0528-qwen3-8b": ("nirbhaysharma504", "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B", "6e8885a6ff5c1dc5201574c8fd700323f23c25fa",
@@ -22,6 +24,13 @@ KERNELS = {
     "bake-qwen35-4b-awq": ("bhavyajain1098", "cyankiwi/Qwen3.5-4B-AWQ-4bit", "d3e78b50c727b1f34802f440ca84b25781625352",
                            {"LC_SLOTS": "48", "LC_PRESENCE_PENALTY": "1.5"}),
     "bake-qwen3-14b-awq": ("bhavyajain1098", "Qwen/Qwen3-14B-AWQ", "31c69efc29464b6bb0aee1398b5a7b50a99340c3", {}),
+    "bake-qwen3-14b-awq-v2": ("paradox73", "Qwen/Qwen3-14B-AWQ", "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+                              {"LC_TOKEN_LOGPROBS": "0", "LC_MAIN_TOKENS": "4096", "LC_ENGINE_STATS": "1"}),
+    "bake-final": ("nirbhaysharma504", "Qwen/Qwen3-14B-AWQ", "31c69efc29464b6bb0aee1398b5a7b50a99340c3", {"LC_ENGINE_STATS": "1"}),
+    "bake-final-nocap": ("paradox73", "Qwen/Qwen3-14B-AWQ", "31c69efc29464b6bb0aee1398b5a7b50a99340c3", {"LC_ENGINE_STATS": "1"}),
+    "bake-qwen3-8b-awq-v2": ("paradox73", "Qwen/Qwen3-8B-AWQ", "4da05a8edb55c6046cce958586c33b61da07bb79",
+                             {"LC_SLOTS": "48", "LC_TOKEN_LOGPROBS": "0", "LC_MAIN_TOKENS": "2048", "LC_CONT_TOKENS": "8192",
+                              "LC_ENGINE_STATS": "1"}),
     "bake-qwen35-9b-fp16": ("aaryanantala", "Qwen/Qwen3.5-9B", "c202236235762e1c871ad0ccb60c8ee5ba337b9a",
                             {"LC_SLOTS": "24", "LC_PRESENCE_PENALTY": "1.5"}),
     "bake-qwen35-4b-fp16": ("aaryanantala", "Qwen/Qwen3.5-4B", "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
@@ -29,7 +38,7 @@ KERNELS = {
 }
 
 DRIVER = r'''
-import base64, collections, csv, io, json, os, re, subprocess, time, zipfile
+import base64, collections, csv, glob, io, json, os, re, subprocess, time, zipfile
 
 T0, SUB, OUT = time.time(), "/tmp/sub", "/kaggle/working"
 
@@ -55,7 +64,7 @@ t = time.time()
 rc = sh(f"cd {SUB} && {env} python predict.py --input /tmp/newfam.csv --output {OUT}/newfam_pred.csv --model /tmp/model "
         f"--workdir /tmp/w 2>&1 | tee /tmp/predict.log; exit ${{PIPESTATUS[0]}}", check=False)
 wall = (time.time() - t) / 60
-sh(f"cp /tmp/w/answers.jsonl {OUT}/newfam_answers.jsonl", check=False)
+sh(f"cat /tmp/w/answers* > {OUT}/newfam_answers.jsonl", check=False)  # one answers file per model process
 
 labels = {r["id"]: r["label"] for r in csv.DictReader(io.StringIO(NEWFAM))}
 family = {r["id"]: r["family"] for r in csv.DictReader(io.StringIO(META))}
@@ -63,8 +72,8 @@ pred = {}
 if os.path.exists(f"{OUT}/newfam_pred.csv"):
     pred = {r["id"]: r["label"] for r in csv.DictReader(open(f"{OUT}/newfam_pred.csv"))}
 recs, lines = {}, []
-if os.path.exists("/tmp/w/answers.jsonl"):
-    lines = [json.loads(x) for x in open("/tmp/w/answers.jsonl")]
+for path in sorted(glob.glob("/tmp/w/answers*")):
+    lines += [json.loads(x) for x in open(path)]
 for r in lines:
     old = recs.get((r["id"], r["k"]))
     if old is None or r["stage"] >= old["stage"]:
