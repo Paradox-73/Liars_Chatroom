@@ -1,0 +1,1734 @@
+id,scenario,speakers,evidence,chat,label
+S20119,Gym members argue about the codes they picked for their lockers.,A = Emil; B = Svetla; C = Malia; D = Farah,"The lockers only accept four-digit codes that follow every one of these rules: digits may repeat; the first digit is not 0; the four digits add up to exactly 21. Every person in the chat set exactly one code, and the lockers accepted it.","1. C: My locker code was 4368.
+2. A: Who is writing this up?
+3. A: Svetla's locker code was 4791.
+4. B: Thanks for checking, everyone.
+5. B: My code started with 4.
+6. A: My locker code was 2775.
+7. D: Malia's code started with 0.
+8. C: My code started with 4.",D
+S20056,Colleagues argue about who sat where at the round table during the team lunch.,A = Sahil; B = Irene; C = Cecilia; D = Kasimir,"Six people sat around a round table with six evenly spaced seats: Kasimir, Sahil, Irene, Cecilia, Helga and Matteo. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Matteo sat two seats away from Sahil. Irene sat next to Matteo. Cecilia sat directly opposite Helga.","1. D: I sat two seats away from Irene.
+2. A: I did not sit next to Helga.
+3. A: Cecilia sat directly opposite Helga.
+4. A: Kasimir sat two seats away from Matteo.
+5. C: I sat two seats away from Kasimir.
+6. A: I did not sit next to Matteo.
+7. B: Was anyone else there?
+8. A: Let's go through it once more.
+9. C: Who is writing this up?
+10. A: Cecilia did not sit next to Irene.",A
+S20110,Gym members argue about the codes they picked for their lockers.,A = Hamid; B = Irene; C = Gideon; D = Lorenzo,"Facts checked by the organisers: The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is even and not 0; the four digits add up to exactly 24. Every person in the chat set exactly one code, and the lockers accepted it.","1. B: wait what
+2. D: pretty sure my code started with 2.
+3. C: tbh my locker code was 8529.
+4. C: tbh Hamid's code had the digit 1 in it twice.
+5. D: anyone else remember?
+6. D: fwiw Hamid's code ended in 3.
+7. B: for the record Lorenzo's locker code was 2958.
+8. A: Gideon's code started with 8.
+9. A: for the record my locker code was 8493.",C
+S20132,Family members go through Alvaro's bank app after a confusing day of spending.,A = Benedikt; B = Anouk; C = Jasper; D = Alvaro,"All times in this case refer to 1 January 2026. At 8:00 AM Alvaro's account held exactly £575. The only payments into or out of the account that day were, in order: a salary payment of £10.99 at 10:30 AM, a transfer in of £117 at 10:50 AM, a refund of £33 at 6:10 PM, a transfer in of £204 at 6:20 PM. Each one changed the balance at the moment it was made.","1. D: At 8:45 AM my balance was £575.
+2. A: Is that everything we know?
+3. D: Who is writing this up?
+4. A: At 6:15 PM Alvaro's balance was £735.99.
+5. D: At 8:30 AM my balance was £575.
+6. B: Is that everything we know?
+7. A: At 12:30 PM Alvaro's balance was £692.
+8. D: At 6:35 PM my balance was £939.99.
+9. A: At 11:20 AM Alvaro's balance was £702.99.
+10. C: Can we settle this quickly?",A
+S20082,A camping group reconstructs how far their van went before it was refuelled.,A = Magnus; B = Babak; C = Yasmin; D = Dmitra,"Facts checked by the organisers: The van left at 07:30 with exactly 50 litres of fuel and was not refuelled before 17:30. It used fuel at a steady 7.5 litres per 100 km, the fuel gauge was always accurate and never read below 4 litres, and the van never went faster than 80 km/h. Babak drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. C: pretty sure at 14:30 the trip meter showed 280 km and the gauge showed 33 litres.
+2. D: ok so by 17:15 the van had done 360 km.
+3. C: can someone just check the notes
+4. B: wait what
+5. B: pretty sure I drove 280 km before 15:00.
+6. A: for the record by 15:00 the van had done 280 km.
+7. C: tbh Babak drove 40 km before 08:45.
+8. D: for the record by 14:30 the van had done 280 km.
+9. A: fwiw by 13:15 the van had done 200 km.
+10. C: can we wrap this up pls
+11. D: pretty sure by 08:45 the van had done 40 km.
+12. B: for the record I drove 160 km before 11:30.",C
+S20117,Gym members argue about the codes they picked for their lockers.,A = Fabian; B = Jovana; C = Silas; D = Valentin,"The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is not 0; the four digits add up to exactly 17; no digit is 0. Every person in the chat set exactly one code, and the lockers accepted it.","1. B: My code started with 2.
+2. B: My locker code was 2737.
+3. D: My locker code was 5138.
+4. C: Valentin's code ended in 8.
+5. A: Silas's code started with 8.
+6. C: My code ended in 3.
+7. A: This is getting confusing.
+8. C: Who is writing this up?
+9. B: Let's go through it once more.
+10. B: Fabian's code started with 4.",B
+S20147,Bidders at a charity auction argue about how the bidding for the signed guitar went.,A = Cecilia; B = Greta; C = Thandi; D = Amaya,"The bidding for the signed guitar opened with a first bid of £50. Every later bid was a whole number of pounds and at least £20 higher than the bid before it. The last bid, £150, won, and no bid was withdrawn.","1. D: The second bid on the signed guitar was £80.
+2. D: Should we ask the organiser?
+3. C: Can we settle this quickly?
+4. A: Thandi bid £80 on the signed guitar at one point.
+5. D: I bid £60 on the signed guitar at one point.
+6. B: I bid £100 on the signed guitar at one point.
+7. C: There were exactly 5 bids on the signed guitar in total.
+8. D: I bid £120 on the signed guitar at one point.
+9. D: The winning bid on the signed guitar beat the bid before it by exactly £30.",D
+S20013,Players in a five-a-side league argue about how their teams did this season.,A = Irene; B = Malia; C = Sahil; D = Elodie,"In the league every team played exactly 5 games. A win earned 3 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Pilots had 15 points, the Badgers had 13 points and the Comets had 1 points.","1. A: The Pilots won at least half of their games.
+2. A: The Badgers won more games than they lost.
+3. C: The Pilots won exactly 5 of their games.
+4. B: The Comets won exactly 4 of their games.
+5. D: Does anyone have the receipt?
+6. D: The Pilots won more games than they lost.
+7. A: The Comets drew exactly 1 game.
+8. B: Is that everything we know?
+9. B: Who is writing this up?",B
+S20128,Family members go through Alvaro's bank app after a confusing day of spending.,A = Alvaro; B = Callum; C = Dmitra; D = Paloma,"All times in this case refer to 14 March 2026. At 8:00 AM Alvaro's account held exactly £581. The only payments into or out of the account that day were, in order: a refund of £179 at 10:00 AM, a card payment of £151.50 at 1:10 PM, a direct debit of £81.99 at 3:30 PM, a card payment of £160 at 3:50 PM. Each one changed the balance at the moment it was made.","1. C: At 11:20 AM Alvaro's balance was £760.
+2. D: This is getting confusing.
+3. A: My balance never went below £360 that day.
+4. B: Can we settle this quickly?
+5. A: At 10:25 AM my balance was £760.
+6. A: At 10:30 AM my balance was £760.
+7. A: At 10:30 AM my balance was £581.
+8. A: At 7:00 PM my balance was £366.51.
+9. A: Let's go through it once more.
+10. C: This is getting confusing.
+11. A: At 6:05 PM my balance was £366.51.",A
+S20059,Colleagues argue about who sat where at the round table during the team lunch.,A = Nadir; B = Arjun; C = Valentin; D = Thandi,"Facts checked by the organisers: Six people sat around a round table with six evenly spaced seats: Arjun, Valentin, Thandi, Nadir, Esther and Otto. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Arjun sat next to Nadir. Thandi sat two seats away from Esther. Nadir sat directly opposite Thandi.","1. D: does it even matter?
+2. C: honestly no idea
+3. B: for the record Esther sat directly opposite Valentin.
+4. B: honestly I sat next to Valentin.
+5. C: pretty sure Thandi did not sit next to Nadir.
+6. C: honestly Esther sat next to Otto.
+7. B: ok who has the details?
+8. B: pretty sure I sat two seats away from Esther.
+9. D: pretty sure I did not sit next to Valentin.
+10. A: anyone else remember?",D
+S20014,Players in a five-a-side league argue about how their teams did this season.,A = Ulla; B = Babak; C = Fabian; D = Saskia,"Facts checked by the organisers: In the league every team played exactly 6 games. A win earned 3 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Otters had 4 points, the Pilots had 0 points and the Comets had 13 points.","1. B: ok who has the details?
+2. C: for the record the Otters drew exactly 2 games.
+3. A: can we wrap this up pls
+4. D: fwiw the Pilots did not draw a single game.
+5. B: honestly the Otters lost exactly 2 games.
+6. D: the Otters won exactly 0 of their games.
+7. C: for the record the Comets won exactly 4 of their games.
+8. A: tbh the Pilots lost exactly 6 games.
+9. B: can someone just check the notes
+10. C: ok so the Otters drew exactly 4 games.
+11. A: fwiw the Pilots won exactly 0 of their games.
+12. D: lol this chat
+13. D: pretty sure the Otters lost more games than they won.",C
+S20112,Gym members argue about the codes they picked for their lockers.,A = Emil; B = Greta; C = Yohannes; D = Dmitra,"Facts checked by the organisers: The lockers only accept four-digit codes that follow every one of these rules: digits may repeat; the first digit is not 0; the four digits add up to exactly 22. Every person in the chat set exactly one code, and the lockers accepted it.","1. C: does it even matter?
+2. D: honestly my code started with 7.
+3. A: can we wrap this up pls
+4. D: my locker code was 7186.
+5. B: tbh my locker code was 5863.
+6. C: ok so my code started with 5.
+7. A: ok so my locker code was 4693.
+8. A: ok so my code started with 4.
+9. C: ok so Dmitra's code ended in 6.
+10. A: Yohannes's locker code was 5583.
+11. A: can someone just check the notes
+12. B: ok so my code started with 5.",A
+S20126,Family members go through Babak's bank app after a confusing day of spending.,A = Babak; B = Helga; C = Elodie; D = Wanjiru,"All times in this case refer to 23 December 2026. At 8:00 AM Babak's account held exactly £633. The only payments into or out of the account that day were, in order: a direct debit of £125.50 at 1:40 PM, a card payment of £193.99 at 2:20 PM, a refund of £107.99 at 2:30 PM, a cash withdrawal of £73 at 6:10 PM. Each one changed the balance at the moment it was made.","1. A: At 7:25 PM my balance was £348.50.
+2. A: At 7:10 PM my balance was £348.50.
+3. A: At 11:55 AM my balance was £633.
+4. A: Is that everything we know?
+5. A: At 7:40 PM my balance was £348.50.
+6. C: At 7:10 PM Babak's balance was £474.
+7. C: I'd rather we got this right.
+8. A: My balance never went below £310 that day.
+9. D: Does anyone have the receipt?
+10. A: At 9:10 AM my balance was £633.
+11. A: At 9:00 AM my balance was £633.
+12. C: Should we ask the organiser?
+13. B: At 4:35 PM Babak's balance was £421.50.",C
+S20016,Players in a five-a-side league argue about how their teams did this season.,A = Renata; B = Magnus; C = Petra; D = Anouk,"Facts checked by the organisers: In the league every team played exactly 8 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Comets had 16 points, the Herons had 14 points and the Lynxes had 16 points.","1. B: ugh this is confusing
+2. C: ok so the Lynxes won exactly 8 of their games.
+3. A: does it even matter?
+4. A: fwiw the Lynxes won more games than they lost.
+5. B: the Comets did not draw a single game.
+6. C: honestly the Lynxes won at least half of their games.
+7. D: fwiw the Comets won at least half of their games.
+8. C: anyone else remember?
+9. A: ok so the Lynxes did not draw a single game.
+10. A: tbh the Herons won more games than they lost.
+11. C: ok so the Herons won exactly 7 of their games.
+12. A: the Comets lost exactly 6 games.",A
+S20104,Gym members argue about the codes they picked for their lockers.,A = Benedikt; B = Rasmus; C = Zofia; D = Wanjiru,"Facts checked by the organisers: The lockers only accept four-digit codes that follow every one of these rules: digits may repeat; the first digit is not 0; the four digits add up to exactly 23. Every person in the chat set exactly one code, and the lockers accepted it.","1. C: honestly no idea
+2. A: tbh my locker code was 8717.
+3. A: Zofia's code ended in 8.
+4. A: my code had the digit 2 in it twice.
+5. D: ugh this is confusing
+6. A: ok so Rasmus's locker code was 7097.
+7. A: honestly my code ended in 7.
+8. B: tbh Wanjiru's code ended in 8.
+9. A: for the record Zofia's locker code was 7268.
+10. D: honestly no idea",A
+S20065,Six friends try to remember the seating at a birthday dinner.,A = Jasper; B = Lorenzo; C = Orla; D = Luana,"Facts checked by the organisers: Six people sat around a round table with six evenly spaced seats: Luana, Lorenzo, Jasper, Orla, Irene and Petra. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Jasper sat next to Petra. Luana sat next to Jasper. Lorenzo sat two seats away from Orla.","1. A: ugh this is confusing
+2. B: ok who has the details?
+3. A: ok so I did not sit next to Lorenzo.
+4. B: ok so Petra did not sit next to Irene.
+5. A: Petra sat two seats away from Luana.
+6. C: pretty sure Irene sat next to Orla.
+7. C: honestly Petra sat next to Lorenzo.
+8. B: Petra sat two seats away from Orla.
+9. D: pretty sure Orla sat two seats away from Lorenzo.
+10. B: fwiw Jasper sat two seats away from Orla.",B
+S20055,Colleagues argue about who sat where at the round table during the team lunch.,A = Renata; B = Nadir; C = Zoltan; D = Kasimir,"Facts checked by the organisers: Six people sat around a round table with six evenly spaced seats: Renata, Nadir, Zoltan, Kasimir, Emil and Irene. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Renata sat next to Kasimir. Zoltan sat two seats away from Kasimir. Irene sat two seats away from Renata.","1. D: tbh Emil sat two seats away from Irene.
+2. D: pretty sure Zoltan did not sit next to Renata.
+3. C: ok so Emil sat two seats away from Renata.
+4. B: fwiw Zoltan sat two seats away from Nadir.
+5. D: pretty sure Nadir sat next to Renata.
+6. B: ok so Emil sat next to Zoltan.
+7. D: I sat two seats away from Irene.
+8. B: can someone just check the notes
+9. B: ugh this is confusing
+10. A: ok so Emil did not sit next to Irene.
+11. A: honestly no idea
+12. A: can we wrap this up pls",D
+S20149,Friends who went to a village auction compare notes on the sale of the vintage bike.,A = Ilan; B = Otto; C = Thandi; D = Lorenzo,"The bidding for the vintage bike opened with a first bid of £50. Every later bid was a whole number of pounds and at least £5 higher than the bid before it. The last bid, £72, won, and no bid was withdrawn.","1. C: There were exactly 4 bids on the vintage bike in total.
+2. A: The winning bid on the vintage bike beat the bid before it by exactly £5.
+3. D: I bid £67 on the vintage bike at one point.
+4. D: The second bid on the vintage bike was £60.
+5. C: This is getting confusing.
+6. C: Let's go through it once more.
+7. B: Thandi bid £60 on the vintage bike at one point.
+8. B: I bid £77 on the vintage bike at one point.",B
+S20129,Family members go through Yasmin's bank app after a confusing day of spending.,A = Orla; B = Yasmin; C = Mirela; D = Magnus,"Facts checked by the organisers: At 08:00 Yasmin's account held exactly £511. The only payments into or out of the account that day were, in order: a salary payment of £227 at 11:00, a transfer in of £213.50 at 14:50, a cash withdrawal of £245.50 at 17:30, a direct debit of £61 at 18:40. Each one changed the balance at the moment it was made.","1. B: tbh at 15:15 my balance was £951.50.
+2. D: tbh at 19:45 Yasmin's balance was £645.
+3. D: tbh at 17:25 Yasmin's balance was £951.50.
+4. B: at 16:15 my balance was £951.50.
+5. B: fwiw at 16:25 my balance was £738.
+6. A: anyone else remember?
+7. B: ok so at 13:05 my balance was £738.
+8. A: honestly at 13:10 Yasmin's balance was £738.
+9. C: can we wrap this up pls
+10. B: at 19:50 my balance was £645.",B
+S20042,Members of a running club piece together the results of the 5 km race.,A = Nadir; B = Anouk; C = Beatrix; D = Helga,Facts checked by the organisers: 8 runners finished the race and every finishing place from 1st to 8th was taken by exactly one runner; there were no ties. Beatrix finished 7th. Helga finished directly behind Beatrix. Arjun finished ahead of Nadir.,"1. B: fwiw Arjun finished ahead of Helga.
+2. B: ok so I finished ahead of Nadir.
+3. C: nobody finished between Arjun and Anouk.
+4. B: fwiw Arjun finished ahead of Nadir.
+5. A: ok so Helga finished last.
+6. C: fwiw Helga finished 3rd.
+7. C: can someone just check the notes
+8. D: ok so Arjun finished 1st.
+9. B: Beatrix finished 7th.
+10. C: can we wrap this up pls
+11. B: I finished ahead of Helga.",C
+S20051,Club runners argue about the finishing order of the 800 m final.,A = Hamid; B = Yohannes; C = Zofia; D = Malia,6 runners finished the race and every finishing place from 1st to 6th was taken by exactly one runner; there were no ties. Farah finished 4th. Nobody finished between Farah and Zofia. Hamid finished ahead of Malia.,"1. B: I finished ahead of Farah.
+2. C: Nobody finished between Farah and Malia.
+3. A: I finished ahead of Farah.
+4. D: I finished 5th.
+5. B: I'd rather we got this right.
+6. D: Hamid finished 4th.
+7. C: Let's go through it once more.
+8. C: Hamid finished ahead of Yohannes.",D
+S20026,Travellers compare what they got at the airport exchange booth.,A = Matteo; B = Anouk; C = Silas; D = Renata,"All times in this case refer to 23 February 2026. The exchange booth took a flat fee of £5 from every amount handed over and changed the rest at exactly 1.3 euros per pound, with no rounding. It changed no money before 8:30 AM or after 3:00 PM that day. Everyone in the chat changed money there exactly once that day.","1. B: I changed money at the booth at 8:30 AM.
+2. B: I paid the £5 fee at the booth.
+3. D: Who is writing this up?
+4. C: Can we settle this quickly?
+5. C: Callum changed money at the booth at 8:30 AM.
+6. B: This is getting confusing.
+7. B: Silas handed over £65 at the booth and got €78.00 back.
+8. C: I handed over £65 at the booth and got €83.00 back.
+9. A: Callum paid the booth's £5 fee.",C
+S20021,Travellers compare what they got at the airport exchange booth.,A = Rasmus; B = Zofia; C = Cecilia; D = Lorenzo,"Facts checked by the organisers: The exchange booth took a flat fee of £3 from every amount handed over and changed the rest at exactly 1.15 euros per pound, with no rounding. It changed no money before 10:00 or after 17:00 that day. Everyone in the chat changed money there exactly once that day.","1. A: Zofia changed money at the booth at 10:00.
+2. B: ok so I handed over £183 at the booth and got €213.90 back.
+3. C: honestly no idea
+4. B: honestly Rasmus changed money at the booth at 11:55.
+5. D: Wanjiru paid the booth's £3 fee.
+6. C: wait what
+7. A: fwiw Lorenzo changed money at the booth at 13:05.
+8. A: fwiw Wanjiru changed money at the booth at 10:00.
+9. D: ugh this is confusing
+10. B: Lorenzo handed over £103 at the booth and got €115.00 back.
+11. A: lol this chat
+12. B: I handed over £183 at the booth and got €207.00 back.
+13. B: pretty sure Cecilia handed over £143 at the booth and got €161.00 back.",B
+S20025,Travellers compare what they got at the airport exchange booth.,A = Magnus; B = Yasmin; C = Helga; D = Jovana,"Facts checked by the organisers: The exchange booth took a flat fee of £2 from every amount handed over and changed the rest at exactly 1.25 euros per pound, with no rounding. It changed no money before 10:00 or after 17:00 that day. Everyone in the chat changed money there exactly once that day.","1. D: lol this chat
+2. A: pretty sure Yasmin changed money at the booth at 16:05.
+3. B: honestly Hamid handed over £282 at the booth and got €355.00 back.
+4. B: fwiw I paid the £2 fee at the booth.
+5. B: for the record Helga handed over £182 at the booth and got €225.00 back.
+6. A: tbh I handed over £282 at the booth and got €350.00 back.
+7. B: for the record I handed over £122 at the booth and got €150.00 back.
+8. D: hang on, let me think
+9. C: honestly Magnus paid the booth's £2 fee.",B
+S20052,Colleagues argue about who sat where at the round table during the team lunch.,A = Klara; B = Dmitra; C = Otto; D = Zofia,"Six people sat around a round table with six evenly spaced seats: Otto, Dmitra, Klara, Zofia, Magnus and Arjun. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Zofia sat next to Dmitra. Zofia sat next to Magnus. Dmitra sat next to Klara.","1. C: I sat next to Arjun.
+2. D: I did not sit next to Klara.
+3. B: Who is writing this up?
+4. D: This is getting confusing.
+5. C: I did not sit next to Dmitra.
+6. B: I sat two seats away from Magnus.
+7. D: Thanks for checking, everyone.
+8. A: I sat two seats away from Zofia.
+9. B: Arjun did not sit next to Zofia.
+10. A: Arjun sat directly opposite Magnus.
+11. B: I did not sit next to Arjun.
+12. D: Otto sat two seats away from Klara.
+13. A: Let's go through it once more.",A
+S20125,Family members go through Matteo's bank app after a confusing day of spending.,A = Helga; B = Matteo; C = Hamid; D = Farah,"Facts checked by the organisers: At 08:00 Matteo's account held exactly £187.25. The only payments into or out of the account that day were, in order: a salary payment of £92 at 09:50, a card payment of £54.99 at 10:00, a direct debit of £19.50 at 12:30, a transfer in of £218 at 15:00. Each one changed the balance at the moment it was made.","1. B: lol this chat
+2. A: anyone else remember?
+3. D: for the record at 08:25 Matteo's balance was £187.25.
+4. B: fwiw at 16:35 my balance was £422.76.
+5. B: honestly at 09:00 my balance was £187.25.
+6. B: for the record my balance never went below £180 that day.
+7. C: at 19:40 Matteo's balance was £422.76.
+8. B: pretty sure at 10:10 my balance was £132.26.
+9. C: fwiw at 10:10 Matteo's balance was £224.26.",B
+S20095,Residents argue about which committee meetings they went to.,A = Saskia; B = Rasmus; C = Babak; D = Benedikt,"Facts checked by the organisers: In 2028 the committee met once a month, always on the last Wednesday of the month, and never on any other day. 1 August 2028 was a Tuesday. 1 December 2028 was a Friday.","1. B: anyone else remember?
+2. B: tbh Babak was at the gym on 30 December.
+3. D: ugh this is confusing
+4. A: Benedikt went to the December meeting on 27 December.
+5. C: honestly I went to the August meeting on 30 August.
+6. D: fwiw Babak went to the December meeting on 26 December.
+7. A: I was at the gym on 29 December.
+8. D: honestly I was at the gym on 29 December.",D
+S20044,Members of a running club piece together the results of the 5 km race.,A = Beatrix; B = Paloma; C = Alvaro; D = Malia,Facts checked by the organisers: 9 runners finished the race and every finishing place from 1st to 9th was taken by exactly one runner; there were no ties. Beatrix finished 9th. Exactly five runners finished between Beatrix and Yohannes. Malia finished ahead of Alvaro. Paloma was not in the top three.,"1. C: lol this chat
+2. C: pretty sure Yohannes finished ahead of Paloma.
+3. C: nobody finished between Paloma and Beatrix.
+4. C: can someone just check the notes
+5. A: anyone else remember?
+6. C: Malia finished ahead of Yohannes.
+7. D: honestly no idea
+8. A: Yohannes finished 8th.
+9. A: fwiw Malia finished ahead of Beatrix.
+10. B: Malia made the top three.
+11. A: fwiw I finished last.",A
+S20011,Players in a five-a-side league argue about how their teams did this season.,A = Matteo; B = Nkechi; C = Teodor; D = Dmitra,"In the league every team played exactly 6 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Lynxes had 8 points, the Comets had 8 points and the Pilots had 12 points.","1. B: The Pilots went the whole season unbeaten.
+2. C: The Comets won more games than they lost.
+3. D: The Pilots won exactly 0 of their games.
+4. D: I'd rather we got this right.
+5. D: Was anyone else there?
+6. C: The Lynxes drew exactly 2 games.
+7. C: The Comets drew exactly 2 games.
+8. A: The Comets won at least half of their games.
+9. B: The Pilots won exactly 6 of their games.
+10. B: Thanks for checking, everyone.
+11. C: The Pilots won more games than they lost.
+12. D: The Pilots won at least half of their games.",D
+S20017,Players in a five-a-side league argue about how their teams did this season.,A = Dmitra; B = Helga; C = Amaya; D = Thandi,"In the league every team played exactly 7 games. A win earned 3 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Otters had 21 points, the Ravens had 4 points and the Lynxes had 4 points.","1. D: The Ravens lost more games than they won.
+2. C: Should we ask the organiser?
+3. A: The Otters won more games than they lost.
+4. A: The Otters did not draw a single game.
+5. C: Let's go through it once more.
+6. B: The Otters won exactly 6 of their games.
+7. A: The Otters went the whole season unbeaten.
+8. D: The Lynxes lost exactly 3 games.
+9. B: Who is writing this up?
+10. D: The Ravens won exactly 1 of their games.
+11. A: The Ravens drew exactly 1 game.
+12. A: The Lynxes drew exactly 4 games.",B
+S20054,Colleagues argue about who sat where at the round table during the team lunch.,A = Lorenzo; B = Gideon; C = Elodie; D = Klara,"Six people sat around a round table with six evenly spaced seats: Klara, Gideon, Lorenzo, Elodie, Emil and Alvaro. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Alvaro sat two seats away from Klara. Emil sat two seats away from Alvaro. Elodie sat two seats away from Gideon.","1. D: Thanks for checking, everyone.
+2. C: I sat next to Gideon.
+3. C: Gideon sat directly opposite Alvaro.
+4. D: Let's go through it once more.
+5. C: Alvaro sat two seats away from Emil.
+6. A: Emil sat next to Elodie.
+7. D: I did not sit next to Emil.
+8. B: I did not sit next to Lorenzo.",C
+S20071,A camping group reconstructs how far their van went before it was refuelled.,A = Ulla; B = Greta; C = Thandi; D = Paloma,"All times in this case refer to 22 December 2026. The van left at 7:00 AM with exactly 40 litres of fuel and was not refuelled before 4:00 PM. It used fuel at a steady 7.5 litres per 100 km, the fuel gauge was always accurate and never read below 4 litres, and the van never went faster than 90 km/h. Ulla drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. A: Is that everything we know?
+2. B: Ulla drove 200 km before 11:15 AM.
+3. C: By 2:00 PM the van had done 320 km.
+4. C: By 12:45 PM the van had done 240 km.
+5. D: Ulla kept the van at a steady 110 km/h for an hour.
+6. C: By 1:30 PM the van had done 280 km.
+7. D: I'd rather we got this right.
+8. C: Who is writing this up?
+9. B: At 11:15 AM the trip meter showed 200 km and the gauge showed 25 litres.",D
+S20093,Members of a chess club try to sort out the dates of their monthly meetings.,A = Thandi; B = Helga; C = Esther; D = Anouk,"Facts checked by the organisers: In 2028 the committee met once a month, always on the last Sunday of the month, and never on any other day. 1 October 2028 was a Sunday. 1 November 2028 was a Wednesday.","1. C: ok who has the details?
+2. D: for the record I went to the October meeting on 29 October.
+3. B: pretty sure Anouk was at the gym on 29 November.
+4. B: honestly Esther went to the October meeting on 22 October.
+5. C: ugh this is confusing
+6. C: for the record I went to the October meeting on 29 October.
+7. A: Anouk went to the November meeting on 26 November.
+8. B: fwiw I went to the October meeting on 29 October.
+9. A: ok so I went to the November meeting on 26 November.",B
+S20108,Students compare the four-digit codes they set on their lockers.,A = Dalia; B = Klara; C = Jovana; D = Kasimir,"Facts checked by the organisers: The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is odd; the four digits add up to exactly 19; no digit is 0. Every person in the chat set exactly one code, and the lockers accepted it.","1. B: my locker code was 5239.
+2. C: ok so my locker code was 9415.
+3. A: ok so Kasimir's code had the digit 6 in it twice.
+4. C: anyone else remember?
+5. A: pretty sure my code started with 3.
+6. C: fwiw my code started with 9.
+7. D: tbh Jovana's code ended in 5.
+8. D: ok so my code started with 5.
+9. B: hang on, let me think",A
+S20088,Members of a chess club try to sort out the dates of their monthly meetings.,A = Malia; B = Yohannes; C = Xavier; D = Zofia,"In 2028 the committee met once a month, always on the fourth Wednesday of the month, and never on any other day. 1 May 2028 was a Monday. 1 December 2028 was a Friday.","1. A: Zofia went to the December meeting on 20 December.
+2. A: Is that everything we know?
+3. A: Does anyone have the receipt?
+4. B: Zofia went to the December meeting on 27 December.
+5. B: I went to the December meeting on 27 December.
+6. C: I was at the gym on 24 December.
+7. B: Zofia was at the gym on 27 May.
+8. A: I'd rather we got this right.
+9. D: The December meeting was held on a Wednesday.
+10. B: I was at the gym on 31 December.",A
+S20004,Members of a hockey club compare notes on the league table.,A = Luana; B = Helga; C = Klara; D = Petra,"Facts checked by the organisers: In the league every team played exactly 4 games. A win earned 3 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Otters had 3 points, the Herons had 12 points and the Badgers had 9 points.","1. A: for the record the Herons did not draw a single game.
+2. B: pretty sure the Herons won exactly 4 of their games.
+3. A: honestly the Badgers won more games than they lost.
+4. A: ugh this is confusing
+5. D: tbh the Otters won exactly 1 of their games.
+6. A: the Otters drew exactly 4 games.
+7. A: lol this chat
+8. A: pretty sure the Herons won more games than they lost.
+9. C: anyone else remember?",A
+S20121,Flatmates help Callum work out what happened to the money in a shared account.,A = Jasper; B = Callum; C = Rasmus; D = Nkechi,"Facts checked by the organisers: At 08:00 Callum's account held exactly £887.50. The only payments into or out of the account that day were, in order: a direct debit of £109 at 10:50, a card payment of £233 at 14:00, a salary payment of £86.50 at 16:30, a transfer in of £19.50 at 17:30. Each one changed the balance at the moment it was made.","1. C: at 20:10 Callum's balance was £651.50.
+2. B: honestly no idea
+3. A: pretty sure at 16:40 Callum's balance was £632.
+4. B: at 11:10 my balance was £778.50.
+5. B: tbh my balance never went below £540 that day.
+6. A: can we wrap this up pls
+7. D: pretty sure at 08:40 Callum's balance was £887.50.
+8. B: tbh at 20:10 my balance was £884.50.
+9. A: pretty sure at 14:45 Callum's balance was £545.50.
+10. B: can someone just check the notes
+11. B: honestly at 11:50 my balance was £778.50.
+12. D: ok who has the details?
+13. C: tbh at 14:35 Callum's balance was £545.50.",B
+S20072,Workers argue about how far the delivery van went on a single tank.,A = Yohannes; B = Jovana; C = Farah; D = Esther,"Facts checked by the organisers: The van left at 08:00 with exactly 50 litres of fuel and was not refuelled before 17:00. It used fuel at a steady 6 litres per 100 km, the fuel gauge was always accurate and never read below 6 litres, and the van never went faster than 80 km/h. Jovana drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. B: at 09:45 the trip meter showed 100 km and the gauge showed 44 litres.
+2. A: by 12:15 the van had done 350 km.
+3. C: by 10:15 the van had done 100 km.
+4. B: tbh by 15:15 the van had done 450 km.
+5. B: pretty sure I drove 500 km before 16:15.
+6. A: ugh this is confusing
+7. D: wait what
+8. D: for the record at 15:15 the trip meter showed 450 km and the gauge showed 23 litres.",A
+S20106,Gym members argue about the codes they picked for their lockers.,A = Irene; B = Saskia; C = Jasper; D = Malia,"Facts checked by the organisers: The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is even and not 0; the four digits add up to exactly 21. Every person in the chat set exactly one code, and the lockers accepted it.","1. D: tbh my code ended in 2.
+2. D: for the record my locker code was 8472.
+3. C: ok so my locker code was 8771.
+4. C: wait what
+5. D: can someone just check the notes
+6. D: ugh this is confusing
+7. A: my code started with 2.
+8. C: tbh Malia's code started with 8.
+9. C: Saskia's code ended in 3.
+10. B: hang on, let me think
+11. A: for the record Saskia's code started with 8.
+12. C: hang on, let me think",C
+S20038,Members of a running club piece together the results of the 5 km race.,A = Kasimir; B = Ulla; C = Ilan; D = Magnus,Facts checked by the organisers: 9 runners finished the race and every finishing place from 1st to 9th was taken by exactly one runner; there were no ties. Ilan finished 8th. Magnus finished directly behind Ilan. Kasimir finished ahead of Ulla. Babak was not in the top three.,"1. B: ugh this is confusing
+2. A: for the record I finished 3rd.
+3. A: nobody finished between Babak and Ilan.
+4. C: ok so nobody finished between Kasimir and Magnus.
+5. C: does it even matter?
+6. C: Magnus finished 9th.
+7. D: lol this chat
+8. A: for the record Ulla finished ahead of Ilan.
+9. D: tbh Babak finished 7th.
+10. C: honestly nobody finished between me and Babak.",C
+S20140,Friends who went to a village auction compare notes on the sale of the painting.,A = Babak; B = Alvaro; C = Farah; D = Klara,"Facts checked by the organisers: The bidding for the painting opened with a first bid of £100. Every later bid was a whole number of pounds and at least £20 higher than the bid before it. The last bid, £260, won, and no bid was withdrawn.","1. A: pretty sure the winning bid on the painting beat the bid before it by exactly £30.
+2. D: fwiw there were exactly 8 bids on the painting in total.
+3. C: ok so I bid £160 on the painting at one point.
+4. B: I bid £120 on the painting at one point.
+5. A: hang on, let me think
+6. A: fwiw the second bid on the painting was £110.
+7. A: for the record I bid £180 on the painting at one point.
+8. B: for the record the second bid on the painting was £120.
+9. D: for the record I bid £210 on the painting at one point.
+10. C: can someone just check the notes",A
+S20046,Members of a running club piece together the results of the 5 km race.,A = Kasimir; B = Luana; C = Jasper; D = Yasmin,Facts checked by the organisers: 7 runners finished the race and every finishing place from 1st to 7th was taken by exactly one runner; there were no ties. Luana finished 3rd. Exactly one runner finished between Luana and Helga. Jasper finished ahead of Yasmin. Kasimir was not in the top three.,"1. C: pretty sure Helga finished last.
+2. C: can someone just check the notes
+3. D: tbh Luana finished ahead of Helga.
+4. D: tbh nobody finished between Helga and Kasimir.
+5. A: does it even matter?
+6. C: pretty sure I finished ahead of Luana.
+7. D: ok who has the details?
+8. B: fwiw nobody finished between Kasimir and Luana.
+9. A: hang on, let me think
+10. B: pretty sure Helga finished 5th.
+11. D: fwiw Kasimir finished 4th.",C
+S20068,Colleagues argue about who sat where at the round table during the team lunch.,A = Cecilia; B = Hamid; C = Orla; D = Thandi,"Six people sat around a round table with six evenly spaced seats: Cecilia, Hamid, Orla, Thandi, Callum and Zofia. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Zofia sat two seats away from Cecilia. Hamid sat next to Callum. Zofia sat next to Orla.","1. C: I sat two seats away from Hamid.
+2. A: Callum sat next to Thandi.
+3. D: I sat two seats away from Hamid.
+4. B: Orla did not sit next to Hamid.
+5. D: Let's go through it once more.
+6. C: I sat next to Zofia.
+7. A: Orla did not sit next to Zofia.
+8. B: Who is writing this up?
+9. B: I did not sit next to Cecilia.
+10. D: Cecilia sat two seats away from Zofia.",A
+S20152,Friends who went to a village auction compare notes on the sale of the signed guitar.,A = Klara; B = Greta; C = Babak; D = Alvaro,"Facts checked by the organisers: The bidding for the signed guitar opened with a first bid of £40. Every later bid was a whole number of pounds and at least £20 higher than the bid before it. The last bid, £120, won, and no bid was withdrawn.","1. A: ok so the second bid on the signed guitar was £80.
+2. B: lol this chat
+3. B: does it even matter?
+4. A: can someone just check the notes
+5. A: I bid £110 on the signed guitar at one point.
+6. C: pretty sure there were exactly 4 bids on the signed guitar in total.
+7. A: I bid £100 on the signed guitar at one point.
+8. D: can we wrap this up pls
+9. C: tbh Alvaro bid £80 on the signed guitar at one point.
+10. C: fwiw the winning bid on the signed guitar beat the bid before it by exactly £20.",A
+S20136,Flatmates help Jasper work out what happened to the money in a shared account.,A = Greta; B = Petra; C = Silas; D = Jasper,"All times in this case refer to 9 May 2026. At 8:00 AM Jasper's account held exactly £721. The only payments into or out of the account that day were, in order: a salary payment of £90.50 at 12:50 PM, a transfer in of £111 at 1:00 PM, a card payment of £80.50 at 1:10 PM, a card payment of £203.99 at 3:40 PM. Each one changed the balance at the moment it was made.","1. B: Thanks for checking, everyone.
+2. A: Jasper's balance never went below £650 that day.
+3. D: At 8:45 PM my balance was £638.01.
+4. A: At 3:25 PM Jasper's balance was £842.
+5. C: At 4:55 PM Jasper's balance was £638.01.
+6. C: At 6:30 PM Jasper's balance was £638.01.
+7. B: Who is writing this up?
+8. B: Let's go through it once more.
+9. C: At 6:45 PM Jasper's balance was £638.01.
+10. D: At 9:55 AM my balance was £721.
+11. C: At 5:00 PM Jasper's balance was £638.01.
+12. C: At 6:50 PM Jasper's balance was £638.01.
+13. B: I'd rather we got this right.",A
+S20007,Players in a five-a-side league argue about how their teams did this season.,A = Callum; B = Otto; C = Rasmus; D = Babak,"In the league every team played exactly 8 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Herons had 10 points, the Comets had 3 points and the Lynxes had 14 points.","1. D: The Herons lost exactly 3 games.
+2. D: The Lynxes lost exactly 1 game.
+3. C: The Lynxes won exactly 7 of their games.
+4. B: Who is writing this up?
+5. D: The Comets went the whole season unbeaten.
+6. B: The Lynxes won more games than they lost.
+7. D: The Herons won exactly 5 of their games.
+8. A: The Comets lost exactly 5 games.
+9. B: Does anyone have the receipt?",D
+S20115,Students compare the four-digit codes they set on their lockers.,A = Helga; B = Farah; C = Petra; D = Edgar,"The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is even and not 0; the four digits add up to exactly 23. Every person in the chat set exactly one code, and the lockers accepted it.","1. D: Let's go through it once more.
+2. C: Farah's locker code was 8159.
+3. D: My locker code was 6890.
+4. D: Farah's locker code was 8359.
+5. A: My code ended in 1.
+6. A: My locker code was 6971.
+7. B: My code ended in 9.
+8. B: Is that everything we know?
+9. A: Should we ask the organiser?",D
+S20039,Members of a running club piece together the results of the 5 km race.,A = Paloma; B = Ilan; C = Yohannes; D = Wanjiru,9 runners finished the race and every finishing place from 1st to 9th was taken by exactly one runner; there were no ties. Paloma finished 9th. Exactly three runners finished between Paloma and Wanjiru. Ilan finished ahead of Anouk.,"1. A: Anouk finished ahead of Paloma.
+2. B: Yohannes finished ahead of Paloma.
+3. A: I finished 9th.
+4. C: Anouk made the top three.
+5. C: I finished ahead of Anouk.
+6. B: Let's go through it once more.
+7. A: Should we ask the organiser?
+8. A: Thanks for checking, everyone.
+9. B: Nobody finished between me and Yohannes.
+10. B: I made the top three.
+11. D: Anouk finished last.
+12. B: Yohannes made the top three.
+13. A: Who is writing this up?",D
+S20064,Colleagues argue about who sat where at the round table during the team lunch.,A = Teodor; B = Emil; C = Silas; D = Nkechi,"Six people sat around a round table with six evenly spaced seats: Silas, Emil, Teodor, Nkechi, Yohannes and Petra. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Petra sat two seats away from Silas. Silas sat next to Emil. Nkechi sat two seats away from Emil.","1. A: Petra sat two seats away from Emil.
+2. B: Teodor sat next to Silas.
+3. A: Who is writing this up?
+4. C: I sat two seats away from Yohannes.
+5. D: Teodor did not sit next to Emil.
+6. C: Is that everything we know?
+7. C: I did not sit next to Yohannes.
+8. A: I sat two seats away from Nkechi.
+9. D: This is getting confusing.
+10. B: Does anyone have the receipt?
+11. D: I sat next to Petra.",A
+S20114,Gym members argue about the codes they picked for their lockers.,A = Dalia; B = Arjun; C = Magnus; D = Sahil,"Facts checked by the organisers: The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is even and not 0; the four digits add up to exactly 20. Every person in the chat set exactly one code, and the lockers accepted it.","1. B: lol this chat
+2. C: fwiw my code started with 7.
+3. A: pretty sure Magnus's code ended in 1.
+4. A: anyone else remember?
+5. C: ok so my locker code was 8651.
+6. D: tbh my code started with 4.
+7. C: Dalia's code started with 4.
+8. D: does it even matter?
+9. A: ugh this is confusing
+10. C: fwiw Sahil's code ended in 8.
+11. C: for the record Arjun's code started with 4.
+12. D: ok so my locker code was 4268.",C
+S20012,Members of a hockey club compare notes on the league table.,A = Renata; B = Jovana; C = Nadir; D = Irene,"Facts checked by the organisers: In the league every team played exactly 8 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Badgers had 9 points, the Otters had 5 points and the Herons had 0 points.","1. C: fwiw the Badgers drew exactly 5 games.
+2. A: the Herons did not draw a single game.
+3. D: anyone else remember?
+4. D: honestly the Otters lost exactly 5 games.
+5. C: honestly the Badgers won more games than they lost.
+6. B: fwiw the Herons lost exactly 8 games.
+7. B: tbh the Badgers won exactly 2 of their games.
+8. D: fwiw the Otters lost more games than they won.
+9. C: ugh this is confusing
+10. A: fwiw the Herons drew exactly 5 games.",A
+S20067,Six friends try to remember the seating at a birthday dinner.,A = Greta; B = Mirela; C = Hamid; D = Nkechi,"Facts checked by the organisers: Six people sat around a round table with six evenly spaced seats: Greta, Nkechi, Mirela, Hamid, Astrid and Saskia. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Mirela sat directly opposite Astrid. Nkechi sat next to Astrid. Hamid sat two seats away from Astrid.","1. C: pretty sure Saskia sat directly opposite Greta.
+2. D: can we wrap this up pls
+3. D: fwiw Hamid sat directly opposite me.
+4. B: can someone just check the notes
+5. A: ok who has the details?
+6. A: pretty sure Saskia sat two seats away from Hamid.
+7. B: honestly no idea
+8. C: ok so Saskia did not sit next to Hamid.
+9. A: I sat two seats away from Nkechi.
+10. C: pretty sure Astrid sat next to Nkechi.
+11. D: I sat two seats away from Hamid.",D
+S20022,Friends on a trip argue about the money they changed before leaving.,A = Rasmus; B = Amaya; C = Edgar; D = Hamid,"All times in this case refer to 28 April 2026. The exchange booth took a flat fee of £5 from every amount handed over and changed the rest at exactly 1.3 euros per pound, with no rounding. It changed no money before 8:30 AM or after 3:00 PM that day. Everyone in the chat changed money there exactly once that day.","1. C: I paid the £5 fee at the booth.
+2. C: Beatrix handed over £185 at the booth and got €247.00 back.
+3. B: Was anyone else there?
+4. C: I'd rather we got this right.
+5. A: I handed over £245 at the booth and got €312.00 back.
+6. D: Thanks for checking, everyone.
+7. D: I handed over £285 at the booth and got €364.00 back.
+8. A: I changed money at the booth at 3:00 PM.
+9. A: Amaya handed over £305 at the booth and got €390.00 back.
+10. D: Edgar handed over £145 at the booth and got €182.00 back.
+11. B: Beatrix changed money at the booth at 9:15 AM.
+12. B: Rasmus paid the booth's £5 fee.",C
+S20050,Club runners argue about the finishing order of the 800 m final.,A = Paloma; B = Farah; C = Kasimir; D = Hamid,Facts checked by the organisers: 8 runners finished the race and every finishing place from 1st to 8th was taken by exactly one runner; there were no ties. Kasimir finished 1st. Exactly three runners finished between Kasimir and Hamid. Paloma finished ahead of Farah. Nkechi was not in the top three.,"1. C: for the record Farah finished ahead of Paloma.
+2. C: Paloma finished ahead of Farah.
+3. C: can someone just check the notes
+4. A: fwiw I finished ahead of Nkechi.
+5. C: honestly nobody finished between Nkechi and Hamid.
+6. C: ok so I made the top three.
+7. D: can someone just check the notes
+8. C: honestly no idea
+9. A: tbh Kasimir finished 1st.
+10. B: for the record Paloma made the top three.
+11. A: hang on, let me think
+12. C: Farah finished 7th.
+13. A: pretty sure nobody finished between me and Nkechi.
+14. B: ok who has the details?",C
+S20137,Bidders at a charity auction argue about how the bidding for the signed guitar went.,A = Orla; B = Kasimir; C = Otto; D = Rasmus,"The bidding for the signed guitar opened with a first bid of £40. Every later bid was a whole number of pounds and at least £20 higher than the bid before it. The last bid, £170, won, and no bid was withdrawn.","1. B: The winning bid on the signed guitar beat the bid before it by exactly £20.
+2. A: Should we ask the organiser?
+3. D: Let's go through it once more.
+4. B: The second bid on the signed guitar was £80.
+5. B: Rasmus bid £160 on the signed guitar at one point.
+6. D: I bid £100 on the signed guitar at one point.
+7. D: Is that everything we know?
+8. B: I bid £150 on the signed guitar at one point.
+9. C: Who is writing this up?
+10. D: Otto bid £130 on the signed guitar at one point.",B
+S20103,Students compare the four-digit codes they set on their lockers.,A = Jasper; B = Renata; C = Ulla; D = Benedikt,"The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is not 0; the four digits add up to exactly 24. Every person in the chat set exactly one code, and the lockers accepted it.","1. C: My locker code was 8619.
+2. D: My locker code was 5829.
+3. B: Does anyone have the receipt?
+4. D: Was anyone else there?
+5. C: My code ended in 9.
+6. D: My code had the digit 3 in it twice.
+7. A: Thanks for checking, everyone.
+8. C: Let's go through it once more.
+9. D: My code ended in 9.
+10. B: Jasper's locker code was 9681.
+11. B: My code started with 9.",D
+S20008,Members of a hockey club compare notes on the league table.,A = Silas; B = Otto; C = Zofia; D = Zoltan,"Facts checked by the organisers: In the league every team played exactly 8 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Pilots had 8 points, the Badgers had 3 points and the Herons had 9 points.","1. B: tbh the Badgers won exactly 1 of their games.
+2. B: fwiw the Badgers lost more games than they won.
+3. D: anyone else remember?
+4. A: tbh the Pilots drew exactly 4 games.
+5. C: the Badgers lost exactly 6 games.
+6. C: pretty sure the Pilots lost exactly 2 games.
+7. D: for the record the Herons won more games than they lost.
+8. D: hang on, let me think
+9. D: the Herons won exactly 2 of their games.
+10. A: the Badgers did not draw a single game.",A
+S20087,Residents argue about which committee meetings they went to.,A = Saskia; B = Mirela; C = Malia; D = Hamid,"Facts checked by the organisers: In 2027 the committee met once a month, always on the second Thursday of the month, and never on any other day. 1 February 2027 was a Monday. 1 March 2027 was a Monday.","1. B: pretty sure I was at the gym on 15 February.
+2. C: I was at the gym on 14 February.
+3. C: tbh I went to the February meeting on 11 February.
+4. C: I was at the gym on 8 March.
+5. D: pretty sure Mirela went to the February meeting on 18 February.
+6. D: pretty sure I was at the gym on 14 March.
+7. A: the February meeting was held on a Thursday.
+8. D: for the record I went to the March meeting on 11 March.
+9. D: wait what
+10. D: ok so I went to the February meeting on 11 February.
+11. D: ok who has the details?",D
+S20033,Friends on a trip argue about the money they changed before leaving.,A = Malia; B = Luana; C = Yasmin; D = Magnus,"Facts checked by the organisers: The exchange booth took a flat fee of £4 from every amount handed over and changed the rest at exactly 1.25 euros per pound, with no rounding. It changed no money before 10:00 or after 17:00 that day. Everyone in the chat changed money there exactly once that day.","1. B: ok so I handed over £144 at the booth and got €180.00 back.
+2. A: honestly no idea
+3. A: I handed over £304 at the booth and got €375.00 back.
+4. B: pretty sure Matteo handed over £244 at the booth and got €300.00 back.
+5. A: honestly I paid the £4 fee at the booth.
+6. D: honestly Luana handed over £144 at the booth and got €175.00 back.
+7. C: tbh I paid the £4 fee at the booth.
+8. C: can someone just check the notes
+9. A: for the record Matteo changed money at the booth at 17:00.
+10. B: I changed money at the booth at 10:00.
+11. D: tbh I handed over £224 at the booth and got €275.00 back.
+12. C: ok who has the details?",B
+S20057,Six friends try to remember the seating at a birthday dinner.,A = Petra; B = Teodor; C = Anouk; D = Dalia,"Facts checked by the organisers: Six people sat around a round table with six evenly spaced seats: Petra, Dalia, Teodor, Anouk, Yasmin and Saskia. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Saskia sat directly opposite Petra. Dalia sat next to Yasmin. Saskia sat two seats away from Dalia.","1. A: Yasmin did not sit next to Anouk.
+2. D: pretty sure I did not sit next to Anouk.
+3. B: for the record Dalia sat directly opposite Saskia.
+4. D: honestly I did not sit next to Teodor.
+5. D: ok who has the details?
+6. C: can someone just check the notes
+7. C: fwiw I did not sit next to Dalia.
+8. D: fwiw Petra did not sit next to Anouk.
+9. B: for the record Saskia did not sit next to Teodor.",B
+S20143,Friends who went to a village auction compare notes on the sale of the painting.,A = Helga; B = Benedikt; C = Jasper; D = Callum,"The bidding for the painting opened with a first bid of £40. Every later bid was a whole number of pounds and at least £5 higher than the bid before it. The last bid, £67, won, and no bid was withdrawn.","1. D: I bid £50 on the painting at one point.
+2. C: The second bid on the painting was £45.
+3. A: Can we settle this quickly?
+4. A: There were exactly 6 bids on the painting in total.
+5. D: Was anyone else there?
+6. D: The winning bid on the painting beat the bid before it by exactly £5.
+7. D: Jasper bid £45 on the painting at one point.
+8. D: Helga bid £72 on the painting at one point.
+9. A: I bid £62 on the painting at one point.
+10. B: Was anyone else there?
+11. C: Let's go through it once more.
+12. A: Is that everything we know?
+13. C: Benedikt bid £57 on the painting at one point.",D
+S20133,Family members go through Renata's bank app after a confusing day of spending.,A = Beatrix; B = Renata; C = Esther; D = Paloma,"Facts checked by the organisers: At 08:00 Renata's account held exactly £203.25. The only payments into or out of the account that day were, in order: a card payment of £93.50 at 14:10, a refund of £243 at 14:40, a cash withdrawal of £184 at 16:00, a direct debit of £86.99 at 18:30. Each one changed the balance at the moment it was made.","1. A: can someone just check the notes
+2. C: hang on, let me think
+3. B: honestly at 20:00 my balance was £81.76.
+4. C: fwiw at 19:20 Renata's balance was £81.76.
+5. B: does it even matter?
+6. C: fwiw at 17:20 Renata's balance was £168.75.
+7. B: at 13:15 my balance was £203.25.
+8. B: honestly at 15:45 my balance was £446.25.
+9. A: at 20:15 Renata's balance was £81.76.
+10. D: fwiw Renata's balance never went below £80 that day.",B
+S20134,Family members go through Paloma's bank app after a confusing day of spending.,A = Nadir; B = Paloma; C = Ilan; D = Teodor,"All times in this case refer to 10 July 2026. At 8:00 AM Paloma's account held exactly £372. The only payments into or out of the account that day were, in order: a card payment of £97 at 11:50 AM, a refund of £137 at 3:40 PM, a cash withdrawal of £71.99 at 4:00 PM, a cash withdrawal of £207 at 6:40 PM. Each one changed the balance at the moment it was made.","1. D: At 2:00 PM Paloma's balance was £275.
+2. D: At 5:10 PM Paloma's balance was £340.01.
+3. C: This is getting confusing.
+4. B: At 2:35 PM my balance was £275.
+5. D: Thanks for checking, everyone.
+6. C: At 6:20 PM Paloma's balance was £412.
+7. C: Paloma's balance never went below £130 that day.
+8. A: At 10:40 AM Paloma's balance was £372.
+9. B: At 6:10 PM my balance was £340.01.",C
+S20085,Workers argue about how far the delivery van went on a single tank.,A = Farah; B = Sahil; C = Yasmin; D = Malia,"All times in this case refer to 3 March 2026. The van left at 8:00 AM with exactly 40 litres of fuel and was not refuelled before 6:00 PM. It used fuel at a steady 6 litres per 100 km, the fuel gauge was always accurate and never read below 5 litres, and the van never went faster than 80 km/h. Yasmin drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. C: Let's go through it once more.
+2. B: At 2:30 PM the gauge showed 4 litres.
+3. C: By 5:30 PM the van had done 450 km.
+4. B: Should we ask the organiser?
+5. B: Yasmin drove 50 km before 9:30 AM.
+6. A: At 9:30 AM the trip meter showed 50 km and the gauge showed 37 litres.
+7. D: At 10:15 AM the trip meter showed 100 km and the gauge showed 34 litres.
+8. A: At 11:00 AM the trip meter showed 100 km and the gauge showed 34 litres.
+9. C: By 5:15 PM the van had done 400 km.
+10. B: By 2:30 PM the van had done 300 km.",B
+S20030,Friends on a trip argue about the money they changed before leaving.,A = Rasmus; B = Mirela; C = Farah; D = Svetla,"All times in this case refer to 20 September 2026. The exchange booth took a flat fee of £2 from every amount handed over and changed the rest at exactly 1.3 euros per pound, with no rounding. It changed no money before 9:00 AM or after 4:30 PM that day. Everyone in the chat changed money there exactly once that day.","1. D: I paid the £2 fee at the booth.
+2. D: I handed over £222 at the booth and got €286.00 back.
+3. A: Hamid handed over £122 at the booth and got €156.00 back.
+4. D: Thanks for checking, everyone.
+5. C: Hamid handed over £122 at the booth and got €158.60 back.
+6. B: Is that everything we know?
+7. C: Hamid paid the booth's £2 fee.
+8. A: Was anyone else there?
+9. D: Should we ask the organiser?
+10. C: I paid the £2 fee at the booth.
+11. A: Farah changed money at the booth at 9:30 AM.
+12. A: Svetla changed money at the booth at 12:45 PM.",C
+S20076,Workers argue about how far the delivery van went on a single tank.,A = Yasmin; B = Ulla; C = Amaya; D = Otto,"Facts checked by the organisers: The van left at 07:30 with exactly 50 litres of fuel and was not refuelled before 17:30. It used fuel at a steady 10 litres per 100 km, the fuel gauge was always accurate and never read below 5 litres, and the van never went faster than 90 km/h. Amaya drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. A: can someone just check the notes
+2. A: fwiw by 13:30 the van had done 550 km.
+3. B: honestly by 16:15 the van had done 350 km.
+4. A: lol this chat
+5. C: pretty sure at 15:15 the trip meter showed 310 km and the gauge showed 19 litres.
+6. D: at 16:45 the trip meter showed 370 km and the gauge showed 13 litres.
+7. A: honestly by 16:45 the van had done 370 km.
+8. C: I drove 240 km before 13:30.
+9. C: fwiw I drove 360 km before 16:30.
+10. C: tbh by 15:15 the van had done 310 km.",A
+S20023,Friends on a trip argue about the money they changed before leaving.,A = Babak; B = Farah; C = Dmitra; D = Thandi,"Facts checked by the organisers: The exchange booth took a flat fee of £4 from every amount handed over and changed the rest at exactly 1.2 euros per pound, with no rounding. It changed no money before 08:30 or after 15:00 that day. Everyone in the chat changed money there exactly once that day.","1. D: for the record I handed over £164 at the booth and got €192.00 back.
+2. B: fwiw I handed over £244 at the booth and got €288.00 back.
+3. A: fwiw I changed money at the booth at 08:30.
+4. D: Luana paid the booth's £4 fee.
+5. B: pretty sure I paid the £4 fee at the booth.
+6. C: wait what
+7. D: for the record I paid the £4 fee at the booth.
+8. D: anyone else remember?
+9. D: I handed over £164 at the booth and got €196.80 back.
+10. B: wait what",D
+S20036,Club runners argue about the finishing order of the 800 m final.,A = Anouk; B = Farah; C = Benedikt; D = Elodie,Facts checked by the organisers: 6 runners finished the race and every finishing place from 1st to 6th was taken by exactly one runner; there were no ties. Elodie finished 2nd. Exactly two runners finished between Elodie and Gideon. Anouk finished ahead of Farah. Benedikt was not in the top three.,"1. A: Gideon finished 2nd.
+2. B: for the record I finished ahead of Gideon.
+3. D: for the record nobody finished between Anouk and Elodie.
+4. B: honestly nobody finished between me and Gideon.
+5. A: can someone just check the notes
+6. A: can we wrap this up pls
+7. A: I finished ahead of Benedikt.
+8. C: can we wrap this up pls
+9. D: fwiw I finished ahead of Benedikt.",A
+S20020,Travellers compare what they got at the airport exchange booth.,A = Renata; B = Jovana; C = Petra; D = Klara,"All times in this case refer to 27 August 2026. The exchange booth took a flat fee of £4 from every amount handed over and changed the rest at exactly 1.15 euros per pound, with no rounding. It changed no money before 10:00 AM or after 5:00 PM that day. Everyone in the chat changed money there exactly once that day.","1. A: I changed money at the booth at 5:00 PM.
+2. A: Let's go through it once more.
+3. B: Luana changed money at the booth at 1:25 PM.
+4. C: Can we settle this quickly?
+5. A: Jovana changed money at the booth at 5:25 PM.
+6. C: Jovana changed money at the booth at 3:00 PM.
+7. C: Who is writing this up?
+8. D: Let's go through it once more.
+9. B: Was anyone else there?
+10. B: Klara handed over £44 at the booth and got €46.00 back.
+11. B: Luana paid the booth's £4 fee.",A
+S20138,Bidders at a charity auction argue about how the bidding for the antique clock went.,A = Ulla; B = Callum; C = Luana; D = Kasimir,"Facts checked by the organisers: The bidding for the antique clock opened with a first bid of £60. Every later bid was a whole number of pounds and at least £20 higher than the bid before it. The last bid, £170, won, and no bid was withdrawn.","1. D: can we wrap this up pls
+2. C: honestly I bid £80 on the antique clock at one point.
+3. C: honestly I bid £70 on the antique clock at one point.
+4. A: for the record I bid £130 on the antique clock at one point.
+5. A: pretty sure the winning bid on the antique clock beat the bid before it by exactly £40.
+6. B: ok who has the details?
+7. B: fwiw there were exactly 5 bids on the antique clock in total.
+8. A: ugh this is confusing
+9. D: fwiw the second bid on the antique clock was £80.
+10. C: ok so Kasimir bid £100 on the antique clock at one point.",C
+S20146,Bidders at a charity auction argue about how the bidding for the painting went.,A = Silas; B = Yohannes; C = Malia; D = Otto,"Facts checked by the organisers: The bidding for the painting opened with a first bid of £100. Every later bid was a whole number of pounds and at least £5 higher than the bid before it. The last bid, £122, won, and no bid was withdrawn.","1. C: ok who has the details?
+2. D: ok so I bid £115 on the painting at one point.
+3. C: for the record the second bid on the painting was £105.
+4. C: ugh this is confusing
+5. D: for the record there were exactly 4 bids on the painting in total.
+6. A: can we wrap this up pls
+7. C: pretty sure I bid £120 on the painting at one point.
+8. B: can someone just check the notes
+9. C: pretty sure I bid £105 on the painting at one point.
+10. C: pretty sure the winning bid on the painting beat the bid before it by exactly £7.",C
+S20091,Residents argue about which committee meetings they went to.,A = Magnus; B = Luana; C = Beatrix; D = Alvaro,"Facts checked by the organisers: In 2027 the committee met once a month, always on the first Saturday of the month, and never on any other day. 1 March 2027 was a Monday. 1 October 2027 was a Friday.","1. B: pretty sure I was at the gym on 6 October.
+2. C: does it even matter?
+3. D: ok so I went to the March meeting on 13 March.
+4. C: anyone else remember?
+5. C: I was at the gym on 5 October.
+6. A: pretty sure I was at the gym on 8 March.
+7. B: can someone just check the notes
+8. D: fwiw I went to the March meeting on 6 March.
+9. C: honestly I was at the gym on 4 March.
+10. D: pretty sure I went to the October meeting on 2 October.",D
+S20107,Gym members argue about the codes they picked for their lockers.,A = Dalia; B = Elodie; C = Esther; D = Wanjiru,"The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is not 0; the four digits add up to exactly 20. Every person in the chat set exactly one code, and the lockers accepted it.","1. A: This is getting confusing.
+2. B: Wanjiru's code started with 6.
+3. B: My code started with 2.
+4. A: Wanjiru's code ended in 3.
+5. D: My code had the digit 0 in it twice.
+6. B: Esther's locker code was 4853.
+7. B: My code ended in 7.
+8. D: Dalia's code ended in 3.
+9. C: Thanks for checking, everyone.
+10. A: My code started with 9.
+11. C: My code started with 4.",D
+S20116,Gym members argue about the codes they picked for their lockers.,A = Yohannes; B = Sahil; C = Klara; D = Anouk,"Facts checked by the organisers: The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is odd; the four digits add up to exactly 15. Every person in the chat set exactly one code, and the lockers accepted it.","1. B: pretty sure Yohannes's code ended in 4.
+2. C: anyone else remember?
+3. B: honestly no idea
+4. C: tbh Anouk's locker code was 5631.
+5. A: my code had the digit 6 in it twice.
+6. B: fwiw my code started with 3.
+7. A: Sahil's code ended in 0.
+8. C: can someone just check the notes
+9. D: my code ended in 1.
+10. C: my code started with 3.",A
+S20035,Club runners argue about the finishing order of the 800 m final.,A = Paloma; B = Orla; C = Babak; D = Hamid,7 runners finished the race and every finishing place from 1st to 7th was taken by exactly one runner; there were no ties. Babak finished 6th. Nobody finished between Babak and Paloma. Hamid finished ahead of Orla. Xavier was not in the top three.,"1. C: Nobody finished between me and Xavier.
+2. D: I finished 4th.
+3. D: I finished ahead of Orla.
+4. A: Thanks for checking, everyone.
+5. C: I finished ahead of Xavier.
+6. B: I finished ahead of Babak.
+7. B: Nobody finished between me and Hamid.
+8. D: I finished ahead of Babak.
+9. A: Is that everything we know?
+10. C: Hamid finished ahead of Paloma.
+11. B: I made the top three.",D
+S20089,Residents argue about which committee meetings they went to.,A = Saskia; B = Dmitra; C = Petra; D = Svetla,"Facts checked by the organisers: In 2028 the committee met once a month, always on the second Wednesday of the month, and never on any other day. 1 September 2028 was a Friday. 1 December 2028 was a Friday.","1. C: pretty sure I was at the gym on 15 December.
+2. C: can someone just check the notes
+3. B: pretty sure Petra went to the September meeting on 6 September.
+4. B: for the record the December meeting was held on a Wednesday.
+5. C: fwiw Dmitra was at the gym on 17 September.
+6. A: wait what
+7. C: tbh Saskia was at the gym on 11 December.
+8. C: I was at the gym on 15 September.
+9. B: hang on, let me think
+10. D: can someone just check the notes
+11. B: honestly I went to the September meeting on 13 September.
+12. A: fwiw Svetla was at the gym on 15 December.",B
+S20027,Friends on a trip argue about the money they changed before leaving.,A = Farah; B = Babak; C = Nadir; D = Callum,"Facts checked by the organisers: The exchange booth took a flat fee of £3 from every amount handed over and changed the rest at exactly 1.15 euros per pound, with no rounding. It changed no money before 10:00 or after 17:00 that day. Everyone in the chat changed money there exactly once that day.","1. A: for the record Paloma paid the booth's £3 fee.
+2. A: tbh I handed over £263 at the booth and got €299.00 back.
+3. A: honestly I paid the £3 fee at the booth.
+4. B: for the record I handed over £63 at the booth and got €69.00 back.
+5. D: anyone else remember?
+6. C: for the record I paid the £3 fee at the booth.
+7. C: Callum paid the booth's £3 fee.
+8. D: honestly no idea
+9. D: I handed over £183 at the booth and got €207.00 back.
+10. C: wait what
+11. D: honestly Paloma changed money at the booth at 17:05.",D
+S20005,Players in a five-a-side league argue about how their teams did this season.,A = Dalia; B = Ilan; C = Nkechi; D = Zofia,"In the league every team played exactly 6 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Badgers had 12 points, the Kestrels had 9 points and the Herons had 9 points.","1. C: The Kestrels won more games than they lost.
+2. C: The Herons drew exactly 1 game.
+3. D: The Badgers won more games than they lost.
+4. D: The Herons won more games than they lost.
+5. D: Does anyone have the receipt?
+6. A: Can we settle this quickly?
+7. B: The Badgers lost more games than they won.
+8. B: The Herons won exactly 4 of their games.",B
+S20153,Friends who went to a village auction compare notes on the sale of the painting.,A = Jovana; B = Benedikt; C = Beatrix; D = Otto,"The bidding for the painting opened with a first bid of £60. Every later bid was a whole number of pounds and at least £5 higher than the bid before it. The last bid, £77, won, and no bid was withdrawn.","1. B: Let's go through it once more.
+2. C: Otto bid £72 on the painting at one point.
+3. B: Was anyone else there?
+4. A: I bid £65 on the painting at one point.
+5. B: I bid £75 on the painting at one point.
+6. D: The winning bid on the painting beat the bid before it by exactly £5.
+7. C: The second bid on the painting was £65.
+8. B: Who is writing this up?
+9. C: There were exactly 4 bids on the painting in total.",B
+S20139,Bidders at a charity auction argue about how the bidding for the vintage bike went.,A = Yasmin; B = Silas; C = Thandi; D = Klara,"The bidding for the vintage bike opened with a first bid of £20. Every later bid was a whole number of pounds and at least £20 higher than the bid before it. The last bid, £90, won, and no bid was withdrawn.","1. D: I bid £110 on the vintage bike at one point.
+2. C: Is that everything we know?
+3. A: Klara bid £70 on the vintage bike at one point.
+4. B: Thandi bid £40 on the vintage bike at one point.
+5. B: There were exactly 4 bids on the vintage bike in total.
+6. A: The winning bid on the vintage bike beat the bid before it by exactly £20.
+7. A: The second bid on the vintage bike was £40.
+8. C: This is getting confusing.",D
+S20060,Colleagues argue about who sat where at the round table during the team lunch.,A = Gideon; B = Silas; C = Luana; D = Dalia,"Six people sat around a round table with six evenly spaced seats: Gideon, Luana, Silas, Dalia, Yasmin and Saskia. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Luana sat two seats away from Saskia. Yasmin sat next to Silas. Yasmin sat two seats away from Luana.","1. B: Gideon did not sit next to Dalia.
+2. D: Who is writing this up?
+3. C: Saskia sat next to Dalia.
+4. A: Luana sat two seats away from Saskia.
+5. B: Let's go through it once more.
+6. C: I sat next to Gideon.
+7. A: I sat two seats away from Saskia.
+8. A: Yasmin sat next to Silas.
+9. A: Should we ask the organiser?",A
+S20078,Workers argue about how far the delivery van went on a single tank.,A = Farah; B = Kasimir; C = Ilan; D = Valentin,"Facts checked by the organisers: The van left at 08:00 with exactly 45 litres of fuel and was not refuelled before 17:00. It used fuel at a steady 8 litres per 100 km, the fuel gauge was always accurate and never read below 5 litres, and the van never went faster than 80 km/h. Kasimir drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. D: fwiw at 10:15 the trip meter showed 100 km and the gauge showed 37 litres.
+2. B: I drove 100 km before 10:15.
+3. A: honestly at 16:00 the trip meter showed 400 km and the gauge showed 13 litres.
+4. A: ugh this is confusing
+5. D: by 10:30 the van had done 125 km.
+6. A: honestly no idea
+7. C: for the record Kasimir drove 275 km before 13:45.
+8. B: ok so at 09:45 the trip meter showed 75 km and the gauge showed 39 litres.
+9. C: Kasimir drove 400 km before 16:00.
+10. C: for the record by 09:45 the van had done 150 km.
+11. B: can we wrap this up pls
+12. B: pretty sure by 15:00 the van had done 350 km.",C
+S20145,Friends who went to a village auction compare notes on the sale of the painting.,A = Teodor; B = Saskia; C = Astrid; D = Irene,"The bidding for the painting opened with a first bid of £60. Every later bid was a whole number of pounds and at least £10 higher than the bid before it. The last bid, £120, won, and no bid was withdrawn.","1. B: I bid £115 on the painting at one point.
+2. C: There were exactly 5 bids on the painting in total.
+3. A: Let's go through it once more.
+4. C: I bid £100 on the painting at one point.
+5. A: Should we ask the organiser?
+6. C: The second bid on the painting was £70.
+7. B: I bid £80 on the painting at one point.
+8. B: Does anyone have the receipt?
+9. C: Was anyone else there?
+10. D: The winning bid on the painting beat the bid before it by exactly £20.
+11. B: Teodor bid £70 on the painting at one point.",B
+S20092,Members of a chess club try to sort out the dates of their monthly meetings.,A = Magnus; B = Lorenzo; C = Valentin; D = Dmitra,"In 2027 the committee met once a month, always on the last Thursday of the month, and never on any other day. 1 March 2027 was a Monday. 1 June 2027 was a Tuesday.","1. B: Dmitra was at the gym on 27 June.
+2. C: Let's go through it once more.
+3. D: I'd rather we got this right.
+4. A: Valentin was at the gym on 22 June.
+5. C: Magnus was at the gym on 28 June.
+6. C: Is that everything we know?
+7. C: I was at the gym on 29 March.
+8. B: Valentin went to the June meeting on 24 June.
+9. A: I went to the March meeting on 25 March.
+10. A: I went to the June meeting on 17 June.
+11. A: Who is writing this up?",A
+S20061,Six friends try to remember the seating at a birthday dinner.,A = Helga; B = Magnus; C = Valentin; D = Arjun,"Facts checked by the organisers: Six people sat around a round table with six evenly spaced seats: Helga, Valentin, Magnus, Arjun, Mirela and Lorenzo. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Helga sat next to Arjun. Valentin sat next to Lorenzo. Mirela sat directly opposite Lorenzo.","1. B: tbh Arjun sat directly opposite me.
+2. B: can someone just check the notes
+3. D: can we wrap this up pls
+4. C: can we wrap this up pls
+5. B: Lorenzo did not sit next to Valentin.
+6. B: ok so Mirela sat next to Magnus.
+7. A: for the record Valentin sat next to Magnus.
+8. A: tbh I sat two seats away from Magnus.
+9. A: I did not sit next to Magnus.
+10. C: ugh this is confusing
+11. B: for the record Lorenzo sat next to Valentin.",B
+S20010,Members of a hockey club compare notes on the league table.,A = Luana; B = Rasmus; C = Orla; D = Jovana,"Facts checked by the organisers: In the league every team played exactly 6 games. A win earned 3 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Lynxes had 16 points, the Ravens had 15 points and the Badgers had 11 points.","1. C: can someone just check the notes
+2. A: does it even matter?
+3. C: tbh the Ravens won exactly 2 of their games.
+4. B: the Ravens won exactly 5 of their games.
+5. A: honestly no idea
+6. A: the Lynxes won more games than they lost.
+7. B: ok so the Badgers won exactly 3 of their games.
+8. C: anyone else remember?
+9. C: honestly the Badgers won more games than they lost.
+10. D: the Ravens did not draw a single game.",C
+S20063,Colleagues argue about who sat where at the round table during the team lunch.,A = Zofia; B = Lorenzo; C = Luana; D = Kasimir,"Facts checked by the organisers: Six people sat around a round table with six evenly spaced seats: Lorenzo, Kasimir, Zofia, Luana, Saskia and Irene. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Zofia sat directly opposite Saskia. Luana sat next to Kasimir. Irene sat next to Lorenzo.","1. A: pretty sure Saskia sat next to Irene.
+2. A: for the record I sat next to Luana.
+3. D: Irene sat two seats away from Kasimir.
+4. D: tbh Irene did not sit next to Luana.
+5. D: ok who has the details?
+6. A: ok so Kasimir did not sit next to Zofia.
+7. C: does it even matter?
+8. B: Luana sat two seats away from Saskia.
+9. B: ugh this is confusing
+10. D: I sat two seats away from Luana.
+11. D: ok so I sat next to Saskia.
+12. B: tbh Saskia did not sit next to Luana.",D
+S20135,Family members go through Paloma's bank app after a confusing day of spending.,A = Edgar; B = Saskia; C = Orla; D = Paloma,"Facts checked by the organisers: At 08:00 Paloma's account held exactly £789. The only payments into or out of the account that day were, in order: a refund of £190.99 at 10:30, a cash withdrawal of £245 at 16:40, a refund of £70.50 at 16:50, a salary payment of £123 at 17:40. Each one changed the balance at the moment it was made.","1. D: honestly at 13:10 my balance was £789.
+2. C: fwiw Paloma's balance never went below £730 that day.
+3. B: does it even matter?
+4. D: honestly at 12:30 my balance was £979.99.
+5. A: honestly at 15:25 Paloma's balance was £979.99.
+6. A: can someone just check the notes
+7. D: pretty sure at 13:10 my balance was £979.99.
+8. D: wait what
+9. D: honestly at 16:15 my balance was £979.99.",D
+S20075,A camping group reconstructs how far their van went before it was refuelled.,A = Arjun; B = Jovana; C = Alvaro; D = Malia,"All times in this case refer to 15 April 2026. The van left at 7:00 AM with exactly 60 litres of fuel and was not refuelled before 4:00 PM. It used fuel at a steady 10 litres per 100 km, the fuel gauge was always accurate and never read below 4 litres, and the van never went faster than 100 km/h. Alvaro drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. B: Alvaro drove 290 km before 12:15 PM.
+2. C: This is getting confusing.
+3. A: By 11:30 AM the van had done 250 km.
+4. A: At 8:45 AM the trip meter showed 90 km and the gauge showed 51 litres.
+5. D: At 8:15 AM the gauge showed 3 litres.
+6. B: I'd rather we got this right.
+7. C: I drove 160 km before 10:00 AM.
+8. C: I drove 370 km before 1:45 PM.
+9. B: By 10:00 AM the van had done 160 km.
+10. D: By 12:15 PM the van had done 290 km.
+11. A: Was anyone else there?
+12. D: Who is writing this up?",D
+S20144,Friends who went to a village auction compare notes on the sale of the antique clock.,A = Otto; B = Fabian; C = Emil; D = Luana,"Facts checked by the organisers: The bidding for the antique clock opened with a first bid of £100. Every later bid was a whole number of pounds and at least £5 higher than the bid before it. The last bid, £129, won, and no bid was withdrawn.","1. D: ok so Fabian bid £124 on the antique clock at one point.
+2. A: tbh I bid £134 on the antique clock at one point.
+3. A: tbh I bid £117 on the antique clock at one point.
+4. D: lol this chat
+5. A: ok so the winning bid on the antique clock beat the bid before it by exactly £5.
+6. C: can someone just check the notes
+7. C: ok so I bid £105 on the antique clock at one point.
+8. D: pretty sure I bid £112 on the antique clock at one point.
+9. D: honestly the second bid on the antique clock was £105.
+10. B: can we wrap this up pls
+11. D: anyone else remember?
+12. D: honestly there were exactly 6 bids on the antique clock in total.",A
+S20109,Gym members argue about the codes they picked for their lockers.,A = Hamid; B = Wanjiru; C = Saskia; D = Malia,"The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is even and not 0; the four digits add up to exactly 24; no digit is 0. Every person in the chat set exactly one code, and the lockers accepted it.","1. A: This is getting confusing.
+2. C: My code started with 4.
+3. D: Hamid's code ended in 7.
+4. C: Wanjiru's code started with 8.
+5. D: Saskia's locker code was 4659.
+6. A: My locker code was 8637.
+7. D: Should we ask the organiser?
+8. C: Wanjiru's locker code was 8952.
+9. B: My code started with 3.
+10. A: My code started with 8.",B
+S20073,A camping group reconstructs how far their van went before it was refuelled.,A = Otto; B = Nkechi; C = Helga; D = Renata,"All times in this case refer to 10 April 2026. The van left at 8:00 AM with exactly 60 litres of fuel and was not refuelled before 5:00 PM. It used fuel at a steady 8 litres per 100 km, the fuel gauge was always accurate and never read below 4 litres, and the van never went faster than 100 km/h. Helga drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. C: Was anyone else there?
+2. D: Should we ask the organiser?
+3. C: At 9:30 AM the trip meter showed 100 km and the gauge showed 52 litres.
+4. D: By 12:30 PM the van had done 300 km.
+5. D: At 12:30 PM the trip meter showed 300 km and the gauge showed 36 litres.
+6. B: At 3:45 PM the gauge showed 3 litres.
+7. B: Is that everything we know?
+8. C: I drove 100 km before 9:30 AM.
+9. A: Should we ask the organiser?
+10. C: I drove 525 km before 3:45 PM.
+11. B: Helga drove 125 km before 10:00 AM.",B
+S20096,Members of a chess club try to sort out the dates of their monthly meetings.,A = Jovana; B = Dmitra; C = Teodor; D = Amaya,"In 2028 the committee met once a month, always on the fourth Monday of the month, and never on any other day. 1 January 2028 was a Saturday. 1 July 2028 was a Saturday.","1. A: I was at the gym on 27 January.
+2. A: Teodor went to the July meeting on 25 July.
+3. B: I went to the July meeting on 24 July.
+4. A: Should we ask the organiser?
+5. C: Amaya was at the gym on 22 January.
+6. C: I was at the gym on 21 January.
+7. B: I went to the January meeting on 24 January.
+8. A: Dmitra was at the gym on 22 January.
+9. D: I went to the January meeting on 24 January.
+10. C: Was anyone else there?",A
+S20141,Friends who went to a village auction compare notes on the sale of the antique clock.,A = Gideon; B = Renata; C = Fabian; D = Callum,"The bidding for the antique clock opened with a first bid of £100. Every later bid was a whole number of pounds and at least £10 higher than the bid before it. The last bid, £160, won, and no bid was withdrawn.","1. C: Thanks for checking, everyone.
+2. C: Let's go through it once more.
+3. C: I bid £130 on the antique clock at one point.
+4. D: I bid £115 on the antique clock at one point.
+5. B: The winning bid on the antique clock beat the bid before it by exactly £10.
+6. B: I bid £150 on the antique clock at one point.
+7. C: Gideon bid £140 on the antique clock at one point.
+8. D: There were exactly 6 bids on the antique clock in total.
+9. B: The second bid on the antique clock was £115.
+10. A: Was anyone else there?
+11. B: I bid £105 on the antique clock at one point.",B
+S20074,A camping group reconstructs how far their van went before it was refuelled.,A = Wanjiru; B = Ilan; C = Malia; D = Astrid,"Facts checked by the organisers: The van left at 08:00 with exactly 60 litres of fuel and was not refuelled before 17:00. It used fuel at a steady 7.5 litres per 100 km, the fuel gauge was always accurate and never read below 4 litres, and the van never went faster than 80 km/h. Malia drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. C: hang on, let me think
+2. C: lol this chat
+3. A: ok who has the details?
+4. C: pretty sure by 14:15 the van had done 280 km.
+5. C: honestly at 09:30 the trip meter showed 40 km and the gauge showed 57 litres.
+6. B: honestly at 14:15 the trip meter showed 280 km and the gauge showed 39 litres.
+7. D: pretty sure by 13:45 the van had done 240 km.
+8. C: for the record I drove 280 km before 14:15.
+9. B: wait what
+10. C: ok so at 16:45 the trip meter showed 400 km and the gauge showed 34 litres.",C
+S20028,Friends on a trip argue about the money they changed before leaving.,A = Gideon; B = Jovana; C = Zoltan; D = Fabian,"All times in this case refer to 26 July 2026. The exchange booth took a flat fee of £5 from every amount handed over and changed the rest at exactly 1.2 euros per pound, with no rounding. It changed no money before 9:00 AM or after 4:30 PM that day. Everyone in the chat changed money there exactly once that day.","1. B: Fabian paid the booth's £5 fee.
+2. C: Was anyone else there?
+3. D: I changed money at the booth at 4:30 PM.
+4. D: Is that everything we know?
+5. B: Paloma handed over £85 at the booth and got €96.00 back.
+6. A: I handed over £45 at the booth and got €54.00 back.
+7. D: Gideon paid the booth's £5 fee.
+8. A: I'd rather we got this right.
+9. A: Fabian handed over £165 at the booth and got €192.00 back.
+10. A: Paloma changed money at the booth at 9:00 AM.",A
+S20077,A camping group reconstructs how far their van went before it was refuelled.,A = Arjun; B = Gideon; C = Klara; D = Lorenzo,"All times in this case refer to 2 October 2026. The van left at 7:30 AM with exactly 60 litres of fuel and was not refuelled before 4:30 PM. It used fuel at a steady 7.5 litres per 100 km, the fuel gauge was always accurate and never read below 5 litres, and the van never went faster than 80 km/h. Arjun drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. B: Is that everything we know?
+2. B: At 3:30 PM the trip meter showed 360 km and the gauge showed 33 litres.
+3. A: I drove 40 km before 9:00 AM.
+4. B: At 11:45 AM the trip meter showed 200 km and the gauge showed 45 litres.
+5. A: By 9:00 AM the van had done 40 km.
+6. C: Who is writing this up?
+7. A: I drove 200 km before 12:00 PM.
+8. B: By 11:30 AM the van had done 360 km.
+9. D: At 11:15 AM the trip meter showed 160 km and the gauge showed 48 litres.",B
+S20142,Bidders at a charity auction argue about how the bidding for the painting went.,A = Teodor; B = Gideon; C = Paloma; D = Malia,"Facts checked by the organisers: The bidding for the painting opened with a first bid of £100. Every later bid was a whole number of pounds and at least £20 higher than the bid before it. The last bid, £170, won, and no bid was withdrawn.","1. C: honestly no idea
+2. C: Malia bid £110 on the painting at one point.
+3. D: lol this chat
+4. C: pretty sure the second bid on the painting was £130.
+5. C: can someone just check the notes
+6. A: can someone just check the notes
+7. D: can we wrap this up pls
+8. B: fwiw the winning bid on the painting beat the bid before it by exactly £20.
+9. C: fwiw there were exactly 4 bids on the painting in total.
+10. B: pretty sure I bid £130 on the painting at one point.
+11. C: Teodor bid £150 on the painting at one point.",C
+S20150,Bidders at a charity auction argue about how the bidding for the signed guitar went.,A = Silas; B = Jasper; C = Arjun; D = Beatrix,"Facts checked by the organisers: The bidding for the signed guitar opened with a first bid of £50. Every later bid was a whole number of pounds and at least £10 higher than the bid before it. The last bid, £105, won, and no bid was withdrawn.","1. C: fwiw I bid £100 on the signed guitar at one point.
+2. D: fwiw the winning bid on the signed guitar beat the bid before it by exactly £10.
+3. C: the second bid on the signed guitar was £60.
+4. C: ugh this is confusing
+5. A: honestly I bid £95 on the signed guitar at one point.
+6. C: ok who has the details?
+7. C: fwiw Beatrix bid £60 on the signed guitar at one point.
+8. D: wait what
+9. C: ok so I bid £85 on the signed guitar at one point.
+10. C: fwiw there were exactly 6 bids on the signed guitar in total.
+11. B: fwiw I bid £70 on the signed guitar at one point.
+12. C: can we wrap this up pls",C
+S20130,Flatmates help Irene work out what happened to the money in a shared account.,A = Irene; B = Dalia; C = Ulla; D = Farah,"All times in this case refer to 18 November 2026. At 8:00 AM Irene's account held exactly £690.50. The only payments into or out of the account that day were, in order: a cash withdrawal of £158 at 9:10 AM, a card payment of £122 at 10:40 AM, a direct debit of £172.99 at 11:10 AM, a salary payment of £64 at 5:30 PM. Each one changed the balance at the moment it was made.","1. C: At 8:35 PM Irene's balance was £474.50.
+2. B: Who is writing this up?
+3. D: At 8:10 AM Irene's balance was £690.50.
+4. A: At 3:20 PM my balance was £237.51.
+5. B: Irene's balance never went below £230 that day.
+6. A: At 4:45 PM my balance was £237.51.
+7. B: At 8:05 PM Irene's balance was £301.51.
+8. A: At 8:35 PM my balance was £301.51.
+9. C: At 8:35 AM Irene's balance was £690.50.
+10. C: At 7:55 PM Irene's balance was £301.51.
+11. D: Is that everything we know?",C
+S20083,Workers argue about how far the delivery van went on a single tank.,A = Petra; B = Elodie; C = Teodor; D = Yohannes,"All times in this case refer to 15 August 2026. The van left at 7:00 AM with exactly 50 litres of fuel and was not refuelled before 5:00 PM. It used fuel at a steady 8 litres per 100 km, the fuel gauge was always accurate and never read below 6 litres, and the van never went faster than 80 km/h. Teodor drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. B: By 8:15 AM the van had done 50 km.
+2. C: I drove 200 km before 11:15 AM.
+3. D: By 3:30 PM the van had done 700 km.
+4. C: I'd rather we got this right.
+5. C: I drove 400 km before 3:30 PM.
+6. D: At 10:30 AM the trip meter showed 150 km and the gauge showed 38 litres.
+7. D: By 10:00 AM the van had done 125 km.
+8. A: Let's go through it once more.
+9. D: Teodor drove 325 km before 2:00 PM.
+10. D: Thanks for checking, everyone.
+11. C: At 9:15 AM the trip meter showed 100 km and the gauge showed 42 litres.
+12. C: At 8:15 AM the trip meter showed 50 km and the gauge showed 46 litres.",D
+S20015,Players in a five-a-side league argue about how their teams did this season.,A = Farah; B = Klara; C = Thandi; D = Valentin,"In the league every team played exactly 8 games. A win earned 3 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Comets had 13 points, the Herons had 5 points and the Kestrels had 22 points.","1. C: The Herons drew exactly 2 games.
+2. B: The Herons won exactly 1 of their games.
+3. B: Is that everything we know?
+4. C: The Herons lost more games than they won.
+5. A: Can we settle this quickly?
+6. D: The Herons drew exactly 6 games.
+7. A: The Comets drew exactly 4 games.
+8. A: The Kestrels went the whole season unbeaten.",D
+S20047,Members of a running club piece together the results of the 5 km race.,A = Svetla; B = Callum; C = Dmitra; D = Jasper,6 runners finished the race and every finishing place from 1st to 6th was taken by exactly one runner; there were no ties. Jasper finished 6th. Exactly four runners finished between Jasper and Svetla. Callum finished ahead of Petra. Dmitra was not in the top three.,"1. D: Callum finished 5th.
+2. D: I finished 6th.
+3. C: This is getting confusing.
+4. D: I finished last.
+5. B: Thanks for checking, everyone.
+6. D: I'd rather we got this right.
+7. B: Petra finished 4th.
+8. A: Dmitra finished ahead of Jasper.
+9. A: Who is writing this up?
+10. A: Was anyone else there?
+11. B: Svetla made the top three.
+12. A: I finished 1st.
+13. B: I finished ahead of Dmitra.",D
+S20090,Residents argue about which committee meetings they went to.,A = Emil; B = Gideon; C = Irene; D = Fabian,"In 2028 the committee met once a month, always on the first Wednesday of the month, and never on any other day. 1 August 2028 was a Tuesday. 1 September 2028 was a Friday.","1. C: I went to the September meeting on 6 September.
+2. A: Irene went to the August meeting on 2 August.
+3. D: The August meeting was held on a Wednesday.
+4. B: Should we ask the organiser?
+5. C: The September meeting was held on a Wednesday.
+6. C: Is that everything we know?
+7. B: I went to the September meeting on 6 September.
+8. A: Fabian was at the gym on 8 September.
+9. C: I went to the August meeting on 9 August.
+10. C: I was at the gym on 5 August.
+11. A: I went to the September meeting on 6 September.",C
+S20019,Friends on a trip argue about the money they changed before leaving.,A = Helga; B = Astrid; C = Ulla; D = Beatrix,"Facts checked by the organisers: The exchange booth took a flat fee of £2 from every amount handed over and changed the rest at exactly 1.1 euros per pound, with no rounding. It changed no money before 08:30 or after 15:00 that day. Everyone in the chat changed money there exactly once that day.","1. B: fwiw Sahil handed over £262 at the booth and got €286.00 back.
+2. D: Ulla changed money at the booth at 15:05.
+3. C: fwiw Helga handed over £62 at the booth and got €66.00 back.
+4. A: pretty sure I changed money at the booth at 15:00.
+5. B: pretty sure I handed over £62 at the booth and got €66.00 back.
+6. A: Sahil changed money at the booth at 08:30.
+7. C: lol this chat
+8. C: pretty sure I changed money at the booth at 08:30.
+9. A: hang on, let me think
+10. B: honestly no idea",D
+S20081,Workers argue about how far the delivery van went on a single tank.,A = Matteo; B = Cecilia; C = Wanjiru; D = Luana,"All times in this case refer to 12 October 2026. The van left at 7:00 AM with exactly 60 litres of fuel and was not refuelled before 4:00 PM. It used fuel at a steady 7.5 litres per 100 km, the fuel gauge was always accurate and never read below 6 litres, and the van never went faster than 100 km/h. Luana drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. A: I'd rather we got this right.
+2. C: Who is writing this up?
+3. B: At 3:15 PM the gauge showed 5 litres.
+4. B: By 3:15 PM the van had done 400 km.
+5. B: This is getting confusing.
+6. A: By 12:00 PM the van had done 240 km.
+7. B: Luana drove 120 km before 10:00 AM.
+8. B: By 8:45 AM the van had done 80 km.
+9. A: Luana drove 80 km before 8:45 AM.
+10. A: Who is writing this up?
+11. D: By 11:30 AM the van had done 200 km.
+12. B: Thanks for checking, everyone.
+13. B: By 1:15 PM the van had done 280 km.
+14. D: At 8:45 AM the trip meter showed 80 km and the gauge showed 54 litres.",B
+S20086,Members of a chess club try to sort out the dates of their monthly meetings.,A = Esther; B = Astrid; C = Petra; D = Alvaro,"In 2028 the committee met once a month, always on the first Wednesday of the month, and never on any other day. 1 January 2028 was a Saturday. 1 February 2028 was a Tuesday.","1. C: I was at the gym on 7 January.
+2. A: Who is writing this up?
+3. D: I went to the February meeting on 2 February.
+4. B: Was anyone else there?
+5. C: Astrid went to the January meeting on 6 January.
+6. D: Let's go through it once more.
+7. A: I went to the January meeting on 5 January.
+8. D: The January meeting was held on a Wednesday.
+9. D: Esther was at the gym on 9 January.",C
+S20102,Members of a chess club try to sort out the dates of their monthly meetings.,A = Rasmus; B = Greta; C = Sahil; D = Saskia,"In 2027 the committee met once a month, always on the fourth Tuesday of the month, and never on any other day. 1 June 2027 was a Tuesday. 1 December 2027 was a Wednesday.","1. C: Rasmus went to the June meeting on 15 June.
+2. A: I was at the gym on 25 December.
+3. B: Sahil was at the gym on 26 December.
+4. C: Greta was at the gym on 26 June.
+5. C: Should we ask the organiser?
+6. A: I went to the June meeting on 22 June.
+7. B: I'd rather we got this right.
+8. D: This is getting confusing.
+9. D: I was at the gym on 30 December.",C
+S20100,Members of a chess club try to sort out the dates of their monthly meetings.,A = Alvaro; B = Xavier; C = Jasper; D = Cecilia,"In 2028 the committee met once a month, always on the fourth Friday of the month, and never on any other day. 1 April 2028 was a Saturday. 1 December 2028 was a Friday.","1. C: Cecilia went to the April meeting on 28 April.
+2. D: Alvaro was at the gym on 25 December.
+3. A: Should we ask the organiser?
+4. C: The April meeting was held on a Friday.
+5. A: Xavier went to the December meeting on 22 December.
+6. A: I went to the December meeting on 23 December.
+7. C: I was at the gym on 25 April.
+8. A: This is getting confusing.
+9. C: I was at the gym on 20 December.
+10. B: Jasper went to the December meeting on 22 December.
+11. D: Does anyone have the receipt?",A
+S20084,A camping group reconstructs how far their van went before it was refuelled.,A = Sahil; B = Klara; C = Emil; D = Wanjiru,"Facts checked by the organisers: The van left at 07:00 with exactly 45 litres of fuel and was not refuelled before 17:00. It used fuel at a steady 6 litres per 100 km, the fuel gauge was always accurate and never read below 4 litres, and the van never went faster than 80 km/h. Klara drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. C: ugh this is confusing
+2. B: honestly I drove 50 km before 08:30.
+3. A: anyone else remember?
+4. A: pretty sure by 08:30 the van had done 150 km.
+5. D: fwiw by 09:45 the van had done 100 km.
+6. B: pretty sure by 08:15 the van had done 50 km.
+7. C: ok so at 14:30 the trip meter showed 350 km and the gauge showed 24 litres.
+8. C: honestly by 08:30 the van had done 50 km.
+9. B: by 14:30 the van had done 350 km.
+10. A: by 12:30 the van had done 250 km.",A
+S20062,Colleagues argue about who sat where at the round table during the team lunch.,A = Alvaro; B = Malia; C = Kasimir; D = Silas,"Six people sat around a round table with six evenly spaced seats: Malia, Kasimir, Silas, Alvaro, Elodie and Orla. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Kasimir sat next to Elodie. Orla sat next to Alvaro. Kasimir sat two seats away from Alvaro.","1. C: Malia sat next to Alvaro.
+2. D: Elodie sat directly opposite Alvaro.
+3. C: Orla sat two seats away from Malia.
+4. D: Does anyone have the receipt?
+5. D: I sat next to Orla.
+6. D: I did not sit next to Kasimir.
+7. A: This is getting confusing.
+8. D: Elodie sat two seats away from Orla.
+9. B: Who is writing this up?
+10. C: Elodie sat two seats away from Alvaro.",C
+S20097,Residents argue about which committee meetings they went to.,A = Orla; B = Ilan; C = Gideon; D = Yasmin,"Facts checked by the organisers: In 2027 the committee met once a month, always on the first Friday of the month, and never on any other day. 1 April 2027 was a Thursday. 1 June 2027 was a Tuesday.","1. A: ok so the April meeting was held on a Friday.
+2. C: fwiw I was at the gym on 2 June.
+3. C: ugh this is confusing
+4. B: honestly Gideon went to the April meeting on 1 April.
+5. A: for the record I went to the April meeting on 2 April.
+6. B: can we wrap this up pls
+7. A: ok so I was at the gym on 6 June.
+8. A: fwiw the June meeting was held on a Friday.
+9. C: honestly I was at the gym on 6 April.
+10. D: can we wrap this up pls
+11. C: fwiw Ilan went to the June meeting on 4 June.",B
+S20079,Workers argue about how far the delivery van went on a single tank.,A = Cecilia; B = Kasimir; C = Helga; D = Sahil,"All times in this case refer to 28 October 2026. The van left at 7:00 AM with exactly 50 litres of fuel and was not refuelled before 4:00 PM. It used fuel at a steady 6 litres per 100 km, the fuel gauge was always accurate and never read below 4 litres, and the van never went faster than 100 km/h. Kasimir drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. B: I drove 450 km before 3:15 PM.
+2. D: At 1:45 PM the trip meter showed 400 km and the gauge showed 26 litres.
+3. D: By 10:45 AM the van had done 400 km.
+4. B: I drove 400 km before 2:15 PM.
+5. C: Does anyone have the receipt?
+6. B: I drove 300 km before 12:45 PM.
+7. A: At 8:45 AM the trip meter showed 100 km and the gauge showed 44 litres.
+8. D: By 3:15 PM the van had done 450 km.
+9. D: Thanks for checking, everyone.
+10. D: By 12:15 PM the van had done 300 km.
+11. B: I drove 400 km before 1:45 PM.",D
+S20151,Friends who went to a village auction compare notes on the sale of the painting.,A = Emil; B = Esther; C = Valentin; D = Elodie,"The bidding for the painting opened with a first bid of £40. Every later bid was a whole number of pounds and at least £5 higher than the bid before it. The last bid, £75, won, and no bid was withdrawn.","1. D: I bid £80 on the painting at one point.
+2. D: Let's go through it once more.
+3. A: I bid £70 on the painting at one point.
+4. B: Can we settle this quickly?
+5. C: I bid £65 on the painting at one point.
+6. B: I bid £55 on the painting at one point.
+7. B: The winning bid on the painting beat the bid before it by exactly £5.
+8. B: There were exactly 6 bids on the painting in total.
+9. D: I bid £50 on the painting at one point.
+10. D: The second bid on the painting was £50.",D
+S20024,Travellers compare what they got at the airport exchange booth.,A = Edgar; B = Mirela; C = Greta; D = Anouk,"All times in this case refer to 1 November 2026. The exchange booth took a flat fee of £2 from every amount handed over and changed the rest at exactly 1.3 euros per pound, with no rounding. It changed no money before 10:00 AM or after 5:00 PM that day. Everyone in the chat changed money there exactly once that day.","1. B: I changed money at the booth at 5:00 PM.
+2. B: I handed over £42 at the booth and got €52.00 back.
+3. A: I'd rather we got this right.
+4. A: Mirela handed over £42 at the booth and got €54.60 back.
+5. D: I handed over £142 at the booth and got €182.00 back.
+6. D: I paid the £2 fee at the booth.
+7. C: Was anyone else there?
+8. A: Mirela paid the booth's £2 fee.",A
+S20045,Club runners argue about the finishing order of the 800 m final.,A = Farah; B = Orla; C = Gideon; D = Irene,9 runners finished the race and every finishing place from 1st to 9th was taken by exactly one runner; there were no ties. Irene finished 1st. Exactly two runners finished between Irene and Farah. Gideon finished ahead of Emil. Orla was not in the top three.,"1. A: Was anyone else there?
+2. D: Nobody finished between Gideon and Orla.
+3. D: I finished ahead of Orla.
+4. D: I made the top three.
+5. B: I finished 7th.
+6. B: I'd rather we got this right.
+7. B: Irene finished 6th.
+8. C: Farah finished ahead of Emil.
+9. D: Nobody finished between Orla and Gideon.
+10. B: Irene finished ahead of Farah.",B
+S20048,Club runners argue about the finishing order of the 800 m final.,A = Yohannes; B = Nadir; C = Arjun; D = Svetla,Facts checked by the organisers: 9 runners finished the race and every finishing place from 1st to 9th was taken by exactly one runner; there were no ties. Klara finished 3rd. Exactly one runner finished between Klara and Arjun. Svetla finished ahead of Nadir. Yohannes was not in the top three.,"1. C: wait what
+2. A: ok so I finished ahead of Klara.
+3. C: pretty sure nobody finished between me and Nadir.
+4. A: ok who has the details?
+5. C: fwiw nobody finished between Nadir and Arjun.
+6. C: nobody finished between me and Svetla.
+7. A: tbh Klara finished ahead of Arjun.
+8. D: pretty sure I finished ahead of Nadir.
+9. B: ok so I finished 6th.
+10. A: can we wrap this up pls
+11. D: hang on, let me think",A
+S20031,Travellers compare what they got at the airport exchange booth.,A = Jasper; B = Anouk; C = Teodor; D = Irene,"Facts checked by the organisers: The exchange booth took a flat fee of £3 from every amount handed over and changed the rest at exactly 1.1 euros per pound, with no rounding. It changed no money before 10:00 or after 17:00 that day. Everyone in the chat changed money there exactly once that day.","1. C: for the record Jasper handed over £63 at the booth and got €66.00 back.
+2. C: tbh Yasmin paid the booth's £3 fee.
+3. A: honestly no idea
+4. A: ok who has the details?
+5. A: ok so Yasmin handed over £243 at the booth and got €264.00 back.
+6. B: honestly I paid the £3 fee at the booth.
+7. C: honestly Irene changed money at the booth at 10:00.
+8. D: ok so I handed over £223 at the booth and got €247.00 back.
+9. B: Teodor paid the booth's £3 fee.
+10. B: tbh I changed money at the booth at 17:00.",D
+S20148,Friends who went to a village auction compare notes on the sale of the painting.,A = Zoltan; B = Babak; C = Jasper; D = Ilan,"Facts checked by the organisers: The bidding for the painting opened with a first bid of £50. Every later bid was a whole number of pounds and at least £10 higher than the bid before it. The last bid, £120, won, and no bid was withdrawn.","1. A: pretty sure the second bid on the painting was £65.
+2. A: hang on, let me think
+3. C: ok so Zoltan bid £65 on the painting at one point.
+4. A: pretty sure Ilan bid £75 on the painting at one point.
+5. B: ok who has the details?
+6. B: ok so there were exactly 6 bids on the painting in total.
+7. C: pretty sure I bid £85 on the painting at one point.
+8. D: for the record the winning bid on the painting beat the bid before it by exactly £15.
+9. A: can someone just check the notes
+10. A: ok so Jasper bid £130 on the painting at one point.
+11. B: honestly I bid £105 on the painting at one point.
+12. B: does it even matter?",A
+S20053,Colleagues argue about who sat where at the round table during the team lunch.,A = Nkechi; B = Arjun; C = Otto; D = Luana,"Facts checked by the organisers: Six people sat around a round table with six evenly spaced seats: Otto, Nkechi, Arjun, Luana, Wanjiru and Sahil. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Otto sat next to Wanjiru. Luana sat next to Arjun. Nkechi sat two seats away from Otto.","1. D: ok so Wanjiru sat next to Nkechi.
+2. C: pretty sure I did not sit next to Arjun.
+3. C: ok so Sahil sat two seats away from Wanjiru.
+4. C: lol this chat
+5. D: ok so I did not sit next to Nkechi.
+6. D: pretty sure I sat two seats away from Otto.
+7. C: can someone just check the notes
+8. A: for the record I sat next to Arjun.
+9. B: anyone else remember?
+10. A: Wanjiru did not sit next to Sahil.
+11. B: Wanjiru sat two seats away from Nkechi.",B
+S20113,Gym members argue about the codes they picked for their lockers.,A = Esther; B = Babak; C = Edgar; D = Petra,"The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is even and not 0; the four digits add up to exactly 19; no digit is 0. Every person in the chat set exactly one code, and the lockers accepted it.","1. B: My code ended in 4.
+2. B: Petra's locker code was 4276.
+3. B: My code had the digit 5 in it twice.
+4. C: Petra's code ended in 6.
+5. B: My code started with 8.
+6. D: This is getting confusing.
+7. C: My code ended in 5.
+8. C: Esther's code started with 2.
+9. B: Is that everything we know?
+10. B: My locker code was 8164.
+11. A: Edgar's code started with 4.",B
+S20049,Club runners argue about the finishing order of the 800 m final.,A = Babak; B = Dmitra; C = Rasmus; D = Greta,9 runners finished the race and every finishing place from 1st to 9th was taken by exactly one runner; there were no ties. Rasmus finished 3rd. Exactly one runner finished between Rasmus and Babak. Greta finished ahead of Dmitra. Zofia was not in the top three.,"1. B: Babak finished 1st.
+2. D: Was anyone else there?
+3. B: Nobody finished between Zofia and Greta.
+4. A: I finished ahead of Greta.
+5. B: I finished ahead of Greta.
+6. C: I finished ahead of Greta.
+7. B: Can we settle this quickly?
+8. C: I made the top three.
+9. D: Zofia finished ahead of Dmitra.
+10. A: Thanks for checking, everyone.
+11. A: Rasmus finished ahead of Zofia.",B
+S20009,Players in a five-a-side league argue about how their teams did this season.,A = Fabian; B = Petra; C = Greta; D = Jasper,"In the league every team played exactly 8 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Ravens had 8 points, the Badgers had 15 points and the Kestrels had 3 points.","1. B: I'd rather we got this right.
+2. A: The Kestrels lost exactly 6 games.
+3. C: The Badgers won at least half of their games.
+4. B: The Badgers drew exactly 5 games.
+5. B: Thanks for checking, everyone.
+6. A: The Ravens won exactly 3 of their games.
+7. D: Who is writing this up?
+8. B: The Ravens drew exactly 2 games.
+9. B: Was anyone else there?
+10. C: The Badgers went the whole season unbeaten.
+11. B: The Badgers won more games than they lost.
+12. C: The Kestrels won exactly 1 of their games.
+13. A: The Kestrels drew exactly 1 game.",B
+S20080,A camping group reconstructs how far their van went before it was refuelled.,A = Anouk; B = Yohannes; C = Xavier; D = Greta,"Facts checked by the organisers: The van left at 07:00 with exactly 40 litres of fuel and was not refuelled before 16:00. It used fuel at a steady 6 litres per 100 km, the fuel gauge was always accurate and never read below 4 litres, and the van never went faster than 90 km/h. Yohannes drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. B: at 15:00 the trip meter showed 450 km and the gauge showed 13 litres.
+2. C: for the record Yohannes drove 450 km before 15:00.
+3. B: ok so I drove 250 km before 11:45.
+4. B: by 13:30 the van had done 350 km.
+5. A: at 13:30 the trip meter showed 350 km and the gauge showed 23 litres.
+6. A: Yohannes drove 200 km before 10:45.
+7. A: at 10:00 the trip meter showed 150 km and the gauge showed 31 litres.
+8. D: fwiw Yohannes drove 150 km before 09:45.
+9. A: lol this chat
+10. C: ugh this is confusing
+11. B: can we wrap this up pls
+12. C: tbh Yohannes drove 400 km before 14:15.",A
+S20018,Friends on a trip argue about the money they changed before leaving.,A = Jovana; B = Elodie; C = Renata; D = Nadir,"All times in this case refer to 10 January 2026. The exchange booth took a flat fee of £5 from every amount handed over and changed the rest at exactly 1.3 euros per pound, with no rounding. It changed no money before 8:30 AM or after 3:00 PM that day. Everyone in the chat changed money there exactly once that day.","1. D: Petra paid the booth's £5 fee.
+2. C: I changed money at the booth at 3:00 PM.
+3. B: I changed money at the booth at 3:00 PM.
+4. B: Petra handed over £265 at the booth and got €338.00 back.
+5. C: I changed money at the booth at 3:05 PM.
+6. C: I paid the £5 fee at the booth.
+7. C: This is getting confusing.
+8. A: I changed money at the booth at 2:00 PM.
+9. B: Does anyone have the receipt?",C
+S20040,Club runners argue about the finishing order of the 800 m final.,A = Nkechi; B = Edgar; C = Gideon; D = Elodie,Facts checked by the organisers: 6 runners finished the race and every finishing place from 1st to 6th was taken by exactly one runner; there were no ties. Nkechi finished 3rd. Edgar finished directly behind Nkechi. Elodie finished ahead of Gideon. Babak was not in the top three.,"1. C: nobody finished between Babak and Gideon.
+2. A: ok so Babak finished 4th.
+3. B: ugh this is confusing
+4. D: pretty sure I finished ahead of Nkechi.
+5. A: fwiw I finished ahead of Edgar.
+6. A: can we wrap this up pls
+7. D: ok who has the details?
+8. A: wait what
+9. A: fwiw I finished ahead of Babak.
+10. B: I finished ahead of Babak.",A
+S20070,A camping group reconstructs how far their van went before it was refuelled.,A = Amaya; B = Valentin; C = Svetla; D = Lorenzo,"Facts checked by the organisers: The van left at 08:00 with exactly 50 litres of fuel and was not refuelled before 17:00. It used fuel at a steady 10 litres per 100 km, the fuel gauge was always accurate and never read below 5 litres, and the van never went faster than 90 km/h. Valentin drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. A: honestly at 09:15 the trip meter showed 50 km and the gauge showed 45 litres.
+2. C: can someone just check the notes
+3. D: does it even matter?
+4. A: by 09:15 the van had done 50 km.
+5. C: for the record by 15:30 the van had done 330 km.
+6. C: at 13:00 the gauge showed 4 litres.
+7. B: ok so I drove 370 km before 16:15.
+8. A: wait what
+9. C: ok so Valentin drove 330 km before 15:30.
+10. A: at 15:30 the trip meter showed 330 km and the gauge showed 17 litres.",C
+S20131,Family members go through Klara's bank app after a confusing day of spending.,A = Klara; B = Kasimir; C = Otto; D = Zoltan,"Facts checked by the organisers: At 08:00 Klara's account held exactly £872.25. The only payments into or out of the account that day were, in order: a refund of £237.99 at 13:00, a cash withdrawal of £243 at 16:30, a cash withdrawal of £127.99 at 17:10, a transfer in of £11.50 at 17:40. Each one changed the balance at the moment it was made.","1. D: pretty sure at 11:50 Klara's balance was £1110.24.
+2. A: fwiw at 09:20 my balance was £872.25.
+3. A: hang on, let me think
+4. D: at 11:50 Klara's balance was £872.25.
+5. A: for the record at 14:50 my balance was £1110.24.
+6. B: wait what
+7. B: at 09:45 Klara's balance was £872.25.
+8. C: ok who has the details?
+9. B: fwiw at 20:50 Klara's balance was £750.75.",D
+S20124,Flatmates help Benedikt work out what happened to the money in a shared account.,A = Irene; B = Benedikt; C = Valentin; D = Petra,"All times in this case refer to 22 May 2026. At 8:00 AM Benedikt's account held exactly £347. The only payments into or out of the account that day were, in order: a direct debit of £53 at 3:10 PM, a refund of £49 at 3:50 PM, a direct debit of £148.99 at 4:20 PM, a direct debit of £120.99 at 4:50 PM. Each one changed the balance at the moment it was made.","1. A: At 8:55 AM Benedikt's balance was £294.
+2. B: At 4:15 PM my balance was £343.
+3. D: Who is writing this up?
+4. D: At 8:55 AM Benedikt's balance was £347.
+5. B: At 7:40 PM my balance was £73.02.
+6. C: Does anyone have the receipt?
+7. D: At 2:30 PM Benedikt's balance was £347.
+8. C: At 9:55 AM Benedikt's balance was £347.
+9. A: At 10:30 AM Benedikt's balance was £347.",A
+S20034,Travellers compare what they got at the airport exchange booth.,A = Amaya; B = Silas; C = Irene; D = Cecilia,"All times in this case refer to 22 June 2026. The exchange booth took a flat fee of £3 from every amount handed over and changed the rest at exactly 1.25 euros per pound, with no rounding. It changed no money before 10:00 AM or after 5:00 PM that day. Everyone in the chat changed money there exactly once that day.","1. C: The booth charged me a £4 fee.
+2. B: Can we settle this quickly?
+3. B: I handed over £163 at the booth and got €200.00 back.
+4. A: Irene changed money at the booth at 10:00 AM.
+5. B: Was anyone else there?
+6. A: I changed money at the booth at 5:00 PM.
+7. B: Amaya handed over £143 at the booth and got €175.00 back.
+8. A: Does anyone have the receipt?
+9. D: Xavier paid the booth's £3 fee.
+10. D: Let's go through it once more.
+11. C: I handed over £143 at the booth and got €175.00 back.
+12. B: I changed money at the booth at 1:50 PM.",C
+S20066,Six friends try to remember the seating at a birthday dinner.,A = Helga; B = Zofia; C = Malia; D = Klara,"Six people sat around a round table with six evenly spaced seats: Malia, Zofia, Helga, Klara, Luana and Nkechi. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Malia sat two seats away from Zofia. Zofia sat directly opposite Luana. Helga sat directly opposite Malia.","1. C: I did not sit next to Helga.
+2. B: Klara sat two seats away from Malia.
+3. A: Does anyone have the receipt?
+4. B: I sat two seats away from Klara.
+5. A: Zofia did not sit next to Klara.
+6. C: Thanks for checking, everyone.
+7. D: I did not sit next to Nkechi.
+8. C: Klara sat directly opposite me.
+9. B: Who is writing this up?
+10. D: Zofia sat directly opposite Luana.
+11. C: Was anyone else there?",C
+S20099,Members of a chess club try to sort out the dates of their monthly meetings.,A = Matteo; B = Saskia; C = Yasmin; D = Emil,"Facts checked by the organisers: In 2027 the committee met once a month, always on the fourth Wednesday of the month, and never on any other day. 1 March 2027 was a Monday. 1 June 2027 was a Tuesday.","1. A: Emil went to the March meeting on 24 March.
+2. B: I was at the gym on 21 June.
+3. A: I was at the gym on 21 June.
+4. A: can someone just check the notes
+5. D: pretty sure I went to the March meeting on 25 March.
+6. A: I went to the June meeting on 23 June.
+7. A: honestly the March meeting was held on a Wednesday.
+8. C: anyone else remember?
+9. B: Matteo went to the March meeting on 24 March.
+10. D: ok so Saskia went to the March meeting on 24 March.
+11. B: ok who has the details?
+12. D: for the record I went to the June meeting on 23 June.",D
+S20098,Residents argue about which committee meetings they went to.,A = Sahil; B = Magnus; C = Kasimir; D = Hamid,"In 2028 the committee met once a month, always on the second Monday of the month, and never on any other day. 1 April 2028 was a Saturday. 1 September 2028 was a Friday.","1. B: I went to the September meeting on 11 September.
+2. B: Who is writing this up?
+3. A: Hamid went to the April meeting on 10 April.
+4. C: Let's go through it once more.
+5. B: Does anyone have the receipt?
+6. C: Can we settle this quickly?
+7. D: Kasimir was at the gym on 14 April.
+8. B: Hamid was at the gym on 7 April.
+9. C: I went to the April meeting on 3 April.
+10. A: Hamid was at the gym on 9 September.",C
+S20032,Friends on a trip argue about the money they changed before leaving.,A = Cecilia; B = Zoltan; C = Dmitra; D = Alvaro,"All times in this case refer to 17 January 2026. The exchange booth took a flat fee of £3 from every amount handed over and changed the rest at exactly 1.25 euros per pound, with no rounding. It changed no money before 8:30 AM or after 3:00 PM that day. Everyone in the chat changed money there exactly once that day.","1. D: Zoltan paid the booth's £3 fee.
+2. B: Dmitra handed over £183 at the booth and got €225.00 back.
+3. C: Does anyone have the receipt?
+4. B: Cecilia handed over £283 at the booth and got €350.00 back.
+5. D: I paid the £3 fee at the booth.
+6. A: Thanks for checking, everyone.
+7. B: I changed money at the booth at 8:30 AM.
+8. A: Alvaro handed over £203 at the booth and got €255.00 back.
+9. A: I paid the £3 fee at the booth.",A
+S20037,Members of a running club piece together the results of the 5 km race.,A = Gideon; B = Callum; C = Jasper; D = Edgar,9 runners finished the race and every finishing place from 1st to 9th was taken by exactly one runner; there were no ties. Callum finished 1st. Exactly two runners finished between Callum and Jasper. Edgar finished ahead of Hamid. Gideon was not in the top three.,"1. B: Let's go through it once more.
+2. D: I finished ahead of Jasper.
+3. C: Should we ask the organiser?
+4. C: I'd rather we got this right.
+5. D: Nobody finished between me and Callum.
+6. A: I finished 7th.
+7. C: Hamid finished ahead of Gideon.
+8. D: Callum made the top three.
+9. A: Does anyone have the receipt?
+10. B: Nobody finished between Gideon and Callum.",B
+S20123,Family members go through Magnus's bank app after a confusing day of spending.,A = Esther; B = Silas; C = Svetla; D = Magnus,"Facts checked by the organisers: At 08:00 Magnus's account held exactly £539. The only payments into or out of the account that day were, in order: a card payment of £135.99 at 11:30, a transfer in of £104.50 at 11:50, a direct debit of £41 at 14:30, a transfer in of £87 at 17:30. Each one changed the balance at the moment it was made.","1. B: honestly no idea
+2. B: tbh at 09:35 Magnus's balance was £539.
+3. D: fwiw at 16:40 my balance was £466.51.
+4. D: does it even matter?
+5. C: can someone just check the notes
+6. D: honestly at 20:10 my balance was £553.51.
+7. A: at 15:25 Magnus's balance was £466.51.
+8. B: at 13:40 Magnus's balance was £507.51.
+9. D: fwiw at 09:05 my balance was £539.
+10. D: at 15:15 my balance was £362.01.
+11. A: ok who has the details?
+12. D: tbh at 15:15 my balance was £466.51.
+13. A: at 14:25 Magnus's balance was £507.51.",D
+S20043,Club runners argue about the finishing order of the 800 m final.,A = Amaya; B = Otto; C = Alvaro; D = Malia,8 runners finished the race and every finishing place from 1st to 8th was taken by exactly one runner; there were no ties. Astrid finished 6th. Exactly two runners finished between Astrid and Otto. Amaya finished ahead of Malia.,"1. B: Alvaro finished ahead of Otto.
+2. D: Nobody finished between me and Amaya.
+3. A: Nobody finished between me and Astrid.
+4. C: Astrid finished ahead of Amaya.
+5. A: Thanks for checking, everyone.
+6. B: Nobody finished between Astrid and Amaya.
+7. B: Does anyone have the receipt?
+8. D: I finished 3rd.
+9. C: I finished 1st.
+10. C: I finished ahead of Amaya.",D
+S20003,Members of a hockey club compare notes on the league table.,A = Alvaro; B = Lorenzo; C = Otto; D = Nadir,"In the league every team played exactly 4 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Badgers had 6 points, the Kestrels had 4 points and the Herons had 2 points.","1. A: The Herons lost more games than they won.
+2. D: The Kestrels won more games than they lost.
+3. A: The Kestrels won exactly 2 of their games.
+4. B: Is that everything we know?
+5. C: I'd rather we got this right.
+6. A: The Herons lost exactly 2 games.
+7. D: The Herons drew exactly 2 games.
+8. C: Can we settle this quickly?
+9. D: Should we ask the organiser?
+10. D: The Kestrels lost exactly 2 games.
+11. A: The Badgers drew exactly 2 games.",D
+S20094,Members of a chess club try to sort out the dates of their monthly meetings.,A = Magnus; B = Elodie; C = Dalia; D = Petra,"In 2028 the committee met once a month, always on the first Tuesday of the month, and never on any other day. 1 March 2028 was a Wednesday. 1 April 2028 was a Saturday.","1. D: Let's go through it once more.
+2. D: I went to the April meeting on 4 April.
+3. B: I was at the gym on 6 April.
+4. D: The March meeting was held on a Tuesday.
+5. C: I was at the gym on 6 April.
+6. B: The April meeting was held on a Tuesday.
+7. A: Should we ask the organiser?
+8. B: I was at the gym on 9 March.
+9. A: I went to the March meeting on 7 March.
+10. B: Is that everything we know?
+11. C: The March meeting was held on a Thursday.
+12. D: Thanks for checking, everyone.",C
+S20118,Students compare the four-digit codes they set on their lockers.,A = Malia; B = Silas; C = Svetla; D = Dalia,"Facts checked by the organisers: The lockers only accept four-digit codes that follow every one of these rules: digits may repeat; the first digit is not 0; the four digits add up to exactly 22; no digit is 0. Every person in the chat set exactly one code, and the lockers accepted it.","1. C: my code started with 1.
+2. C: pretty sure my locker code was 1580.
+3. A: hang on, let me think
+4. D: ok who has the details?
+5. C: lol this chat
+6. D: my code started with 7.
+7. C: wait what
+8. B: pretty sure Malia's code ended in 3.
+9. B: for the record my code started with 2.
+10. C: ok so my locker code was 1588.
+11. A: honestly Svetla's code ended in 8.",C
+S20058,Colleagues argue about who sat where at the round table during the team lunch.,A = Zoltan; B = Irene; C = Yohannes; D = Malia,"Six people sat around a round table with six evenly spaced seats: Irene, Zoltan, Yohannes, Malia, Nadir and Otto. Each person had exactly two neighbours. Two seats away means exactly one seat between them on the shorter side, and directly opposite means three seats away either way. Otto sat two seats away from Yohannes. Irene sat two seats away from Yohannes. Irene sat next to Nadir.","1. C: Let's go through it once more.
+2. D: Malia sat directly opposite Irene.
+3. C: Who is writing this up?
+4. C: Irene sat next to Nadir.
+5. A: Does anyone have the receipt?
+6. A: I did not sit next to Nadir.
+7. C: Irene sat next to Yohannes.
+8. B: I did not sit next to Yohannes.
+9. C: Can we settle this quickly?
+10. D: Irene sat directly opposite me.",C
+S20029,Travellers compare what they got at the airport exchange booth.,A = Dalia; B = Farah; C = Rasmus; D = Elodie,"Facts checked by the organisers: The exchange booth took a flat fee of £5 from every amount handed over and changed the rest at exactly 1.1 euros per pound, with no rounding. It changed no money before 10:00 or after 17:00 that day. Everyone in the chat changed money there exactly once that day.","1. A: honestly I handed over £85 at the booth and got €88.00 back.
+2. B: pretty sure I handed over £225 at the booth and got €242.00 back.
+3. B: anyone else remember?
+4. B: ok so Zofia paid the booth's £5 fee.
+5. A: can we wrap this up pls
+6. D: pretty sure I handed over £305 at the booth and got €330.00 back.
+7. C: ugh this is confusing
+8. D: Rasmus changed money at the booth at 10:00.
+9. B: I handed over £225 at the booth and got €253.00 back.
+10. A: for the record I paid the £5 fee at the booth.",B
+S20105,Gym members argue about the codes they picked for their lockers.,A = Lorenzo; B = Yohannes; C = Silas; D = Nkechi,"The lockers only accept four-digit codes that follow every one of these rules: digits may repeat; the first digit is even and not 0; the four digits add up to exactly 20; no digit is 0. Every person in the chat set exactly one code, and the lockers accepted it.","1. A: My code started with 6.
+2. A: Is that everything we know?
+3. C: Who is writing this up?
+4. A: My code ended in 2.
+5. C: I'd rather we got this right.
+6. C: My code started with 8.
+7. B: Silas's code ended in 4.
+8. D: Is that everything we know?
+9. B: Nkechi's locker code was 6266.
+10. B: My locker code was 8248.
+11. A: Yohannes's code started with 8.",B
+S20041,Club runners argue about the finishing order of the 800 m final.,A = Jovana; B = Mirela; C = Benedikt; D = Nkechi,8 runners finished the race and every finishing place from 1st to 8th was taken by exactly one runner; there were no ties. Jovana finished 4th. Exactly two runners finished between Jovana and Beatrix. Nkechi finished ahead of Mirela.,"1. B: Beatrix finished ahead of Nkechi.
+2. D: Benedikt finished ahead of Nkechi.
+3. D: I finished 6th.
+4. B: Benedikt finished ahead of Mirela.
+5. C: Beatrix finished ahead of Jovana.
+6. B: I finished ahead of Nkechi.
+7. C: Was anyone else there?
+8. A: I finished ahead of Mirela.
+9. C: Beatrix finished ahead of Benedikt.
+10. B: Can we settle this quickly?
+11. C: Nobody finished between me and Beatrix.
+12. C: Who is writing this up?",B
+S20006,Members of a hockey club compare notes on the league table.,A = Svetla; B = Rasmus; C = Renata; D = Paloma,"Facts checked by the organisers: In the league every team played exactly 8 games. A win earned 3 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Lynxes had 20 points, the Herons had 8 points and the Otters had 24 points.","1. C: fwiw the Lynxes went the whole season unbeaten.
+2. D: the Otters won exactly 8 of their games.
+3. C: wait what
+4. B: honestly no idea
+5. C: the Lynxes won exactly 2 of their games.
+6. D: ok so the Otters went the whole season unbeaten.
+7. D: for the record the Herons lost more games than they won.
+8. B: honestly the Lynxes won more games than they lost.
+9. A: can we wrap this up pls
+10. A: does it even matter?
+11. D: ok so the Lynxes drew exactly 2 games.
+12. B: pretty sure the Herons lost exactly 2 games.",C
+S20111,Students compare the four-digit codes they set on their lockers.,A = Kasimir; B = Jasper; C = Esther; D = Beatrix,"The lockers only accept four-digit codes that follow every one of these rules: every digit is different; the first digit is not 0; the four digits add up to exactly 22; no digit is 0. Every person in the chat set exactly one code, and the lockers accepted it.","1. D: My code ended in 1.
+2. C: Can we settle this quickly?
+3. D: Esther's code had the digit 5 in it twice.
+4. B: Thanks for checking, everyone.
+5. A: My locker code was 4936.
+6. B: Esther's locker code was 6475.
+7. A: Was anyone else there?
+8. A: I'd rather we got this right.
+9. B: My code started with 8.
+10. D: My code started with 7.
+11. B: My code ended in 6.",D
+S20122,Family members go through Wanjiru's bank app after a confusing day of spending.,A = Xavier; B = Wanjiru; C = Klara; D = Dalia,"All times in this case refer to 10 June 2026. At 8:00 AM Wanjiru's account held exactly £830.50. The only payments into or out of the account that day were, in order: a salary payment of £22.99 at 11:00 AM, a cash withdrawal of £136 at 11:20 AM, a cash withdrawal of £47.50 at 5:40 PM, a card payment of £233 at 6:10 PM. Each one changed the balance at the moment it was made.","1. C: Who is writing this up?
+2. D: At 5:30 PM Wanjiru's balance was £717.49.
+3. B: This is getting confusing.
+4. B: At 8:30 PM my balance was £436.99.
+5. A: At 4:25 PM Wanjiru's balance was £717.49.
+6. B: At 4:55 PM my balance was £717.49.
+7. C: Wanjiru's balance never went below £450 that day.
+8. D: At 12:35 PM Wanjiru's balance was £717.49.
+9. D: At 7:45 PM Wanjiru's balance was £436.99.
+10. B: At 5:00 PM my balance was £717.49.
+11. D: At 8:00 PM Wanjiru's balance was £436.99.",C
+S20001,Members of a hockey club compare notes on the league table.,A = Yohannes; B = Benedikt; C = Hamid; D = Matteo,"In the league every team played exactly 8 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Pilots had 15 points, the Ravens had 6 points and the Herons had 3 points.","1. B: The Herons won exactly 3 of their games.
+2. C: The Ravens lost exactly 5 games.
+3. D: The Ravens lost more games than they won.
+4. A: Was anyone else there?
+5. D: The Herons lost exactly 6 games.
+6. D: The Pilots won at least half of their games.
+7. B: The Pilots drew exactly 1 game.
+8. B: Does anyone have the receipt?
+9. A: Thanks for checking, everyone.",B
+S20101,Residents argue about which committee meetings they went to.,A = Zoltan; B = Helga; C = Astrid; D = Fabian,"Facts checked by the organisers: In 2028 the committee met once a month, always on the fourth Wednesday of the month, and never on any other day. 1 March 2028 was a Wednesday. 1 May 2028 was a Monday.","1. B: for the record I was at the gym on 21 May.
+2. A: pretty sure I went to the March meeting on 22 March.
+3. D: for the record I was at the gym on 28 May.
+4. B: Zoltan went to the May meeting on 23 May.
+5. A: ok who has the details?
+6. C: anyone else remember?
+7. B: ok so I went to the March meeting on 22 March.
+8. D: for the record the May meeting was held on a Wednesday.
+9. B: hang on, let me think
+10. A: ok so I was at the gym on 24 March.
+11. D: anyone else remember?",B
+S20127,Family members go through Thandi's bank app after a confusing day of spending.,A = Astrid; B = Yasmin; C = Thandi; D = Ilan,"Facts checked by the organisers: At 08:00 Thandi's account held exactly £646.25. The only payments into or out of the account that day were, in order: a card payment of £81 at 09:50, a direct debit of £59 at 14:50, a transfer in of £64.50 at 16:00, a card payment of £166 at 17:00. Each one changed the balance at the moment it was made.","1. C: fwiw at 16:30 my balance was £570.75.
+2. D: ok who has the details?
+3. C: ok so at 13:00 my balance was £565.25.
+4. C: at 18:20 my balance was £404.75.
+5. C: pretty sure at 13:10 my balance was £565.25.
+6. D: at 17:05 Thandi's balance was £570.75.
+7. C: hang on, let me think
+8. B: anyone else remember?
+9. C: for the record at 14:10 my balance was £565.25.
+10. A: hang on, let me think",D
+S20002,Players in a five-a-side league argue about how their teams did this season.,A = Matteo; B = Amaya; C = Xavier; D = Mirela,"Facts checked by the organisers: In the league every team played exactly 8 games. A win earned 2 points, a draw 1 point and a loss no points; no other points were given or taken away. At the end of the season the Comets had 8 points, the Pilots had 14 points and the Kestrels had 14 points.","1. C: lol this chat
+2. D: for the record the Comets won exactly 1 of their games.
+3. C: can we wrap this up pls
+4. C: pretty sure the Comets won more games than they lost.
+5. C: the Comets lost exactly 1 game.
+6. D: fwiw the Kestrels lost exactly 1 game.
+7. B: honestly the Comets drew exactly 6 games.
+8. B: tbh the Kestrels won more games than they lost.
+9. A: hang on, let me think
+10. C: for the record the Pilots won exactly 7 of their games.
+11. B: the Pilots won more games than they lost.
+12. B: wait what
+13. B: the Pilots did not draw a single game.",C
+S20120,Flatmates help Luana work out what happened to the money in a shared account.,A = Rasmus; B = Luana; C = Otto; D = Fabian,"All times in this case refer to 10 January 2026. At 8:00 AM Luana's account held exactly £766.25. The only payments into or out of the account that day were, in order: a cash withdrawal of £218 at 12:30 PM, a card payment of £26 at 2:30 PM, a card payment of £151.50 at 5:10 PM, a cash withdrawal of £71 at 5:50 PM. Each one changed the balance at the moment it was made.","1. C: At 12:35 PM Luana's balance was £548.25.
+2. B: Should we ask the organiser?
+3. D: At 5:45 PM Luana's balance was £370.75.
+4. A: At 2:50 PM Luana's balance was £522.25.
+5. A: At 9:35 AM Luana's balance was £548.25.
+6. B: At 8:55 PM my balance was £299.75.
+7. A: Luana's balance never went below £290 that day.
+8. A: At 7:00 PM Luana's balance was £299.75.
+9. B: At 12:20 PM my balance was £766.25.
+10. A: Is that everything we know?",A
+S20069,Workers argue about how far the delivery van went on a single tank.,A = Farah; B = Anouk; C = Teodor; D = Luana,"All times in this case refer to 21 February 2026. The van left at 8:00 AM with exactly 45 litres of fuel and was not refuelled before 6:00 PM. It used fuel at a steady 7.5 litres per 100 km, the fuel gauge was always accurate and never read below 6 litres, and the van never went faster than 90 km/h. Farah drove the van all day; nobody else drove it, and the trip meter started at 0 km.","1. D: Who is writing this up?
+2. A: At 10:00 AM the trip meter showed 80 km and the gauge showed 39 litres.
+3. A: At 10:15 AM the trip meter showed 80 km and the gauge showed 39 litres.
+4. B: Can we settle this quickly?
+5. B: Is that everything we know?
+6. C: This is getting confusing.
+7. A: By 4:45 PM the van had done 400 km.
+8. B: By 4:45 PM the van had done 800 km.
+9. B: Farah drove 440 km before 5:30 PM.
+10. A: At 2:00 PM the trip meter showed 280 km and the gauge showed 24 litres.
+11. D: This is getting confusing.",B
+NF001,Office colleagues reconstruct how fast Priya's tablet battery ran down during a conference.,A = Priya; B = Tariq; C = Elena; D = Julian,"All times in this case refer to 15 September 2026. At 9:00 AM Priya's tablet was at 92% battery. The tablet was not plugged into a charger at any time between 9:00 AM and 5:00 PM, and during this period its battery drained at a constant rate of 8 percentage points per hour. Priya attended the morning keynote in Hall B.","1. C: Who's taking notes on this?
+2. B: At 1:00 PM Priya's tablet showed 72% battery.
+3. D: I attended the keynote in Hall B around 10:00 AM.
+4. A: This is getting confusing.
+5. C: At 11:00 AM Priya's tablet had 76% battery remaining.
+6. A: Between 9:00 AM and 3:00 PM my tablet battery dropped by 48 percentage points.
+7. D: At 2:30 PM Priya's tablet showed under 50% battery.
+8. B: Can we get a plain answer?",B
+NF002,Drivers dispute how much parking time was purchased at the downtown municipal lot.,A = Marcus; B = Sonia; C = Kenji; D = Chloe,"All times in this case refer to 3 March 2026. Parking at the municipal lot cost £1.50 per 30 minutes, with a maximum permitted stay of 3 hours per vehicle. Drivers paid in advance and the parking ticket displayed the exact expiry time based on the amount paid. All meter payments were made in increments of £1.50.","1. B: Could we keep this thread short?
+2. A: I parked my car in bay 4.
+3. D: I paid £6.00 at 10:00 AM and my parking ticket expired at 12:30 PM.
+4. C: This is all rather confusing.
+5. B: At 9:15 AM I bought the maximum permitted stay for £9.00.
+6. A: I paid £4.50 at the meter at 1:00 PM for 90 minutes of parking.
+7. C: I paid £3.00 at 2:00 PM and my ticket expired at 3:00 PM.
+8. D: Who's writing up the notes?",D
+NF003,Clinic staff determine the schedule of allergy medication administered to a patient.,A = Farah; B = Liam; C = Nadia; D = Oscar,All times in this case refer to 18 June 2026. A patient could receive at most three doses of antihistamine in a single calendar day. Each dose after the first had to be given at least 5 hours after the previous dose. The patient's first dose of antihistamine was administered at 7:30 AM.,"1. D: Is someone writing this up?
+2. A: I administered the patient's second dose of antihistamine at 11:45 AM.
+3. C: Let's keep this thread brief.
+4. B: I gave the patient their second dose of antihistamine at 1:15 PM.
+5. D: I checked the patient's temperature at 10:00 AM.
+6. A: Would the doctor know more?
+7. C: The patient received their third dose of antihistamine at 6:45 PM.
+8. B: The patient received exactly three doses of antihistamine that day.",A
+NF004,Security guards review the freight elevator log during morning deliveries.,A = Bram; B = Leila; C = Tariq; D = Maya,"All times in this case refer to 22 May 2026. The freight elevator had a strict weight limit of at most 500 kg. Each metal container weighed exactly 75 kg, and each person was logged at a standard allowance of 70 kg. The elevator would refuse to move if the combined weight of passengers and containers exceeded 500 kg.","1. B: Can we keep this brief?
+2. A: At 9:30 AM I rode the freight elevator alone with 4 metal containers.
+3. C: At 10:15 AM I rode the freight elevator up to floor 4 accompanied by two colleagues and carrying 5 metal containers.
+4. D: This is getting muddled.
+5. B: At 11:00 AM two of us transported 3 metal containers in the freight elevator.
+6. A: I signed the maintenance clipboard on floor 4.
+7. D: Four of us rode the freight elevator together at 1:40 PM without any containers.
+8. C: Is there more to go on?",C
+NF005,University students check borrowing records for reserved engineering textbooks.,A = Dev; B = Amara; C = Lucas; D = Mei,"All dates in this case refer to October 2026. Standard textbook loans lasted exactly 7 days from the borrowing date. A borrower could renew a textbook at most twice, with each renewal adding exactly 7 days to the current due date. Overdue books could never be renewed.","1. C: Does anyone have anything to add?
+2. B: I borrowed an engineering textbook on 5 October and returned it on its initial due date of 12 October.
+3. A: I borrowed an engineering textbook on 2 October and renewed it three times to keep it until 30 October.
+4. D: I'd like a clear answer here.
+5. C: I borrowed my textbook on 3 October, renewed it once, and returned it on 17 October.
+6. B: I studied in the silent reading room on the second floor.
+7. D: I borrowed a textbook on 1 October, renewed it twice, and had a final due date of 22 October.
+8. A: Can we keep this brief?",A
+NF006,Commuters compare notes on the delayed express service from Greenfield to Central.,A = Samira; B = Viktor; C = Chloe; D = Ravi,"All times in this case refer to 12 November 2026. The 8:15 AM express train from Greenfield to Central was scheduled to depart from platform 3. Due to signaling works, it was moved to platform 7, where it arrived at 8:22 AM and departed 18 minutes behind schedule. The non-stop journey to Central took exactly 42 minutes. Passengers could only board the train while it was stopped at its departure platform.","1. D: Could we keep this thread short?
+2. C: The express train did not depart from platform 3.
+3. B: I arrived at Central on the express train from Greenfield at 8:57 AM.
+4. A: I bought a coffee at the station kiosk before boarding.
+5. B: Shall we start again from the top?
+6. A: The 8:15 AM express train departed from Greenfield at 8:33 AM.
+7. C: I boarded the express train at platform 7 at 8:26 AM.
+8. D: The express train arrived at Central at 9:15 AM.",B
+NF007,Bakers at an artisanal pastry shop review ingredient usage for afternoon custard tarts.,A = Lin; B = Carlos; C = Fatima; D = Jonas,"All baking took place on 9 May 2026. The bakery's standard base recipe produces exactly 12 custard tarts and requires 250 ml of cream, 4 egg yolks, and 60 grams of sugar. Bakers strictly scale all ingredients proportionally when producing larger or smaller batches. The pantry had 20 eggs available at the start of the day.","1. B: Who is taking the notes?
+2. A: I made a batch of 24 custard tarts and used exactly 120 grams of sugar.
+3. D: I baked a batch of 36 custard tarts using 600 ml of cream and 12 egg yolks.
+4. C: This is getting tangled.
+5. B: For a small batch of 6 custard tarts, I used 2 egg yolks and 125 ml of cream.
+6. A: I washed the stainless steel mixing bowls at noon.
+7. C: I prepared 18 custard tarts using exactly 375 ml of cream.
+8. D: Can we keep this brief?",D
+NF008,Festival attendees discuss merchandise purchases at the concert souvenir stall.,A = Keira; B = Aruna; C = Mateo; D = Zain,"At the concert merchandise booth on 14 August 2026, individual enamel pins cost £4.00 each, or £10.00 for a bundle of three. T-shirts cost £18.00 each with no quantity discount. The register always applied the bundle price to as many groups of three pins as possible. All customers paid with cash notes and received exact change.","1. B: Can we get a plain answer?
+2. A: I bought five enamel pins for a total cost of £18.00.
+3. C: I bought four enamel pins and paid £16.00 at the counter.
+4. D: Thanks for sorting this out, everyone.
+5. B: I bought one T-shirt and three enamel pins, handing over a £50 note and receiving £22 in change.
+6. A: The queue at the booth moved quite fast.
+7. D: I bought six enamel pins and was charged exactly £20.00.
+8. C: This is all rather confusing.",C
+NF009,Chess club members verify the final standings of a four-round weekend tournament.,A = Zoya; B = Henrik; C = Ananya; D = Lars,"The chess tournament took place across four rounds on 5 April 2026. Each participant played exactly four games. A win awarded 3 tournament points, a draw awarded 1 point, and a loss awarded 0 points. No bonus points were available. Henrik finished the tournament with zero losses.","1. C: Is there more to go on?
+2. B: I won two games and drew two games, finishing with 8 points.
+3. A: I completed all four tournament games and finished with a total score of 11 points.
+4. D: This is all rather confusing.
+5. C: I had one win, two draws, and one loss, earning 5 points.
+6. B: I played on board 2 for my third round.
+7. D: I finished the four rounds with exactly 7 points from two wins, one draw, and one loss.
+8. A: Who is taking the notes?",A
+NF010,Studio instructors review attendance caps for Saturday morning pottery workshops.,A = Nicole; B = Kieran; C = Sophie; D = Rahul,"All sessions took place on 17 January 2026. The ceramics studio held morning pottery sessions in Room 1 and Room 2. Studio policy strictly capped Room 1 at a maximum of 8 participants and Room 2 at a maximum of 12 participants per session. No person was permitted to join a session once the room cap was reached, and instructors never counted toward the participant cap.","1. C: Could we keep this thread short?
+2. A: My 9:00 AM advanced glazing session in Room 1 had 7 participants.
+3. B: I led the 10:00 AM beginner workshop in Room 1 with 11 registered participants working at the wheels.
+4. D: Some clarity would be good.
+5. C: I taught the 11:00 AM wheel-throwing class in Room 2 with exactly 12 participants.
+6. A: I restocked the clay bins before the first class began.
+7. D: There were 9 students in my 10:30 AM sculpting group in Room 2.
+8. B: Shall we start again from the top?",B
+NF011,Botanical garden volunteers sort out who watered the specimen ferns in the glasshouse.,A = Leanne; B = Yusuf; C = Nadia; D = George,"All times in this case refer to 25 July 2026. The rare royal ferns required precise care: they were watered at most once per day, and any watering had to occur strictly before 10:00 AM. After 10:00 AM, the misting system was active, and direct watering of the ferns was strictly forbidden. The ferns were kept in Glasshouse 3.","1. C: Can we keep this brief?
+2. A: I checked the humidity gauge in Glasshouse 3 at 8:15 AM.
+3. D: I gave the royal ferns their daily watering at 11:20 AM.
+4. B: This is getting muddled.
+5. B: I watered the royal ferns thoroughly at 8:40 AM.
+6. A: The misting system switched on promptly at 10:00 AM.
+7. C: I trimmed dead fronds near the entrance of Glasshouse 3 at 2:00 PM.
+8. D: Does anyone have anything to add?",D
+NF012,Laboratory researchers examine equipment usage and power drain during an automated assay.,A = Dragan; B = Sonia; C = Heidi; D = Kaito,"All times in this case refer to 8 September 2026. The portable centrifuge battery was at 100% at 8:00 AM and was not recharged all day. While running, the centrifuge drained the battery at a constant rate of 15 percentage points per hour; when idle, it consumed no power. Whenever the green sterilization lamp was illuminated, the centrifuge was required to remain powered off and idle. The green sterilization lamp was illuminated continuously from 1:00 PM to 3:30 PM and at no other time.","1. C: Who's writing up the notes?
+2. B: I ran the centrifuge for 2 hours between 9:00 AM and 11:30 AM, draining the battery by 30 percentage points.
+3. A: I operated the centrifuge continuously from 1:30 PM to 2:45 PM to process sample vials.
+4. D: Let's keep this thread brief.
+5. C: At 12:00 PM the centrifuge battery showed 70% remaining.
+6. D: The green sterilization lamp was switched off at 3:30 PM.
+7. B: I logged the test results in the laboratory database.
+8. A: Can we get a plain answer?",A
+NF013,Shoppers piece together their expenses for parking and purchases at the retail village.,A = Omar; B = Beatrice; C = Fiona; D = Liam,"All events occurred on 19 October 2026. Parking at the retail village cost £2.00 per hour or fraction of an hour, payable upon exit. At the village café, gourmet muffins cost £3.50 each or £9.00 for a box of three, and the café register always applied the three-muffin deal to full sets of three. All shoppers paid each bill in exact cash without vouchers.","1. B: This is getting tangled.
+2. A: I parked from 10:00 AM to 11:45 AM and paid £4.00 for parking.
+3. C: I parked my car from 1:15 PM to 4:05 PM and paid exactly £4.00 at the exit barrier.
+4. D: Can someone give a clear answer?
+5. B: I bought four gourmet muffins at the café and paid £12.50.
+6. D: I bought six gourmet muffins at the café and was charged £18.00.
+7. A: I bought an iced tea at the café patio.
+8. C: Is there more to go on?",C
+NF014,Hotel staff investigate elevator operations and emergency protocol activations.,A = Nadia; B = Kenji; C = Darius; D = Elena,"All times in this case refer to 4 June 2026. The guest elevator carried at most 8 passengers per trip. Whenever the maintenance yellow strobe on the roof was flashing, the elevator was locked in fire-service mode and could only be operated by a keyholder with no more than 2 passengers inside. The maintenance yellow strobe flashed continuously from 2:15 PM to 3:45 PM and at no other time that day.","1. B: Could we keep this thread short?
+2. A: At 1:30 PM I rode the guest elevator with six other people.
+3. D: At 3:00 PM I took the guest elevator down with four other hotel guests.
+4. C: This is all rather confusing.
+5. B: As a keyholder, I operated the elevator at 2:30 PM with just one passenger.
+6. C: At 4:10 PM I rode the elevator up with five guests.
+7. A: I delivered fresh towels to the fifth floor.
+8. D: Who's taking notes on this?",D
+NF015,Summer camp counselors review camper health logs and activity schedules.,A = Maya; B = Colin; C = Priya; D = Sam,"All times in this case refer to 28 July 2026. Camp policy mandated that any camper taking anti-nausea drops could receive at most three doses in a single day, with at least 4 hours between consecutive doses. Whenever lightning was detected within 10 miles, all outdoor activities were suspended and all campers were confined to the indoor recreation hall. Lightning was detected continuously from 1:30 PM to 4:00 PM and at no other time that day.","1. C: Is someone writing this up?
+2. A: I gave the camper their first dose of anti-nausea drops at 9:00 AM.
+3. B: I administered the camper's second dose of anti-nausea drops at 11:30 AM.
+4. D: This is a bit of a muddle.
+5. C: I administered the camper's second dose of anti-nausea drops at 1:15 PM in the clinic.
+6. D: During the lightning detection at 2:30 PM, I supervised board games inside the recreation hall.
+7. A: I led the outdoor archery drill at 10:30 AM before any storm warnings.
+8. B: Can we keep this thread brief?",B
