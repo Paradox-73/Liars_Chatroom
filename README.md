@@ -67,7 +67,7 @@ Numbers for the final pipeline:
 | Liars wrongly judged consistent by the rules | 0 | same |
 | New-family accuracy, `validation/newfam` (300 cases) | 0.957 (287 of 300) with version 2; 0.957 and 0.953 in two runs before it | [`submission/README.md`](submission/README.md), [`docs/BAKEOFF.md`](docs/BAKEOFF.md) |
 | New-family accuracy, `validation/set2` (168 cases) | 0.946 (159 of 168) with version 2, against 0.911 before it (11 cases better, 5 worse) and 0.857 with a 4,096-token first sample | same |
-| Kaggle check, 450 hard test cases, two T4 cards | 75.0 min including model load, limit 90; every case got a thinking answer (code before version 2) | `submission/README.md` |
+| Kaggle check, 450 hard test cases, two T4 cards | 78.5 min including model load, limit 90; every case got a thinking answer | `submission/README.md` |
 | `s6`, full `test.csv` | 1,064 of 1,064 open cases got a thinking answer, 101 stopped at the cap and were forced, 194 extra samples | `results/frozen/s6/REBUILD.md` |
 
 ## How it works
@@ -248,7 +248,7 @@ The kernels in [`kaggle/`](kaggle/) run on two T4 cards. `kaggle/build.py` embed
 | `s6` runtime on Kaggle | 184.2 min of a 189.2 min budget, exit 0 | same |
 | New-family accuracy, 300 cases | 0.957 (version 2); 0.957 and 0.953 before it | `submission/README.md`, `docs/BAKEOFF.md` |
 | New-family accuracy, 168 cases | 0.946 (159 of 168, version 2); 0.911 before it, 0.857 with the 4,096 cap | same |
-| Kaggle check, 450 hard cases | 75.0 min including model load; limit 90 | `submission/README.md` |
+| Kaggle check, 450 hard cases | 78.5 min including model load; limit 90 | `submission/README.md` |
 | Kit selftest, 200 cases | OK, accuracy 1.000, 5.4 min | same |
 
 The first upload scored 0.93333 with C filled in for every unanswered case. That means the rules answered about 91% of the public slice. They answer 69.6% of all test cases, so coverage on the rest is lower, and the public score flatters the private slice.
