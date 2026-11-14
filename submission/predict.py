@@ -61,7 +61,8 @@ def read_cases(path):
     """(ids in file order, fixed answers id -> (letter, tier), cases left to the model, their open speakers)."""
     csv.field_size_limit(2**31 - 1)  # the default 128 KiB per field would stop the whole run on one long chat
     with open(path, newline="", encoding="utf-8-sig", errors="replace") as f:  # a stray byte changes one case, not all
-        rows = list(csv.DictReader(f))
+        # "ID", " id" or "Evidence " in the header would otherwise find no column: every row skipped, an empty file
+        rows = [{(k or "").strip().lower(): v for k, v in r.items()} for r in csv.DictReader(f)]
     ids, fixed, cases, cands = [], {}, {}, {}
     for r in rows:
         cid = r.get("id")
