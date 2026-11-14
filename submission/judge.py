@@ -283,7 +283,8 @@ def main():
             quick.appendleft(("force", cid, k, prompt(cid) + text + suffix, tokens, kind))
             if kind == "main":
                 counts["main_capped"] += 1
-                if "</think>" not in text and max_len - plen(cid) - tokens - 64 >= 2048:
+                # only when a continuation can add 2,048 tokens: never when LC_CONT_TOKENS equals the first cap
+                if "</think>" not in text and min(CONT_TOKENS - tokens, max_len - plen(cid) - tokens - 64) >= 2048:
                     queued_cont.append((cid, k, text, tokens))
         if time.time() - last_beat > 10:
             beat()
