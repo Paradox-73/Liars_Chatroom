@@ -25,3 +25,13 @@ def test_rule_answers_only_when_the_rules_read_all_the_evidence(tmp_path):
     ids, fixed, cases, cands = predict.read_cases(str(path))
     assert fixed == {"ruled": ("B", "rule")}  # before, the hybrid was fixed too: ("D", "elim"), a wrong answer
     assert list(cases) == ["hybrid"] and cands["hybrid"] == "ABCD"
+
+
+def test_header_names_in_any_case_and_with_spaces(tmp_path):
+    path = tmp_path / "cases.csv"
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["ID", " Scenario", "SPEAKERS ", "Evidence", "chat"])  # before: no "id" column, no case read
+        w.writerow(["ruled", "Shed visits.", SPEAKERS, WINDOW, CHAT.format(b="4:30 PM")])
+    ids, fixed, cases, cands = predict.read_cases(str(path))
+    assert ids == ["ruled"] and fixed == {"ruled": ("B", "rule")}
