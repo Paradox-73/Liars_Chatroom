@@ -23,9 +23,11 @@ on two cards passes tensors between its processes through shared memory.
 
 1. **Rules.** `lc/rules` (27 families, standard library) parses the evidence and judges the claims it fully
    understands. A case is answered when exactly one speaker has a claim that cannot be true. A speaker whose claims
-   were all judged consistent is cleared. On train the rules answer 2,257 of 2,500 cases with no error. On scenario
-   families they were not written for they stay silent: on our 300 synthetic cases from 17 new families they answer
-   none and misfire on none. A complete predictions file is written at once.
+   were all judged consistent is cleared. On train the rules answer 2,257 of 2,500 cases with no error. Their answer
+   and the cleared speakers count only when the rules read every evidence sentence (2,221 of those 2,257): a sentence
+   no family reads can change what the rest means, so such a case goes to the model with no speaker cleared. On
+   scenario families they were not written for they stay silent: on our 300 synthetic cases from 17 new families
+   they answer none and misfire on none. A complete predictions file is written at once.
 2. **Model.** `judge.py`, a child process, serves Qwen3-14B-AWQ with vLLM (tensor parallel over both cards, float16)
    on the cases the rules leave open: the prompt of `lc/llm/prompt.py`, thinking mode, temperature 0.6, top-p 0.95,
    top-k 20. Up to 40 cases are in flight, fewer when the KV cache would overflow. A free slot takes, in order:

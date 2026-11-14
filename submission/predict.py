@@ -35,6 +35,7 @@ sys.path.insert(0, ROOT)
 from lc.combine import FALLBACK, LETTERS, decide, open_speakers, vote  # noqa: E402
 from lc.data import case_from_row  # noqa: E402
 from lc.rules import solve  # noqa: E402
+from lc.rules.core import Result  # noqa: E402
 
 ATTEMPTS = [  # (judge.py arguments, environment), tried in order until one exits cleanly; as in kaggle/launcher.py
     ([], {}),
@@ -74,8 +75,13 @@ def read_cases(path):
             fixed[cid] = (FALLBACK, "unreadable")
             continue
         try:
-            letter, tier = decide(case, [])  # no model files yet: a case the rules leave open comes back as "fallback"
-            open_ = "".join(sorted(open_speakers(case, solve(case)))) if tier == "fallback" else ""
+            res = solve(case)
+            if any(not s.startswith("All times in this case refer to") for s in res.unconsumed):
+                # evidence no rule family read can change what the rest means: no rule answer, nobody cleared
+                letter, tier, res = None, "fallback", Result(cid)
+            else:
+                letter, tier = decide(case, [])  # no model files yet: a case the rules leave open comes back as "fallback"
+            open_ = "".join(sorted(open_speakers(case, res))) if tier == "fallback" else ""
         except Exception as e:
             log(f"case {cid}: the rules failed ({type(e).__name__}); the model judges every speaker")
             letter, tier, open_ = None, "fallback", ""

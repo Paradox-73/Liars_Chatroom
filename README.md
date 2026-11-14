@@ -121,6 +121,8 @@ An exception inside a family never stops a case. It is recorded and the family i
 3. **llm.** The samples vote over the speakers the rules did not clear. A speaker is cleared when all of their messages other than questions were judged consistent. A forced answer counts at half weight.
 4. **fallback.** A case the model never reached gets a one-token answer without thinking, and failing that the letter C, the most common train label.
 
+`predict.py` keeps a rule or elim answer, and the cleared speakers, only when the rules read every evidence sentence. A sentence no family reads can change what the rest means, so such a case goes to the model with no speaker cleared. On train this sends 36 of the 2,257 rule answers to the model.
+
 ## Rules compliance
 
 Competition rule numbers refer to section 10 of the Rules tab.

@@ -1,0 +1,27 @@
+"""python -m pytest tests"""
+import csv
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "submission"))
+import predict  # noqa: E402
+
+SPEAKERS = "A = Kofi; B = Yusuf; C = Akira; D = Obi"
+WINDOW = ("All times in this case refer to 30 June 2026. Nobody could enter the carpentry shed between 4:00 PM and "
+          "5:00 PM.")
+CHAT = "\n".join(["1. A: I entered the carpentry shed at 3:30 PM.", "2. B: I entered the carpentry shed at {b}.",
+                  "3. C: I entered the carpentry shed at 5:30 PM.", "4. D: I had a long call with the supplier today."])
+
+
+def test_rule_answers_only_when_the_rules_read_all_the_evidence(tmp_path):
+    rows = [("ruled", WINDOW, CHAT.format(b="4:30 PM")),  # B entered inside the window: the rules can prove it
+            ("hybrid", WINDOW + " Yusuf spent the whole afternoon at the dentist across town and only got back at "
+             "7:30 PM.", CHAT.format(b="6:30 PM"))]  # the liar is B, through a sentence no rule family reads
+    path = tmp_path / "cases.csv"
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["id", "scenario", "speakers", "evidence", "chat"])
+        w.writerows([cid, "Shed visits.", SPEAKERS, ev, chat] for cid, ev, chat in rows)
+    ids, fixed, cases, cands = predict.read_cases(str(path))
+    assert fixed == {"ruled": ("B", "rule")}  # before, the hybrid was fixed too: ("D", "elim"), a wrong answer
+    assert list(cases) == ["hybrid"] and cands["hybrid"] == "ABCD"
