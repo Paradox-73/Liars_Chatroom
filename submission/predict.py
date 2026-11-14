@@ -160,6 +160,9 @@ def run_model(a, cases, cands, write, stop_new, hard):
     parts = len(gpus) if len(gpus) >= 2 else 1
     py = next((p for p in (os.environ.get("LC_PYTHON"), os.path.join(HERE, ".venv", "bin", "python")) if p and os.path.exists(p)),
               sys.executable)
+    if os.path.isdir(os.path.join(HERE, ".venv")) and not os.path.exists(os.path.join(HERE, ".venv", "bin", "python")):
+        log(f"ERROR: .venv/bin/python does not resolve (a moved folder, or the Python it links to is gone): the model "
+            f"process runs with {py}; run setup.sh again")
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}  # a PYTHONPATH made for another Python must not leak in
     env.update(settings, PYTHONPATH=ROOT, HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", VLLM_NO_USAGE_STATS="1", DO_NOT_TRACK="1")
     workers = []

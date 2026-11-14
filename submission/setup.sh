@@ -17,6 +17,8 @@ else  # a plain install first: pip refuses --user inside a virtualenv
     python3 -m pip install --quiet --user --break-system-packages uv
   UV="python3 -m uv"
 fi
+# a Python that uv downloads goes beside this file, so .venv/bin/python does not point into this user's home
+export UV_PYTHON_INSTALL_DIR="$PWD/.python"
 $UV venv .venv --python 3.12 --allow-existing
 # torch and vLLM are CUDA 12.9 builds from the PyTorch index; unsafe-best-match lets every other pin come from PyPI
 $UV pip install --python .venv/bin/python -r requirements.txt --index-strategy unsafe-best-match
