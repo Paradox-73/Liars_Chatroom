@@ -44,7 +44,8 @@ ATTEMPTS = [  # (judge.py arguments, environment), tried in order until one exit
 ]
 # How the judge model that setup.sh downloads runs; the environment can override each value. First samples stop at
 # 3,072 tokens: on two T4 cards more cases then get a thinking answer in time than with 4,096 (README, Choosing the model).
-MODEL_ENV = {"LC_MAIN_TOKENS": "3072",  # capped first samples continue to 16,384 tokens if on time
+MODEL_ENV = {"LC_MAIN_TOKENS": "3072",
+             "LC_CONT_TOKENS": "3072",  # = the cap, so no continuations: spare time goes to extra samples (README)
              "LC_TOKEN_LOGPROBS": "0"}  # no log-probabilities on every token: 15% faster on T4, the letter votes alone
 START_LIMIT, STALL_LIMIT = 20 * 60, 5 * 60  # seconds without a heartbeat from judge.py before it counts as hung
 NO_RETRY = (3, 4)  # judge.py exit codes: no GPU, no vLLM

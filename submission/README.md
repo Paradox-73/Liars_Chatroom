@@ -28,8 +28,6 @@ CUDA 12.9 (Kaggle's 580 does).
 2. **Model.** `judge.py`, a child process, serves Qwen3-14B-AWQ with vLLM (tensor parallel over both cards, float16)
    on the cases the rules leave open: the prompt of `lc/llm/prompt.py`, thinking mode, temperature 0.6, top-p 0.95,
    top-k 20. Up to 40 cases are in flight, fewer when the KV cache would overflow. A free slot takes, in order:
-   - a sample that reached its cap while still thinking, continued to 16,384 tokens in total. It goes first only
-     while the first samples are on schedule, and holds at most half of the slots while they wait;
    - the first sample of the next case, seed 0, longest prompt first (a long prompt means long reasoning, so slow
      cases start early), at most 3,072 tokens (see Choosing the model). Cutting only the later cases shorter to fit
      the time costs accuracy: on our 300 new-family cases a cap that shared the remaining tokens out evenly scored
@@ -38,7 +36,11 @@ CUDA 12.9 (Kaggle's 580 does).
    - an extra sample (seed 1, 2, ...) for the least certain case: smallest vote margin first, up to 5 samples a
      case, none once two clean samples agree.
 
-   A sample without an `ANSWER:` line gets a forced answer: `ANSWER:` is appended and one token is read.
+   A sample without an `ANSWER:` line gets a forced answer: `ANSWER:` is appended and one token is read. A sample
+   that reaches the cap is not continued: spare time goes to extra samples instead (see Choosing the model).
+   `judge.py` can continue capped samples (`LC_CONT_TOKENS` above the cap), but `predict.py` sets it equal to the
+   cap, which leaves the engine a context of 5,120 tokens on two cards. Our longest prompt (test and new-family
+   files) is about 3,200 characters, so at most about 1,100 tokens.
 3. **Vote.** `lc/combine.py` decides each case: the rule answer, then elimination (one speaker left with claims nobody
    could judge), then the vote of the samples over the speakers the rules did not clear, with forced answers at half
    weight. A case the model never reached gets a one-token answer without thinking, and failing that the letter C (or
@@ -103,6 +105,13 @@ repository), and 15 from a teammate's own set. There 3,072 scored 0.911 against 
 (two-sided sign test, p = 0.012), mostly because more cases got a thinking answer in time (152 of 168, against 127).
 On the first set both scored 0.953 (5 cases better, 5 worse); the 0.957 above is an earlier run at 4,096. This
 submission uses the 3,072-token first sample.
+
+**No continuations.** Continuing a capped sample rarely paid on T4 cards. On 49 hard cases whose first sample hit its
+cap, continuing to 8,192 tokens gave a net 3 more right answers (p = 0.51) and took 2,595 s on two cards. A fresh
+4,096-token sample on those cases finished 29 times out of 78 and was right 28 of those 29 times. So a capped sample
+is forced at once and spare time goes to extra samples. With the 3,072-token first sample and no continuations, the
+first set scored 0.957 (299 of 299 cases reached, 41 forced, 5 extra samples). On the second set no spare time is
+left for continuations either way.
 
 **Size limit.** Update 2 lowered the limit for the final code check to 14B. The organisers then clarified on the
 Discussion tab: the limit is 15B total parameters, including embeddings, as listed on the model's official page, and a
